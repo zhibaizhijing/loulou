@@ -211,7 +211,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
       const confirm = await wx.showModal({
         title: 'Mock WeChat Pay',
         content: `Pay S$${amount} into platform escrow?`,
-        confirmText: `Pay S$${amount}`,
+        confirmText: 'Pay',
         cancelText: 'Cancel'
       })
       if (!confirm.confirm) {
