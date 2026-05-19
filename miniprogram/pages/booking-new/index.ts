@@ -5,8 +5,12 @@ import { showAppError } from '../../utils/errorHandler'
 import { formatDate } from '../../utils/date'
 import { bus, BUS_EVENTS } from '../../utils/bus'
 import { cloudCall } from '../../services/cloudCall'
+import { __USE_MOCK__ } from '../../utils/env'
+import { mockDb } from '../../mocks/db'
 import { SERVICE_TYPE_LABEL } from '../../models/index'
-import type { Walker, Dog, ServiceType, ServiceItem } from '../../models/index'
+import type { Walker, Dog, ServiceType, ServiceItem, User } from '../../models/index'
+
+const MOCK_OWNER_ID = 'mock-owner-1'
 
 interface Data {
   walker: Walker | null
@@ -66,8 +70,16 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   async loadDogs() {
-    const r = await cloudCall<{ dogs?: Dog[] }>('getMyProfile', {}).catch(() => ({ dogs: [] as Dog[] }))
-    this.setData({ dogs: r.dogs || [] })
+    let dogs: Dog[] = []
+    if (__USE_MOCK__) {
+      const u = mockDb.users.list().find(x => x._id === MOCK_OWNER_ID)
+      dogs = u?.dogs || []
+    } else {
+      const r = await cloudCall<{ dogs?: Dog[] }>('getMyProfile', {}).catch(() => ({ dogs: [] as Dog[] }))
+      dogs = r.dogs || []
+    }
+    const selectedDogId = dogs.length === 1 ? dogs[0].id : this.data.selectedDogId
+    this.setData({ dogs, selectedDogId })
   },
 
   onPickDog(e: WechatMiniprogram.BaseEvent) {
@@ -80,7 +92,12 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     const dog = e.detail.dog
     const dogs = [...this.data.dogs, dog]
     this.setData({ dogs, selectedDogId: dog.id, addingDog: false })
-    await cloudCall('updateProfile', { name: '__keep__', dogs }).catch(() => undefined)
+    if (__USE_MOCK__) {
+      const u = mockDb.users.list().find(x => x._id === MOCK_OWNER_ID)
+      if (u) mockDb.users.update(u._id, { dogs } as Partial<User>)
+    } else {
+      await cloudCall('updateProfile', { name: '__keep__', dogs }).catch(() => undefined)
+    }
   },
 
   onDate(e: WechatMiniprogram.CustomEvent<{ value: string }>) { this.setData({ datePart: String(e.detail.value) }) },

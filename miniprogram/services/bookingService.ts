@@ -83,6 +83,16 @@ export async function listCaregiverPendingBookings(caregiverId: string): Promise
   return cloudCall<Booking[]>('listCaregiverPendingBookings', { caregiverId })
 }
 
+export async function listCaregiverBookings(caregiverId: string): Promise<Booking[]> {
+  if (__USE_MOCK__) {
+    return mockDb.bookings
+      .list()
+      .filter(b => b.walkerId === caregiverId)
+      .sort((a, b) => b.date - a.date)
+  }
+  return cloudCall<Booking[]>('listCaregiverBookings', { caregiverId })
+}
+
 function createMock(input: CreateBookingInput): { bookingId: string } {
   // Idempotency stub: same (owner, walker, date, serviceType) returns existing booking.
   const idemKey = `${MOCK_OWNER_ID}|${input.walkerId}|${input.date}|${input.serviceType}`

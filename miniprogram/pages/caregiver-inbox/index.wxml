@@ -3,24 +3,54 @@
 <empty-state wx:if="{{noCaregiver}}" icon="🚫" title="Not in caregiver mode" />
 
 <view wx:else class="page">
+  <t-tabs value="{{tab}}" bind:change="onTabChange">
+    <t-tab-panel label="Pending" value="pending" />
+    <t-tab-panel label="Upcoming" value="upcoming" />
+    <t-tab-panel label="Past" value="past" />
+  </t-tabs>
+
   <loading-skeleton wx:if="{{loading}}" count="3" />
-  <empty-state wx:elif="{{bookings.length === 0}}" icon="📭" title="No pending requests" subtitle="Owners haven't sent any bookings yet." />
+
+  <empty-state wx:elif="{{filtered.length === 0 && tab === 'pending'}}"
+    icon="📭" title="No pending requests" subtitle="Owners haven't sent any bookings yet." />
+  <empty-state wx:elif="{{filtered.length === 0 && tab === 'upcoming'}}"
+    icon="📅" title="No upcoming bookings" subtitle="Accepted bookings will appear here." />
+  <empty-state wx:elif="{{filtered.length === 0}}"
+    icon="🗂" title="No past bookings" />
 
   <view wx:else>
-    <view wx:for="{{bookings}}" wx:key="_id" class="card">
-      <view class="row">
-        <view class="title">{{item.dateLabel}}</view>
-        <t-tag>{{item.durationMin}} min</t-tag>
+    <view wx:for="{{filtered}}" wx:key="_id" class="card">
+      <view wx:if="{{tab === 'pending'}}">
+        <view class="row">
+          <view class="title">{{item.dateLabel}}</view>
+          <t-tag>{{item.serviceLabel}} · {{item.durationLabel}}</t-tag>
+        </view>
+        <view class="row">
+          <view class="muted">{{item.dogId}}</view>
+          <view class="amount">S${{item.mockPayment.amount}}</view>
+        </view>
+        <view wx:if="{{item.notes}}" class="notes">"{{item.notes}}"</view>
+        <view class="actions">
+          <t-button theme="primary" size="small" data-id="{{item._id}}" bindtap="onAccept" loading="{{acting === item._id}}">Accept</t-button>
+          <t-button variant="outline" theme="danger" size="small" data-id="{{item._id}}" bindtap="onDecline" loading="{{acting === item._id}}">Decline</t-button>
+          <t-button variant="outline" size="small" data-id="{{item._id}}" bindtap="onChat">Chat owner</t-button>
+        </view>
       </view>
-      <view class="row">
-        <view class="muted">{{item.dogId}}</view>
-        <view class="amount">S${{item.mockPayment.amount}}</view>
-      </view>
-      <view wx:if="{{item.notes}}" class="notes">"{{item.notes}}"</view>
-      <view class="actions">
-        <t-button theme="primary" size="small" data-id="{{item._id}}" bindtap="onAccept" loading="{{acting === item._id}}">Accept</t-button>
-        <t-button variant="outline" theme="danger" size="small" data-id="{{item._id}}" bindtap="onDecline" loading="{{acting === item._id}}">Decline</t-button>
-        <t-button variant="outline" size="small" data-id="{{item._id}}" bindtap="onChat">Chat owner</t-button>
+
+      <view wx:else bindtap="onOpen" data-id="{{item._id}}">
+        <view class="row">
+          <view class="title">{{item.dateLabel}}</view>
+          <t-tag>{{item.serviceLabel}} · {{item.durationLabel}}</t-tag>
+        </view>
+        <view class="row">
+          <view class="muted">{{item.statusLabel}}</view>
+          <view class="amount">S${{item.mockPayment.amount}}</view>
+        </view>
+        <view wx:if="{{item.notes}}" class="notes">"{{item.notes}}"</view>
+        <view class="actions">
+          <t-button variant="outline" size="small" data-id="{{item._id}}" catchtap="onChat">Chat owner</t-button>
+          <t-button variant="text" size="small" data-id="{{item._id}}" catchtap="onOpen">View details ›</t-button>
+        </view>
       </view>
     </view>
   </view>
