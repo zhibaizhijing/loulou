@@ -13,4 +13,3 @@
     <t-button theme="primary" size="medium" bindtap="onSend" loading="{{sending}}">Send</t-button>
   </view>
 </view>
-<custom-tab-bar />

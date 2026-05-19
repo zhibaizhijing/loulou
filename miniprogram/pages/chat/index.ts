@@ -1,6 +1,6 @@
 import { listMessages, sendMessage, watchNewMessages } from '../../services/chatService'
 import { showAppError } from '../../utils/errorHandler'
-import { isWalkerMode } from '../../utils/walkerMode'
+import { isCaregiverMode } from '../../services/caregiverAuth'
 import type { Message, MessageRole } from '../../models'
 
 interface Data {
@@ -19,7 +19,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
 
   async onLoad(q: Record<string, string>) {
     this.bookingId = q.bookingId
-    this.setData({ myRole: isWalkerMode() ? 'walker' : 'owner' })
+    this.setData({ myRole: isCaregiverMode() ? 'walker' : 'owner' })
     try {
       const initial = await listMessages(this.bookingId, 50)
       const lastId = initial.length ? initial[initial.length - 1]._id : ''

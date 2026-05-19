@@ -2,6 +2,7 @@ import { cloudCall } from './cloudCall'
 import { __USE_MOCK__ } from '../utils/env'
 import { mockDb } from '../mocks/db'
 import { watchMockCollection } from '../mocks/realtime'
+import { currentCaregiverId } from './caregiverAuth'
 import { AppError } from '../utils/errorHandler'
 import type { Message, MessageRole } from '../models'
 
@@ -28,9 +29,10 @@ export async function sendMessage(bookingId: string, text: string, role: Message
   const trimmed = text.trim()
   if (!trimmed) throw new AppError('VALIDATION', 'Message cannot be empty')
   if (__USE_MOCK__) {
+    const senderId = role === 'walker' ? (currentCaregiverId() || MOCK_OWNER_ID) : MOCK_OWNER_ID
     const inserted = mockDb.messages.insert({
       bookingId,
-      senderId: MOCK_OWNER_ID,
+      senderId,
       senderRole: role,
       text: trimmed,
       createdAt: Date.now()
