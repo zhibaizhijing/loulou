@@ -36,6 +36,12 @@
     <view class="card-sub">Tap to edit availability →</view>
   </view>
 
+  <view class="card" bindtap="onOpenEarnings">
+    <view class="card-title">Earnings</view>
+    <view class="card-value">View ledger</view>
+    <view class="card-sub">Credits, commission, payouts →</view>
+  </view>
+
   <view class="actions">
     <t-button block variant="outline" bindtap="onExitMode">Exit caregiver mode</t-button>
   </view>

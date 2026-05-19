@@ -1,4 +1,4 @@
-import type { Caregiver, Review, Booking, Message, WalkReport, User, ServiceItem, AvailabilitySlot, CaregiverApplication } from '../models'
+import type { Caregiver, Review, Booking, Message, WalkReport, User, ServiceItem, AvailabilitySlot, CaregiverApplication, Payout } from '../models'
 import { emitChange } from './realtime'
 import { loadAll, saveAll } from './storage'
 import { SEED_WALKERS, SEED_REVIEWS_TEMPLATE, SEED_OWNER } from './seedData'
@@ -54,7 +54,8 @@ export const mockDb = {
   users:        new Collection<User>('users'),
   applications: new Collection<CaregiverApplication>('applications'),
   services:     new Collection<ServiceItem>('services'),
-  availability: new Collection<AvailabilitySlot>('availability')
+  availability: new Collection<AvailabilitySlot>('availability'),
+  payouts:      new Collection<Payout>('payouts')
 }
 
 function persistAndNotify(coll: string, op: 'insert' | 'update' | 'delete', row: Record_) {
@@ -72,7 +73,8 @@ function snapshotAll() {
     users:        mockDb.users.snapshot(),
     applications: mockDb.applications.snapshot(),
     services:     mockDb.services.snapshot(),
-    availability: mockDb.availability.snapshot()
+    availability: mockDb.availability.snapshot(),
+    payouts:      mockDb.payouts.snapshot()
   }
 }
 
@@ -93,6 +95,7 @@ export function initMockDb() {
     if (restored.applications?.length) mockDb.applications.load(restored.applications as CaregiverApplication[])
     if (restored.services?.length) mockDb.services.load(restored.services as ServiceItem[])
     if (restored.availability?.length) mockDb.availability.load(restored.availability as AvailabilitySlot[])
+    if (restored.payouts?.length) mockDb.payouts.load(restored.payouts as Payout[])
     return
   }
   // Cold seed
@@ -153,6 +156,7 @@ export function resetMockDb() {
   mockDb.applications.load([])
   mockDb.services.load([])
   mockDb.availability.load([])
+  mockDb.payouts.load([])
   initialised = false
   saveAll({})
 }

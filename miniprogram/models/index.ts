@@ -97,6 +97,23 @@ export interface MockPayment {
   paid: boolean
 }
 
+// P0-C — escrow lifecycle. unpaid: not yet collected. held: in platform escrow.
+// released: paid out to caregiver after settle window. refunded: returned to owner.
+export type PaymentState = 'unpaid' | 'held' | 'released' | 'refunded'
+
+export interface BookingPayment {
+  state: PaymentState
+  amount: number                 // gross paid by owner (in cents-equivalent integer dollars for mock)
+  commissionRate: number         // captured at payment time (e.g. 0.15)
+  commission: number             // commission deducted on release
+  payoutAmount: number           // amount caregiver receives on release (= amount - commission)
+  refundAmount?: number          // for partial refunds
+  idempotencyKey?: string        // dedupes provider calls
+  paidAt?: number
+  releasedAt?: number
+  refundedAt?: number
+}
+
 export interface Booking {
   _id: string
   ownerId: string
@@ -107,9 +124,26 @@ export interface Booking {
   durationMin: number        // semantic varies by serviceType: minutes for walking/house_visit, nights for boarding/live_in, days for daycare
   status: BookingStatus
   notes?: string
-  mockPayment: MockPayment
+  mockPayment: MockPayment   // legacy: kept for backwards compat with seeded bookings; new code reads `payment`
+  payment?: BookingPayment   // P0-C escrow lifecycle; optional for legacy bookings
+  completedAt?: number       // set when status → completed (used by auto-release scheduler)
   createdAt: number
   updatedAt: number
+}
+
+// P0-C ledger entries. One row per money movement.
+export type PayoutKind = 'credit' | 'commission' | 'payout' | 'refund' | 'adjustment'
+
+export interface Payout {
+  _id: string
+  caregiverId: string
+  bookingId?: string
+  kind: PayoutKind
+  amount: number                 // signed: credits + / commission - / payout - / refund - / adjustment ±
+  balanceAfter: number
+  createdAt: number
+  idempotencyKey?: string
+  note?: string
 }
 
 export type MessageRole = 'owner' | 'walker'

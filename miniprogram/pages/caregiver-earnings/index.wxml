@@ -1,0 +1,32 @@
+<mock-banner />
+
+<empty-state wx:if="{{noCaregiver}}" icon="🚫" title="Not in caregiver mode" />
+
+<view wx:else class="page">
+  <loading-skeleton wx:if="{{loading}}" count="4" />
+
+  <view wx:else>
+    <view class="balance-card">
+      <view class="balance-label">Net balance</view>
+      <view class="balance-amount">S${{balance}}</view>
+      <view class="balance-hint">Funds released to your wallet (mock — no real money)</view>
+    </view>
+
+    <view class="totals">
+      <view class="total-row"><text>Owner credits</text><text class="pos">+ S${{totalCredited}}</text></view>
+      <view class="total-row"><text>Platform commission</text><text class="neg">− S${{totalCommission}}</text></view>
+      <view class="total-row"><text>Payouts to you</text><text class="neg">− S${{totalPayout}}</text></view>
+      <view class="total-row"><text>Refunds to owners</text><text class="neg">− S${{totalRefunded}}</text></view>
+    </view>
+
+    <view class="ledger-label">Recent activity</view>
+    <empty-state wx:if="{{rows.length === 0}}" icon="📒" title="No earnings yet" subtitle="Accept a booking to start earning." />
+    <view wx:for="{{rows}}" wx:key="_id" class="ledger-row">
+      <view class="ledger-main">
+        <text class="ledger-kind">{{item.kindLabel}}</text>
+        <text class="ledger-date">{{item.dateLabel}}</text>
+      </view>
+      <text class="ledger-amount {{item.amount >= 0 ? 'pos' : 'neg'}}">{{item.amountLabel}}</text>
+    </view>
+  </view>
+</view>

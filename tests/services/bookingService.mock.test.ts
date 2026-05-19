@@ -20,7 +20,8 @@ describe('bookingService (mock path)', () => {
     const b = mockDb.bookings.get(r.bookingId)!
     expect(b.status).toBe('requested')
     expect(b.mockPayment.amount).toBe(60)  // 30 × (60/30)
-    expect(b.mockPayment.paid).toBe(true)
+    expect(b.mockPayment.paid).toBe(false)
+    expect(b.payment?.state).toBe('unpaid')
   })
 
   it('createBooking idempotency — same (owner, walker, date, serviceType) returns existing id', async () => {

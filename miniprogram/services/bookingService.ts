@@ -114,7 +114,9 @@ function createMock(input: CreateBookingInput): { bookingId: string } {
     durationMin: input.durationMin,
     status: 'requested',
     notes: input.notes,
-    mockPayment: { amount, paid: true },
+    mockPayment: { amount, paid: false },
+    // P0-C: new bookings start unpaid; paymentService.requestPayment flips to held
+    payment: { state: 'unpaid', amount, commissionRate: 0.15, commission: 0, payoutAmount: 0 },
     createdAt: now,
     updatedAt: now
   } as Omit<Booking, '_id'>)

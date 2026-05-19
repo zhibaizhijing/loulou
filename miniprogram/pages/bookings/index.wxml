@@ -13,7 +13,7 @@
   <view wx:for="{{filtered}}" wx:key="_id" class="row" bindtap="onTap" data-id="{{item._id}}">
     <view class="row-main">
       <view class="row-title">{{item.dateLabel}} · {{item.durationLabel}}</view>
-      <view class="row-sub">{{item.statusLabel}}</view>
+      <view class="row-sub">{{item.statusLabel}} · <t-tag size="small" theme="{{item.paymentTone}}">{{item.paymentLabel}}</t-tag></view>
     </view>
     <view class="row-amount">S${{item.mockPayment.amount}}</view>
   </view>

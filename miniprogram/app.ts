@@ -1,5 +1,6 @@
 import { silentLogin } from './services/authService'
 import { initNetworkWatcher } from './utils/network'
+import { startAutoReleaseTick } from './services/autoReleaseTick'
 import { createLogger } from './utils/logger'
 import { __USE_MOCK__ } from './utils/env'
 
@@ -15,6 +16,7 @@ App<IAppOption>({
       }
       initNetworkWatcher()
       await silentLogin()
+      startAutoReleaseTick()
     } catch (e: any) {
       log.error('boot failed', e)
       this.globalData.bootError = e

@@ -5,7 +5,7 @@ import { formatDateTime } from '../../utils/date'
 import { bus, BUS_EVENTS } from '../../utils/bus'
 import type { Booking } from '../../models'
 
-interface Row extends Booking { dateLabel: string; statusLabel: string; durationLabel: string }
+interface Row extends Booking { dateLabel: string; statusLabel: string; durationLabel: string; paymentLabel: string; paymentTone: string }
 interface Data { tab: string; all: Row[]; filtered: Row[]; pageStatus: string; pageError: string }
 
 const STATUS_LABEL: Record<Booking['status'], string> = {
@@ -15,6 +15,13 @@ const STATUS_LABEL: Record<Booking['status'], string> = {
   in_progress: 'Walk in progress',
   completed: 'Completed',
   cancelled: 'Cancelled'
+}
+
+const PAYMENT_LABEL: Record<string, { label: string; tone: string }> = {
+  unpaid:   { label: 'Unpaid',   tone: 'warning' },
+  held:     { label: 'Paid · escrow', tone: 'primary' },
+  released: { label: 'Released', tone: 'success' },
+  refunded: { label: 'Refunded', tone: 'danger' }
 }
 
 Page<Data, WechatMiniprogram.IAnyObject>({
@@ -36,11 +43,15 @@ Page<Data, WechatMiniprogram.IAnyObject>({
           const unit = b.serviceType === 'walking' || b.serviceType === 'house_visit' ? 'min'
                     : b.serviceType === 'daycare' ? (b.durationMin > 1 ? 'days' : 'day')
                     : (b.durationMin > 1 ? 'nights' : 'night')
+          const payState = b.payment?.state || 'unpaid'
+          const pay = PAYMENT_LABEL[payState] || { label: payState, tone: 'default' }
           return {
             ...b,
             dateLabel: formatDateTime(b.date),
             statusLabel: STATUS_LABEL[b.status],
-            durationLabel: `${b.durationMin} ${unit}`
+            durationLabel: `${b.durationMin} ${unit}`,
+            paymentLabel: pay.label,
+            paymentTone: pay.tone
           }
         }),
         { onEmpty: v => v.length === 0 }

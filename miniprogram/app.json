@@ -13,7 +13,8 @@
     "pages/caregiver-service-edit/index",
     "pages/caregiver-calendar/index",
     "pages/caregiver-home/index",
-    "pages/caregiver-inbox/index"
+    "pages/caregiver-inbox/index",
+    "pages/caregiver-earnings/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

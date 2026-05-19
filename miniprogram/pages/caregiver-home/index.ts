@@ -78,6 +78,9 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   onOpenCalendar() {
     wx.navigateTo({ url: '/pages/caregiver-calendar/index' })
   },
+  onOpenEarnings() {
+    wx.navigateTo({ url: '/pages/caregiver-earnings/index' })
+  },
   async onExitMode() {
     const m = await wx.showModal({ title: 'Exit caregiver mode?', content: 'You will return to the owner side of the app.' })
     if (!m.confirm) return

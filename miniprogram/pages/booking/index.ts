@@ -1,4 +1,5 @@
 import { getBookingById, cancelBooking } from '../../services/bookingService'
+import { previewCancelRefund, refundPayment } from '../../services/paymentService'
 import { getWalkerById } from '../../services/walkerService'
 import { createPageState } from '../../utils/usePageState'
 import { showAppError } from '../../utils/errorHandler'
@@ -83,12 +84,33 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     if (w) wx.navigateTo({ url: `/pages/walker/index?id=${w._id}` })
   },
   async onCancel() {
-    const m = await wx.showModal({ title: 'Cancel?', content: 'This cannot be undone.' })
+    let content = 'This cannot be undone.'
+    let refundAmount = 0
+    let shouldRefund = false
+    try {
+      const preview = previewCancelRefund(this.bookingId)
+      refundAmount = preview.refundAmount
+      shouldRefund = refundAmount > 0 && this.data.booking?.payment?.state === 'held'
+      const pctText = preview.refundPct === 1 ? '100%' : `${Math.round(preview.refundPct * 100)}%`
+      content = shouldRefund
+        ? `${pctText} refund — you'll get S$${refundAmount} back. Continue?`
+        : 'Outside the refund window — no refund. Continue?'
+    } catch { /* preview failure shouldn't block cancel */ }
+
+    const m = await wx.showModal({ title: 'Cancel booking?', content })
     if (!m.confirm) return
     try {
+      if (shouldRefund) {
+        await refundPayment({
+          bookingId: this.bookingId,
+          refundAmount,
+          idempotencyKey: `refund-${this.bookingId}-${Date.now()}`,
+          reason: 'Owner cancelled'
+        })
+      }
       await cancelBooking(this.bookingId)
       bus.emit(BUS_EVENTS.BOOKING_UPDATED, { bookingId: this.bookingId })
-      wx.showToast({ title: 'Cancelled', icon: 'success' })
+      wx.showToast({ title: shouldRefund ? `Refunded S$${refundAmount}` : 'Cancelled', icon: 'success' })
       this.load()
     } catch (e) { showAppError(e) }
   },

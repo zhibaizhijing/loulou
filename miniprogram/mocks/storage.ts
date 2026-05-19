@@ -1,4 +1,4 @@
-const KEY = 'mockdb:v3'
+const KEY = 'mockdb:v4'
 
 interface AllRows { [coll: string]: Array<{ _id: string }> }
 

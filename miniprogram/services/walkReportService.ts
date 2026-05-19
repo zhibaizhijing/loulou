@@ -44,6 +44,7 @@ function submitMock(input: SubmitWalkReportInput): { reportId: string } {
     createdAt: Date.now()
   } as Omit<WalkReport, '_id'>)
 
-  mockDb.bookings.update(input.bookingId, { status: 'completed', updatedAt: Date.now() } as any)
+  const now = Date.now()
+  mockDb.bookings.update(input.bookingId, { status: 'completed', completedAt: now, updatedAt: now } as any)
   return { reportId: inserted._id }
 }

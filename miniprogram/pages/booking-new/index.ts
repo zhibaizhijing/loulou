@@ -1,12 +1,17 @@
 import { getWalkerById } from '../../services/walkerService'
-import { createBooking } from '../../services/bookingService'
+import { createBooking, cancelBooking } from '../../services/bookingService'
 import { listActiveServicesForCaregiver } from '../../services/serviceItemService'
+import { requestPayment } from '../../services/paymentService'
 import { showAppError } from '../../utils/errorHandler'
 import { formatDate } from '../../utils/date'
 import { bus, BUS_EVENTS } from '../../utils/bus'
 import { cloudCall } from '../../services/cloudCall'
+import { __USE_MOCK__ } from '../../utils/env'
+import { mockDb } from '../../mocks/db'
 import { SERVICE_TYPE_LABEL } from '../../models/index'
-import type { Walker, Dog, ServiceType, ServiceItem } from '../../models/index'
+import type { Walker, Dog, ServiceType, ServiceItem, User } from '../../models/index'
+
+const MOCK_OWNER_ID = 'mock-owner-1'
 
 interface Data {
   walker: Walker | null
@@ -69,8 +74,16 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   async loadDogs() {
-    const r = await cloudCall<{ dogs?: Dog[] }>('getMyProfile', {}).catch(() => ({ dogs: [] as Dog[] }))
-    this.setData({ dogs: r.dogs || [] })
+    let dogs: Dog[] = []
+    if (__USE_MOCK__) {
+      const u = mockDb.users.list().find(x => x._id === MOCK_OWNER_ID)
+      dogs = u?.dogs || []
+    } else {
+      const r = await cloudCall<{ dogs?: Dog[] }>('getMyProfile', {}).catch(() => ({ dogs: [] as Dog[] }))
+      dogs = r.dogs || []
+    }
+    const selectedDogId = dogs.length === 1 ? dogs[0].id : this.data.selectedDogId
+    this.setData({ dogs, selectedDogId })
   },
 
   onPickDog(e: WechatMiniprogram.BaseEvent) {
@@ -83,7 +96,12 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     const dog = e.detail.dog
     const dogs = [...this.data.dogs, dog]
     this.setData({ dogs, selectedDogId: dog.id, addingDog: false })
-    await cloudCall('updateProfile', { name: '__keep__', dogs }).catch(() => undefined)
+    if (__USE_MOCK__) {
+      const u = mockDb.users.list().find(x => x._id === MOCK_OWNER_ID)
+      if (u) mockDb.users.update(u._id, { dogs } as Partial<User>)
+    } else {
+      await cloudCall('updateProfile', { name: '__keep__', dogs }).catch(() => undefined)
+    }
   },
 
   onDate(e: WechatMiniprogram.CustomEvent<{ value: string }>) {
@@ -184,12 +202,33 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     if (!(date > Date.now())) return wx.showToast({ title: 'Time must be in future', icon: 'none' })
 
     this.setData({ submitting: true })
+    let createdBookingId = ''
     try {
       const r = await createBooking({ walkerId: this.walkerId, dogId: selectedDogId, date, serviceType, durationMin, notes })
-      bus.emit(BUS_EVENTS.BOOKING_CREATED, { bookingId: r.bookingId })
-      wx.showToast({ title: 'Booking confirmed', icon: 'success' })
-      wx.redirectTo({ url: `/pages/booking/index?id=${r.bookingId}` })
+      createdBookingId = r.bookingId
+
+      const amount = this.data.computedAmount
+      const confirm = await wx.showModal({
+        title: 'Mock WeChat Pay',
+        content: `Pay S$${amount} into platform escrow?`,
+        confirmText: `Pay S$${amount}`,
+        cancelText: 'Cancel'
+      })
+      if (!confirm.confirm) {
+        // Owner backed out — best-effort cancel so the unpaid booking doesn't linger.
+        await cancelBooking(createdBookingId).catch(() => undefined)
+        this.setData({ submitting: false })
+        wx.showToast({ title: 'Booking cancelled', icon: 'none' })
+        return
+      }
+
+      await requestPayment({ bookingId: createdBookingId, idempotencyKey: `pay-${createdBookingId}-${Date.now()}` })
+      bus.emit(BUS_EVENTS.BOOKING_CREATED, { bookingId: createdBookingId })
+      wx.showToast({ title: 'Paid — held in escrow', icon: 'success' })
+      wx.redirectTo({ url: `/pages/booking/index?id=${createdBookingId}` })
     } catch (e) {
+      // If payment failed but booking was created, cancel it to leave a clean state.
+      if (createdBookingId) await cancelBooking(createdBookingId).catch(() => undefined)
       showAppError(e)
     } finally {
       this.setData({ submitting: false })

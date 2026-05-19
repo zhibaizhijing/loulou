@@ -9,6 +9,19 @@
     <view class="row"><text>Duration</text><text>{{durationDetailLabel}}</text></view>
     <view class="row"><text>Status</text><t-tag>{{statusLabel}}</t-tag></view>
     <view class="row"><text>Total</text><text>S${{booking.mockPayment.amount}}</text></view>
+    <view class="row" wx:if="{{booking.payment}}">
+      <text>Payment</text>
+      <t-tag wx:if="{{booking.payment.state === 'unpaid'}}" theme="warning">Unpaid</t-tag>
+      <t-tag wx:elif="{{booking.payment.state === 'held'}}" theme="primary">Held in escrow</t-tag>
+      <t-tag wx:elif="{{booking.payment.state === 'released'}}" theme="success">Released to caregiver</t-tag>
+      <t-tag wx:elif="{{booking.payment.state === 'refunded'}}" theme="danger">Refunded</t-tag>
+    </view>
+    <view class="row" wx:if="{{booking.payment.state === 'refunded' && booking.payment.refundAmount}}">
+      <text>Refunded</text><text>S${{booking.payment.refundAmount}}</text>
+    </view>
+    <view class="row" wx:if="{{booking.payment.state === 'released'}}">
+      <text>Caregiver receives</text><text>S${{booking.payment.payoutAmount}}</text>
+    </view>
     <view class="row" wx:if="{{booking.notes}}"><text>Notes</text><text>{{booking.notes}}</text></view>
   </view>
 

@@ -59,14 +59,14 @@
   </view>
 
   <view class="section pay">
-    <view class="label">Mock payment</view>
+    <view class="label">Payment</view>
     <view class="total">Total: S${{computedAmount}}</view>
     <view class="hint">{{priceFormula}}</view>
-    <view class="hint">Demo only — no real charge.</view>
+    <view class="hint">Funds held in platform escrow until service complete (mock WeChat Pay).</view>
   </view>
 
   <view class="cta">
-    <t-button theme="primary" size="large" block loading="{{submitting}}" bindtap="onSubmit">Confirm booking</t-button>
+    <t-button theme="primary" size="large" block loading="{{submitting}}" bindtap="onSubmit">Pay S${{computedAmount}} & book</t-button>
   </view>
 </view>
 
