@@ -2,14 +2,15 @@ import { applyCaregiver, getMyApplication } from '../../services/applicationServ
 import { switchToCaregiver } from '../../services/caregiverAuth'
 import { uploadImage } from '../../services/storageService'
 import { showAppError } from '../../utils/errorHandler'
-import { SERVICE_TYPE_LABEL } from '../../models/index'
-import type { ServiceType, CaregiverApplication } from '../../models/index'
+import { SERVICE_TYPE_LABEL, PET_TYPE_LABEL, SIZE_BAND_LABEL } from '../../models/index'
+import type { ServiceType, CaregiverApplication, PetType, SizeBand, CaregiverIntake } from '../../models/index'
 
 type Phase = 'form' | 'status'
 
 interface Data {
   phase: Phase
   step: number
+  totalSteps: number
   realName: string
   idPhotoUrl: string
   indoorPhotos: string[]
@@ -17,6 +18,19 @@ interface Data {
   proposedServiceTypes: ServiceType[]
   serviceOptions: { value: ServiceType; label: string }[]
   serviceLabels: Record<ServiceType, string>
+  // Intake (P0-B Task 111)
+  acceptedPetTypes: PetType[]
+  acceptedSizeBands: SizeBand[]
+  maxConcurrent: number
+  canMedicate: boolean
+  acceptsAggressive: boolean
+  acceptsPuppy: boolean
+  acceptsSenior: boolean
+  intakeNotes: string
+  petTypeOptions: { value: PetType; label: string }[]
+  sizeBandOptions: { value: SizeBand; label: string }[]
+  petTypeLabels: Record<PetType, string>
+  sizeBandLabels: Record<SizeBand, string>
   submitting: boolean
   application: CaregiverApplication | null
   statusIcon: string
@@ -25,6 +39,9 @@ interface Data {
 }
 
 const ALL_SERVICES: ServiceType[] = ['walking', 'boarding', 'daycare', 'house_visit', 'live_in']
+const ALL_PET_TYPES: PetType[] = ['dog', 'cat', 'small_animal']
+const ALL_SIZE_BANDS: SizeBand[] = ['xs', 's', 'm', 'l', 'xl']
+const TOTAL_STEPS = 6
 
 const STATUS_VIEW: Record<string, { icon: string; title: string; sub: string }> = {
   submitted: { icon: '📨', title: 'Application submitted',  sub: 'We have received your details.' },
@@ -37,6 +54,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   data: {
     phase: 'form',
     step: 1,
+    totalSteps: TOTAL_STEPS,
     realName: '',
     idPhotoUrl: '',
     indoorPhotos: [],
@@ -44,6 +62,18 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     proposedServiceTypes: [],
     serviceOptions: ALL_SERVICES.map(s => ({ value: s, label: SERVICE_TYPE_LABEL[s] })),
     serviceLabels: SERVICE_TYPE_LABEL,
+    acceptedPetTypes: ['dog'],
+    acceptedSizeBands: ['s', 'm'],
+    maxConcurrent: 1,
+    canMedicate: false,
+    acceptsAggressive: false,
+    acceptsPuppy: false,
+    acceptsSenior: false,
+    intakeNotes: '',
+    petTypeOptions: ALL_PET_TYPES.map(t => ({ value: t, label: PET_TYPE_LABEL[t] })),
+    sizeBandOptions: ALL_SIZE_BANDS.map(b => ({ value: b, label: SIZE_BAND_LABEL[b] })),
+    petTypeLabels: PET_TYPE_LABEL,
+    sizeBandLabels: SIZE_BAND_LABEL,
     submitting: false,
     application: null,
     statusIcon: '', statusTitle: '', statusSub: ''
@@ -64,13 +94,15 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   onUnload() { this.stopPolling() },
 
   checkCanAdvance(): boolean {
-    const { step, realName, idPhotoUrl, indoorPhotos, bio, proposedServiceTypes } = this.data
+    const { step, realName, idPhotoUrl, indoorPhotos, bio, proposedServiceTypes,
+            acceptedPetTypes, acceptedSizeBands, maxConcurrent } = this.data
     switch (step) {
       case 1: return realName.trim().length > 0
       case 2: return !!idPhotoUrl
       case 3: return indoorPhotos.length >= 1
       case 4: return bio.trim().length >= 10 && proposedServiceTypes.length > 0
-      case 5: return true
+      case 5: return acceptedPetTypes.length > 0 && acceptedSizeBands.length > 0 && maxConcurrent >= 1
+      case 6: return true
       default: return false
     }
   },
@@ -88,7 +120,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
       wx.showToast({ title: 'Please complete this step', icon: 'none' })
       return
     }
-    if (this.data.step < 5) this.setData({ step: this.data.step + 1 })
+    if (this.data.step < TOTAL_STEPS) this.setData({ step: this.data.step + 1 })
   },
 
   async onPickIdPhoto() {
@@ -122,15 +154,48 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     this.setData({ proposedServiceTypes: e.detail.value })
   },
 
+  onPetTypesChange(e: WechatMiniprogram.CustomEvent<{ value: PetType[] }>) {
+    this.setData({ acceptedPetTypes: e.detail.value })
+  },
+  onSizeBandsChange(e: WechatMiniprogram.CustomEvent<{ value: SizeBand[] }>) {
+    this.setData({ acceptedSizeBands: e.detail.value })
+  },
+  onMaxConcurrentChange(e: WechatMiniprogram.CustomEvent<{ value: number }>) {
+    this.setData({ maxConcurrent: Number(e.detail.value) })
+  },
+  onCanMedicateChange(e: WechatMiniprogram.CustomEvent<{ value: boolean }>) {
+    this.setData({ canMedicate: !!e.detail.value })
+  },
+  onAcceptsAggressiveChange(e: WechatMiniprogram.CustomEvent<{ value: boolean }>) {
+    this.setData({ acceptsAggressive: !!e.detail.value })
+  },
+  onAcceptsPuppyChange(e: WechatMiniprogram.CustomEvent<{ value: boolean }>) {
+    this.setData({ acceptsPuppy: !!e.detail.value })
+  },
+  onAcceptsSeniorChange(e: WechatMiniprogram.CustomEvent<{ value: boolean }>) {
+    this.setData({ acceptsSenior: !!e.detail.value })
+  },
+
   async onSubmit() {
     this.setData({ submitting: true })
+    const intake: CaregiverIntake = {
+      acceptedPetTypes: this.data.acceptedPetTypes,
+      acceptedSizeBands: this.data.acceptedSizeBands,
+      maxConcurrent: this.data.maxConcurrent,
+      canMedicate: this.data.canMedicate,
+      acceptsAggressive: this.data.acceptsAggressive,
+      acceptsPuppy: this.data.acceptsPuppy,
+      acceptsSenior: this.data.acceptsSenior,
+      intakeNotes: this.data.intakeNotes.trim().slice(0, 200)
+    }
     try {
       await applyCaregiver({
         realName: this.data.realName,
         idPhotoUrl: this.data.idPhotoUrl,
         indoorPhotos: this.data.indoorPhotos,
         bio: this.data.bio,
-        proposedServiceTypes: this.data.proposedServiceTypes
+        proposedServiceTypes: this.data.proposedServiceTypes,
+        intake
       })
       const app = await getMyApplication()
       this.setData({

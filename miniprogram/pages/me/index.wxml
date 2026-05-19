@@ -23,6 +23,5 @@
     <t-cell wx:elif="{{hasApplication}}" title="My application" note="{{applicationStatusLabel}}" hover bind:click="onMyApplication" />
     <t-cell wx:else title="Become a caregiver" hover bind:click="onApply" />
     <t-cell wx:if="{{isCaregiver}}" title="Exit caregiver mode" hover bind:click="onExitCaregiver" />
-    <t-cell title="Legacy walker-mode page (deprecated)" hover bind:click="onWalker" />
   </t-cell-group>
 </view>

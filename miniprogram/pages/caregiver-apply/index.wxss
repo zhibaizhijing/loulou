@@ -4,6 +4,8 @@
 .progress-fill { height:100%; background:#2563eb; transition: width 0.3s; }
 .section { display:flex; flex-direction:column; gap:16rpx; }
 .label { font-size:28rpx; font-weight:500; color:#1f2329; }
+.sub-label { font-size:24rpx; color:#666; margin-top:24rpx; }
+.switch-row { display:flex; justify-content:space-between; align-items:center; padding:12rpx 0; font-size:26rpx; }
 .hint { font-size:24rpx; color:#888; }
 .thumb-wrap { display:flex; }
 .thumb-id { width:240rpx; height:160rpx; border-radius:8rpx; background:#eee; }

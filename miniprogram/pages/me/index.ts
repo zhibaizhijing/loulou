@@ -89,8 +89,6 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     finally { wx.hideLoading() }
   },
 
-  onWalker() { wx.navigateTo({ url: '/pages/_walker/index' }) },
-
   onApply() { wx.navigateTo({ url: '/pages/caregiver-apply/index' }) },
   onMyApplication() { wx.navigateTo({ url: '/pages/caregiver-apply/index' }) },
   onCaregiverHome() { wx.navigateTo({ url: '/pages/caregiver-home/index' }) },

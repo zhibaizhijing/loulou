@@ -7,6 +7,8 @@
     "t-button":         "tdesign-miniprogram/button/button",
     "t-checkbox":       "tdesign-miniprogram/checkbox/checkbox",
     "t-checkbox-group": "tdesign-miniprogram/checkbox-group/checkbox-group",
+    "t-switch":         "tdesign-miniprogram/switch/switch",
+    "t-stepper":        "tdesign-miniprogram/stepper/stepper",
     "t-tag":            "tdesign-miniprogram/tag/tag",
     "loading-skeleton": "/components/loading-skeleton/index"
   }

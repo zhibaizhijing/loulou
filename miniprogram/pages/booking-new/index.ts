@@ -15,16 +15,18 @@ interface Data {
   addingDog: boolean
   datePart: string
   timePart: string
+  checkOutDate: string               // for range variant (boarding / live_in)
   serviceType: ServiceType
   availableServices: ServiceType[]
   services: ServiceItem[]            // caregiver's active service items
-  variant: 'minute' | 'stepper'      // form variant
+  variant: 'minute' | 'stepper' | 'range'  // form variant
   minuteOptions: number[]            // for minute variant
   maxQuantity: number                // for stepper variant
-  durationMin: number
+  durationMin: number                // semantics: minutes (walking/house_visit), days (daycare), nights (boarding/live_in)
   durationLabel: string
   notes: string
   minDate: string
+  minCheckOutDate: string
   submitting: boolean
   computedAmount: number
   priceFormula: string
@@ -34,7 +36,7 @@ interface Data {
 Page<Data, WechatMiniprogram.IAnyObject>({
   data: {
     walker: null, dogs: [], selectedDogId: '', addingDog: false,
-    datePart: '', timePart: '',
+    datePart: '', timePart: '', checkOutDate: '',
     serviceType: 'walking',
     availableServices: ['walking'],
     services: [],
@@ -45,6 +47,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     durationLabel: 'Duration',
     notes: '',
     minDate: formatDate(Date.now()),
+    minCheckOutDate: formatDate(Date.now() + 86_400_000),
     submitting: false,
     computedAmount: 0,
     priceFormula: '',
@@ -83,11 +86,32 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     await cloudCall('updateProfile', { name: '__keep__', dogs }).catch(() => undefined)
   },
 
-  onDate(e: WechatMiniprogram.CustomEvent<{ value: string }>) { this.setData({ datePart: String(e.detail.value) }) },
+  onDate(e: WechatMiniprogram.CustomEvent<{ value: string }>) {
+    const datePart = String(e.detail.value)
+    const minCheckOutDate = formatDate(new Date(datePart).getTime() + 86_400_000)
+    let checkOutDate = this.data.checkOutDate
+    if (checkOutDate && checkOutDate < minCheckOutDate) checkOutDate = minCheckOutDate
+    this.setData({ datePart, minCheckOutDate, checkOutDate })
+    this.syncRangeDuration()
+  },
   onTime(e: WechatMiniprogram.CustomEvent<{ value: string }>) { this.setData({ timePart: String(e.detail.value) }) },
+  onCheckOutDate(e: WechatMiniprogram.CustomEvent<{ value: string }>) {
+    this.setData({ checkOutDate: String(e.detail.value) })
+    this.syncRangeDuration()
+  },
+
+  syncRangeDuration() {
+    if (this.data.variant !== 'range') return
+    const { datePart, checkOutDate } = this.data
+    if (!datePart || !checkOutDate) return
+    const ci = new Date(datePart).getTime()
+    const co = new Date(checkOutDate).getTime()
+    const nights = Math.max(1, Math.round((co - ci) / 86_400_000))
+    this.setData({ durationMin: nights }, () => this.recomputeAmount())
+  },
 
   applyServiceType(s: ServiceType) {
-    let variant: 'minute' | 'stepper' = 'minute'
+    let variant: 'minute' | 'stepper' | 'range' = 'minute'
     let minuteOptions = [30, 45, 60]
     let maxQuantity = 7
     let durationMin = 30
@@ -103,19 +127,20 @@ Page<Data, WechatMiniprogram.IAnyObject>({
         durationLabel = 'Visit duration'
         break
       case 'boarding':
-        variant = 'stepper'; maxQuantity = 7; durationMin = 1
-        durationLabel = 'Nights'
+        variant = 'range'; durationMin = 1
+        durationLabel = 'Check-in → check-out'
         break
       case 'daycare':
         variant = 'stepper'; maxQuantity = 5; durationMin = 1
         durationLabel = 'Days'
         break
       case 'live_in':
-        variant = 'stepper'; maxQuantity = 30; durationMin = 1
-        durationLabel = 'Nights'
+        variant = 'range'; durationMin = 1
+        durationLabel = 'Check-in → check-out'
         break
     }
     this.setData({ serviceType: s, variant, minuteOptions, maxQuantity, durationMin, durationLabel })
+    this.syncRangeDuration()
     this.recomputeAmount()
   },
 
@@ -151,9 +176,10 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   async onSubmit() {
-    const { selectedDogId, datePart, timePart, durationMin, notes, serviceType } = this.data
+    const { selectedDogId, datePart, timePart, durationMin, notes, serviceType, variant, checkOutDate } = this.data
     if (!selectedDogId) return wx.showToast({ title: 'Pick a dog', icon: 'none' })
     if (!datePart || !timePart) return wx.showToast({ title: 'Pick date & time', icon: 'none' })
+    if (variant === 'range' && !checkOutDate) return wx.showToast({ title: 'Pick check-out date', icon: 'none' })
     const date = new Date(`${datePart}T${timePart}:00`).getTime()
     if (!(date > Date.now())) return wx.showToast({ title: 'Time must be in future', icon: 'none' })
 

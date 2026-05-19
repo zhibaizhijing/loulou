@@ -18,7 +18,15 @@ export const SEED_WALKERS: Omit<Caregiver, '_id'>[] = [
     pricePerWalk: 30,
     rating: 4.8,
     reviewCount: 23,
-    demo: true
+    demo: true,
+    acceptedPetTypes: ['dog'],
+    acceptedSizeBands: ['s', 'm', 'l', 'xl'],
+    maxConcurrent: 2,
+    canMedicate: true,
+    acceptsAggressive: false,
+    acceptsPuppy: true,
+    acceptsSenior: true,
+    intakeNotes: 'Large dogs welcome — fenced yard.'
   },
   {
     name: 'Mei Lin',
@@ -30,7 +38,15 @@ export const SEED_WALKERS: Omit<Caregiver, '_id'>[] = [
     pricePerWalk: 25,
     rating: 4.9,
     reviewCount: 41,
-    demo: true
+    demo: true,
+    acceptedPetTypes: ['dog', 'cat'],
+    acceptedSizeBands: ['xs', 's', 'm'],
+    maxConcurrent: 3,
+    canMedicate: true,
+    acceptsAggressive: false,
+    acceptsPuppy: true,
+    acceptsSenior: false,
+    intakeNotes: 'Anxious / puppy specialist. Up to 20kg.'
   },
   {
     name: 'Ravi Kumar',
@@ -42,7 +58,15 @@ export const SEED_WALKERS: Omit<Caregiver, '_id'>[] = [
     pricePerWalk: 28,
     rating: 4.6,
     reviewCount: 12,
-    demo: true
+    demo: true,
+    acceptedPetTypes: ['dog', 'cat', 'small_animal'],
+    acceptedSizeBands: ['xs', 's', 'm'],
+    maxConcurrent: 1,
+    canMedicate: false,
+    acceptsAggressive: false,
+    acceptsPuppy: false,
+    acceptsSenior: true,
+    intakeNotes: 'Weekends only. Small-to-medium pets.'
   },
   {
     name: 'Priya Wong',
@@ -56,7 +80,15 @@ export const SEED_WALKERS: Omit<Caregiver, '_id'>[] = [
     pricePerWalk: 35,
     rating: 4.7,
     reviewCount: 18,
-    demo: true
+    demo: true,
+    acceptedPetTypes: ['dog', 'cat'],
+    acceptedSizeBands: ['xs', 's', 'm', 'l'],
+    maxConcurrent: 2,
+    canMedicate: true,
+    acceptsAggressive: false,
+    acceptsPuppy: true,
+    acceptsSenior: true,
+    intakeNotes: 'Live-in sitter. Medication, senior care.'
   }
 ]
 

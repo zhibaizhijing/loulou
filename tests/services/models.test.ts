@@ -16,7 +16,10 @@ describe('models', () => {
   it('Walker has required marketplace fields', () => {
     const w: Walker = {
       _id: 'w', name: 'n', avatar: 'a', bio: 'b', photos: [], areas: ['Loyang'],
-      serviceTypes: ['walking'], pricePerWalk: 30, rating: 4.5, reviewCount: 10, demo: true
+      serviceTypes: ['walking'], pricePerWalk: 30, rating: 4.5, reviewCount: 10, demo: true,
+      acceptedPetTypes: ['dog'], acceptedSizeBands: ['s'], maxConcurrent: 1,
+      canMedicate: false, acceptsAggressive: false, acceptsPuppy: false, acceptsSenior: false,
+      intakeNotes: ''
     }
     expectTypeOf(w.pricePerWalk).toBeNumber()
   })

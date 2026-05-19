@@ -1,10 +1,10 @@
 import { getWalkerById } from '../../services/walkerService'
 import { listReviewsForWalker } from '../../services/reviewService'
 import { listActiveServicesForCaregiver } from '../../services/serviceItemService'
-import { SERVICE_TYPE_LABEL, PRICING_UNIT_FOR } from '../../models/index'
+import { SERVICE_TYPE_LABEL, PRICING_UNIT_FOR, PET_TYPE_LABEL, SIZE_BAND_LABEL } from '../../models/index'
 import { createPageState } from '../../utils/usePageState'
 import { showAppError } from '../../utils/errorHandler'
-import type { Walker, Review, ServiceType, PricingUnit } from '../../models/index'
+import type { Walker, Review, ServiceType, PricingUnit, PetType, SizeBand } from '../../models/index'
 
 interface ServicePrice { serviceType: ServiceType; price: number; unitLabel: string }
 interface Data {
@@ -12,6 +12,8 @@ interface Data {
   reviews: Review[]
   servicePrices: ServicePrice[]
   labels: Record<ServiceType, string>
+  petTypeLabels: Record<PetType, string>
+  sizeBandLabels: Record<SizeBand, string>
   pageStatus: string
   pageError: string
 }
@@ -25,7 +27,13 @@ const PRICING_UNIT_LABEL: Record<PricingUnit, string> = {
 }
 
 Page<Data, WechatMiniprogram.IAnyObject>({
-  data: { walker: null, reviews: [], servicePrices: [], labels: SERVICE_TYPE_LABEL, pageStatus: 'loading', pageError: '' },
+  data: {
+    walker: null, reviews: [], servicePrices: [],
+    labels: SERVICE_TYPE_LABEL,
+    petTypeLabels: PET_TYPE_LABEL,
+    sizeBandLabels: SIZE_BAND_LABEL,
+    pageStatus: 'loading', pageError: ''
+  },
   walkerId: '' as string,
 
   onLoad(query: Record<string, string>) {

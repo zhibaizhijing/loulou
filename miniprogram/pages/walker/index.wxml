@@ -19,6 +19,33 @@
     <view class="bio">{{walker.bio}}</view>
   </view>
 
+  <view class="section intake">
+    <view class="label">What I accept</view>
+    <view class="intake-row">
+      <text class="ik">Pets</text>
+      <view class="tags">
+        <text wx:for="{{walker.acceptedPetTypes}}" wx:key="*this" class="tag intake-tag">{{petTypeLabels[item]}}</text>
+      </view>
+    </view>
+    <view class="intake-row">
+      <text class="ik">Sizes</text>
+      <view class="tags">
+        <text wx:for="{{walker.acceptedSizeBands}}" wx:key="*this" class="tag intake-tag">{{sizeBandLabels[item]}}</text>
+      </view>
+    </view>
+    <view class="intake-row">
+      <text class="ik">Max at once</text>
+      <text>{{walker.maxConcurrent}}</text>
+    </view>
+    <view class="intake-flags">
+      <text wx:if="{{walker.canMedicate}}" class="tag flag-on">💊 Medication</text>
+      <text wx:if="{{walker.acceptsPuppy}}" class="tag flag-on">🐶 Puppies OK</text>
+      <text wx:if="{{walker.acceptsSenior}}" class="tag flag-on">🦴 Seniors OK</text>
+      <text wx:if="{{walker.acceptsAggressive}}" class="tag flag-on">⚠️ Reactive OK</text>
+    </view>
+    <view wx:if="{{walker.intakeNotes}}" class="intake-notes">{{walker.intakeNotes}}</view>
+  </view>
+
   <view class="section">
     <view class="label">Service areas</view>
     <view class="tags">

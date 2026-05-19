@@ -13,6 +13,15 @@
     <t-search placeholder="Search name or area (e.g. mei, loyang)" model:value="{{q}}" bind:submit="onSearch" bind:change="onChange" bind:clear="onClearSearch" />
   </view>
 
+  <scroll-view scroll-x class="filter-chips" enhanced show-scrollbar="{{false}}">
+    <view class="chip {{!sizeBand ? 'on' : ''}}" data-value="" bindtap="onSizeBandTap">Any size</view>
+    <view wx:for="{{sizeBandOptions}}" wx:key="value"
+          class="chip {{sizeBand === item.value ? 'on' : ''}}"
+          data-value="{{item.value}}" bindtap="onSizeBandTap">{{item.label}}</view>
+    <view class="chip-divider"></view>
+    <view class="chip {{canMedicate ? 'on' : ''}}" bindtap="onMedicateToggle">💊 Medication</view>
+  </scroll-view>
+
   <loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="5" />
 
   <empty-state

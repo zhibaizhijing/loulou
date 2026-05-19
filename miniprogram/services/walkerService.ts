@@ -1,4 +1,4 @@
-import type { Walker, ServiceType } from '../models'
+import type { Walker, ServiceType, SizeBand } from '../models'
 import { AppError } from '../utils/errorHandler'
 import { __USE_MOCK__ } from '../utils/env'
 import { mockDb } from '../mocks/db'
@@ -8,6 +8,8 @@ export interface WalkerFilter {
   maxPrice?: number
   minRating?: number
   serviceType?: ServiceType
+  sizeBand?: SizeBand        // intake filter — caregiver must accept this size band
+  canMedicate?: boolean      // intake filter — caregiver must be able to administer meds
   limit?: number
 }
 
@@ -44,6 +46,8 @@ function listMock(f: WalkerFilter): Walker[] {
   if (f.maxPrice !== undefined)  rows = rows.filter(w => w.pricePerWalk <= (f.maxPrice as number))
   if (f.minRating !== undefined) rows = rows.filter(w => w.rating >= (f.minRating as number))
   if (f.serviceType) rows = rows.filter(w => Array.isArray((w as any).serviceTypes) && (w as any).serviceTypes.includes(f.serviceType))
+  if (f.sizeBand) rows = rows.filter(w => Array.isArray(w.acceptedSizeBands) && w.acceptedSizeBands.includes(f.sizeBand as SizeBand))
+  if (f.canMedicate) rows = rows.filter(w => w.canMedicate === true)
   rows = rows.slice().sort((a, b) => b.rating - a.rating)
   return rows.slice(0, f.limit ?? 20)
 }
@@ -64,5 +68,7 @@ async function listLive(f: WalkerFilter): Promise<Walker[]> {
   let rows = (r.data as Walker[])
   if (f.q) rows = rows.filter(w => matchesQuery(w, f.q as string))
   if (f.serviceType) rows = rows.filter(w => Array.isArray((w as any).serviceTypes) && (w as any).serviceTypes.includes(f.serviceType))
+  if (f.sizeBand) rows = rows.filter(w => Array.isArray(w.acceptedSizeBands) && w.acceptedSizeBands.includes(f.sizeBand as SizeBand))
+  if (f.canMedicate) rows = rows.filter(w => w.canMedicate === true)
   return rows.slice(0, f.limit ?? 20)
 }

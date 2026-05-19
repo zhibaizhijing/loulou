@@ -2,3 +2,7 @@
 .search-bar { margin-bottom: 16rpx; }
 .list { display: flex; flex-direction: column; }
 .type-tabs { background: #fff; }
+.filter-chips { display:flex; gap:12rpx; padding:8rpx 0 16rpx; white-space:nowrap; }
+.filter-chips .chip { display:inline-flex; align-items:center; padding:8rpx 20rpx; font-size:24rpx; color:#444; background:#f3f4f6; border-radius:24rpx; flex-shrink:0; }
+.filter-chips .chip.on { background:#2563eb; color:#fff; }
+.filter-chips .chip-divider { width:2rpx; background:#e5e7eb; margin:0 4rpx; flex-shrink:0; }

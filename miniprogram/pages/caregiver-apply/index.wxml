@@ -1,8 +1,8 @@
 <mock-banner />
 
 <view wx:if="{{phase === 'form'}}" class="page">
-  <view class="progress">Step {{step}} of 5</view>
-  <view class="progress-bar"><view class="progress-fill" style="width: {{step * 20}}%"></view></view>
+  <view class="progress">Step {{step}} of {{totalSteps}}</view>
+  <view class="progress-bar"><view class="progress-fill" style="width: {{(step * 100) / totalSteps}}%"></view></view>
 
   <view wx:if="{{step === 1}}" class="section">
     <view class="label">Your real name</view>
@@ -36,6 +36,45 @@
   </view>
 
   <view wx:if="{{step === 5}}" class="section">
+    <view class="label">What pets you accept</view>
+    <view class="hint">Owners use these as search filters.</view>
+
+    <view class="sub-label">Pet types</view>
+    <t-checkbox-group value="{{acceptedPetTypes}}" bind:change="onPetTypesChange">
+      <t-checkbox wx:for="{{petTypeOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
+    </t-checkbox-group>
+
+    <view class="sub-label">Size bands</view>
+    <t-checkbox-group value="{{acceptedSizeBands}}" bind:change="onSizeBandsChange">
+      <t-checkbox wx:for="{{sizeBandOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
+    </t-checkbox-group>
+
+    <view class="sub-label">Max pets at a time</view>
+    <t-stepper value="{{maxConcurrent}}" min="{{1}}" max="{{5}}" bind:change="onMaxConcurrentChange" />
+
+    <view class="sub-label">Care capabilities</view>
+    <view class="switch-row">
+      <view>Can administer medication</view>
+      <t-switch value="{{canMedicate}}" bind:change="onCanMedicateChange" />
+    </view>
+    <view class="switch-row">
+      <view>Accepts puppies (&lt;6 months)</view>
+      <t-switch value="{{acceptsPuppy}}" bind:change="onAcceptsPuppyChange" />
+    </view>
+    <view class="switch-row">
+      <view>Accepts seniors (&gt;10 years)</view>
+      <t-switch value="{{acceptsSenior}}" bind:change="onAcceptsSeniorChange" />
+    </view>
+    <view class="switch-row">
+      <view>Accepts aggressive / reactive pets</view>
+      <t-switch value="{{acceptsAggressive}}" bind:change="onAcceptsAggressiveChange" />
+    </view>
+
+    <view class="sub-label">Notes (optional, ≤200 chars)</view>
+    <t-textarea placeholder="Any specifics owners should know" model:value="{{intakeNotes}}" maxlength="{{200}}" />
+  </view>
+
+  <view wx:if="{{step === 6}}" class="section">
     <view class="label">Review your application</view>
     <view class="review-row"><text class="rk">Name</text><text>{{realName}}</text></view>
     <view class="review-row"><text class="rk">Bio</text><text>{{bio}}</text></view>
@@ -45,6 +84,23 @@
         <t-tag wx:for="{{proposedServiceTypes}}" wx:key="*this" style="margin-right:8rpx">{{serviceLabels[item]}}</t-tag>
       </view>
     </view>
+    <view class="review-row">
+      <text class="rk">Pet types</text>
+      <view>
+        <t-tag wx:for="{{acceptedPetTypes}}" wx:key="*this" style="margin-right:8rpx">{{petTypeLabels[item]}}</t-tag>
+      </view>
+    </view>
+    <view class="review-row">
+      <text class="rk">Sizes</text>
+      <view>
+        <t-tag wx:for="{{acceptedSizeBands}}" wx:key="*this" style="margin-right:8rpx">{{sizeBandLabels[item]}}</t-tag>
+      </view>
+    </view>
+    <view class="review-row"><text class="rk">Max at once</text><text>{{maxConcurrent}}</text></view>
+    <view class="review-row"><text class="rk">Can medicate</text><text>{{canMedicate ? 'Yes' : 'No'}}</text></view>
+    <view class="review-row"><text class="rk">Puppies</text><text>{{acceptsPuppy ? 'Yes' : 'No'}}</text></view>
+    <view class="review-row"><text class="rk">Seniors</text><text>{{acceptsSenior ? 'Yes' : 'No'}}</text></view>
+    <view wx:if="{{intakeNotes}}" class="review-row"><text class="rk">Notes</text><text>{{intakeNotes}}</text></view>
     <view class="review-row"><text class="rk">ID photo</text><image src="{{idPhotoUrl}}" mode="aspectFill" class="thumb-id" /></view>
     <view class="review-row"><text class="rk">Indoor photos</text>
       <view class="thumb-grid">
@@ -55,8 +111,8 @@
 
   <view class="nav-buttons">
     <t-button wx:if="{{step > 1}}" variant="outline" bindtap="onBack">Back</t-button>
-    <t-button wx:if="{{step < 5}}" theme="primary" bindtap="onNext">Next</t-button>
-    <t-button wx:if="{{step === 5}}" theme="primary" loading="{{submitting}}" bindtap="onSubmit">Submit application</t-button>
+    <t-button wx:if="{{step < totalSteps}}" theme="primary" bindtap="onNext">Next</t-button>
+    <t-button wx:if="{{step === totalSteps}}" theme="primary" loading="{{submitting}}" bindtap="onSubmit">Submit application</t-button>
   </view>
 </view>
 

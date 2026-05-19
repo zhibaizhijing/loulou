@@ -21,13 +21,21 @@
   </view>
 
   <view class="section">
-    <view class="label">Date & start time</view>
+    <view class="label">{{variant === 'range' ? 'Check-in date & time' : 'Date & start time'}}</view>
     <picker mode="date" start="{{minDate}}" value="{{datePart}}" bindchange="onDate">
       <view class="picker-row">{{datePart || 'Choose date'}}</view>
     </picker>
     <picker mode="time" value="{{timePart}}" bindchange="onTime">
-      <view class="picker-row">{{timePart || 'Choose time'}}</view>
+      <view class="picker-row">{{timePart || (variant === 'range' ? 'Choose drop-off time' : 'Choose time')}}</view>
     </picker>
+  </view>
+
+  <view class="section" wx:if="{{variant === 'range'}}">
+    <view class="label">Check-out date</view>
+    <picker mode="date" start="{{minCheckOutDate}}" value="{{checkOutDate}}" bindchange="onCheckOutDate">
+      <view class="picker-row">{{checkOutDate || 'Choose check-out date'}}</view>
+    </picker>
+    <view class="hint" wx:if="{{durationMin > 0 && checkOutDate}}">{{durationMin}} night{{durationMin > 1 ? 's' : ''}}</view>
   </view>
 
   <view class="section" wx:if="{{availableServices.length > 1}}">
@@ -37,12 +45,12 @@
     </t-radio-group>
   </view>
 
-  <view class="section">
+  <view class="section" wx:if="{{variant !== 'range'}}">
     <view class="label">{{durationLabel}}</view>
     <t-radio-group wx:if="{{variant === 'minute'}}" value="{{durationMin}}" bind:change="onDuration">
       <t-radio wx:for="{{minuteOptions}}" wx:key="*this" value="{{item}}" label="{{item}} min" />
     </t-radio-group>
-    <t-stepper wx:else value="{{durationMin}}" min="{{1}}" max="{{maxQuantity}}" bind:change="onStepper" />
+    <t-stepper wx:if="{{variant === 'stepper'}}" value="{{durationMin}}" min="{{1}}" max="{{maxQuantity}}" bind:change="onStepper" />
   </view>
 
   <view class="section">
