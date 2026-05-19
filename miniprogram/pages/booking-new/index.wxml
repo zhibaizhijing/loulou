@@ -1,0 +1,65 @@
+<mock-banner />
+<view class="page" wx:if="{{walker}}">
+  <view class="walker-strip">
+    <image src="{{walker.avatar}}" class="avatar" />
+    <view>
+      <view class="name">{{walker.name}}</view>
+      <view class="price">S${{walker.pricePerWalk}} / 30 min</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="label">Pick your dog</view>
+    <view wx:if="{{dogs.length === 0}}" class="hint">No dogs yet — add one below.</view>
+    <view wx:else class="dog-list">
+      <view wx:for="{{dogs}}" wx:key="id"
+            class="dog-chip {{selectedDogId === item.id ? 'on' : ''}}"
+            bindtap="onPickDog" data-id="{{item.id}}">{{item.name}}</view>
+    </view>
+    <view class="add-dog-toggle" bindtap="onToggleAddDog">{{addingDog ? '× Cancel' : '+ Add a dog'}}</view>
+    <dog-form wx:if="{{addingDog}}" bind:save="onSaveDog" />
+  </view>
+
+  <view class="section">
+    <view class="label">Date & start time</view>
+    <picker mode="date" start="{{minDate}}" value="{{datePart}}" bindchange="onDate">
+      <view class="picker-row">{{datePart || 'Choose date'}}</view>
+    </picker>
+    <picker mode="time" value="{{timePart}}" bindchange="onTime">
+      <view class="picker-row">{{timePart || 'Choose time'}}</view>
+    </picker>
+  </view>
+
+  <view class="section" wx:if="{{availableServices.length > 1}}">
+    <view class="label">Service</view>
+    <t-radio-group value="{{serviceType}}" bind:change="onServiceTypeChange">
+      <t-radio wx:for="{{availableServices}}" wx:key="*this" value="{{item}}" label="{{labels[item]}}" />
+    </t-radio-group>
+  </view>
+
+  <view class="section">
+    <view class="label">{{durationLabel}}</view>
+    <t-radio-group wx:if="{{variant === 'minute'}}" value="{{durationMin}}" bind:change="onDuration">
+      <t-radio wx:for="{{minuteOptions}}" wx:key="*this" value="{{item}}" label="{{item}} min" />
+    </t-radio-group>
+    <t-stepper wx:else value="{{durationMin}}" min="{{1}}" max="{{maxQuantity}}" bind:change="onStepper" />
+  </view>
+
+  <view class="section">
+    <view class="label">Notes (optional)</view>
+    <t-textarea model:value="{{notes}}" placeholder="Anything the walker should know?" />
+  </view>
+
+  <view class="section pay">
+    <view class="label">Mock payment</view>
+    <view class="total">Total: S${{computedAmount}}</view>
+    <view class="hint">{{priceFormula}}</view>
+    <view class="hint">Demo only — no real charge.</view>
+  </view>
+
+  <view class="cta">
+    <t-button theme="primary" size="large" block loading="{{submitting}}" bindtap="onSubmit">Confirm booking</t-button>
+  </view>
+</view>
+
+<loading-skeleton wx:else count="5" />

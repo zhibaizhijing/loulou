@@ -1,0 +1,27 @@
+<mock-banner />
+
+<empty-state wx:if="{{noCaregiver}}" icon="🚫" title="Not in caregiver mode" />
+
+<view wx:else class="page">
+  <loading-skeleton wx:if="{{loading}}" count="3" />
+  <empty-state wx:elif="{{bookings.length === 0}}" icon="📭" title="No pending requests" subtitle="Owners haven't sent any bookings yet." />
+
+  <view wx:else>
+    <view wx:for="{{bookings}}" wx:key="_id" class="card">
+      <view class="row">
+        <view class="title">{{item.dateLabel}}</view>
+        <t-tag>{{item.durationMin}} min</t-tag>
+      </view>
+      <view class="row">
+        <view class="muted">{{item.dogId}}</view>
+        <view class="amount">S${{item.mockPayment.amount}}</view>
+      </view>
+      <view wx:if="{{item.notes}}" class="notes">"{{item.notes}}"</view>
+      <view class="actions">
+        <t-button theme="primary" size="small" data-id="{{item._id}}" bindtap="onAccept" loading="{{acting === item._id}}">Accept</t-button>
+        <t-button variant="outline" theme="danger" size="small" data-id="{{item._id}}" bindtap="onDecline" loading="{{acting === item._id}}">Decline</t-button>
+        <t-button variant="outline" size="small" data-id="{{item._id}}" bindtap="onChat">Chat owner</t-button>
+      </view>
+    </view>
+  </view>
+</view>

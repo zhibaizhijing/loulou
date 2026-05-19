@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "Leave a Review",
+  "usingComponents": {
+    "mock-banner": "/components/mock-banner/index",
+    "custom-tab-bar": "/custom-tab-bar/index",
+    "star-rating": "/components/star-rating/index",
+    "t-textarea":  "tdesign-miniprogram/textarea/textarea",
+    "t-button":    "tdesign-miniprogram/button/button"
+  }
+}

@@ -1,0 +1,7 @@
+<view class="form">
+  <t-input label="Dog name *" placeholder="Buddy" model:value="{{name}}" />
+  <t-input label="Breed"      placeholder="Golden Retriever" model:value="{{breed}}" />
+  <t-input label="Weight (kg)" type="number" placeholder="25" model:value="{{sizeKgStr}}" />
+  <t-input label="Notes"      placeholder="Special needs?" model:value="{{notes}}" />
+  <t-button theme="primary" block size="medium" bindtap="onSave">Save</t-button>
+</view>

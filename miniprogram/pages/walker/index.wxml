@@ -1,0 +1,53 @@
+<mock-banner />
+<loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="6" />
+
+<empty-state wx:elif="{{pageStatus === 'error'}}"
+  icon="⚠️" title="Walker not found" subtitle="{{pageError}}" ctaText="Back" bind:cta="onBack" />
+
+<view wx:else class="page">
+  <view class="hero">
+    <image class="avatar" src="{{walker.avatar}}" mode="aspectFill" />
+    <view class="meta">
+      <view class="name">{{walker.name}}</view>
+      <view class="rating">★ {{walker.rating}} ({{walker.reviewCount}} reviews)</view>
+      <view class="price">S${{walker.pricePerWalk}} / 30 min</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="label">About</view>
+    <view class="bio">{{walker.bio}}</view>
+  </view>
+
+  <view class="section">
+    <view class="label">Service areas</view>
+    <view class="tags">
+      <text wx:for="{{walker.areas}}" wx:key="*this" class="tag">{{item}}</text>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{servicePrices.length > 0}}">
+    <view class="label">Services &amp; pricing</view>
+    <view wx:for="{{servicePrices}}" wx:key="serviceType" class="service-price-row">
+      <text class="sp-name">{{labels[item.serviceType]}}</text>
+      <text class="sp-amount">S${{item.price}} {{item.unitLabel}}</text>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{walker.photos.length}}">
+    <view class="label">Photos</view>
+    <view class="photos">
+      <image wx:for="{{walker.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="photo" />
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="label">Reviews</view>
+    <empty-state wx:if="{{reviews.length === 0}}" icon="📝" title="No reviews yet" />
+    <review-item wx:for="{{reviews}}" wx:key="_id" review="{{item}}" />
+  </view>
+
+  <view class="cta">
+    <t-button theme="primary" size="large" block bindtap="onBook">Book a walk</t-button>
+  </view>
+</view>

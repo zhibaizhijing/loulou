@@ -1,0 +1,27 @@
+<mock-banner />
+
+<empty-state wx:if="{{noCaregiver}}" icon="🚫" title="Not in caregiver mode" />
+
+<view wx:else class="page">
+  <view class="header">
+    <t-button size="small" variant="outline" bindtap="onPrevMonth">‹</t-button>
+    <view class="month-label">{{yearMonth}}</view>
+    <t-button size="small" variant="outline" bindtap="onNextMonth">›</t-button>
+  </view>
+
+  <view class="weekdays">
+    <text wx:for="{{['M','T','W','T','F','S','S']}}" wx:key="index" class="weekday">{{item}}</text>
+  </view>
+
+  <view class="grid">
+    <view wx:for="{{cells}}" wx:key="key" class="cell {{item.kind}}" data-date="{{item.date}}" bindtap="onTapDay">
+      <text class="day-num" wx:if="{{item.day}}">{{item.day}}</text>
+    </view>
+  </view>
+
+  <view class="legend">
+    <view class="legend-item"><view class="swatch available"></view> Available</view>
+    <view class="legend-item"><view class="swatch blocked"></view> Blocked</view>
+    <view class="legend-item"><view class="swatch past"></view> Past</view>
+  </view>
+</view>

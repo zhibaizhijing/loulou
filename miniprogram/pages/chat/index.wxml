@@ -1,0 +1,16 @@
+<mock-banner />
+<view class="page">
+  <scroll-view scroll-y class="messages" scroll-into-view="{{lastScrollId}}">
+    <loading-skeleton wx:if="{{loading}}" count="3" />
+    <chat-bubble wx:for="{{messages}}" wx:key="_id"
+                 id="m-{{item._id}}"
+                 message="{{item}}"
+                 mine="{{item.senderRole === myRole}}" />
+  </scroll-view>
+
+  <view class="composer">
+    <t-input model:value="{{draft}}" placeholder="Type a message" />
+    <t-button theme="primary" size="medium" bindtap="onSend" loading="{{sending}}">Send</t-button>
+  </view>
+</view>
+<custom-tab-bar />

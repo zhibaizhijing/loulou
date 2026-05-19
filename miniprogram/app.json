@@ -1,0 +1,41 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/bookings/index",
+    "pages/me/index",
+    "pages/walker/index",
+    "pages/booking-new/index",
+    "pages/booking/index",
+    "pages/chat/index",
+    "pages/review/index",
+    "pages/_walker/index",
+    "pages/caregiver-apply/index",
+    "pages/caregiver-services/index",
+    "pages/caregiver-service-edit/index",
+    "pages/caregiver-calendar/index",
+    "pages/caregiver-home/index",
+    "pages/caregiver-inbox/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "Loulou",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#888888",
+    "selectedColor": "#2563eb",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/home/index",     "text": "Home" },
+      { "pagePath": "pages/bookings/index", "text": "Bookings" },
+      { "pagePath": "pages/me/index",       "text": "Me" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "cloud": true
+}

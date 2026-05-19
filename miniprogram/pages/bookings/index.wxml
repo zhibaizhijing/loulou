@@ -1,0 +1,20 @@
+<mock-banner />
+<offline-banner />
+<t-tabs value="{{tab}}" bind:change="onTabChange">
+  <t-tab-panel label="Upcoming" value="upcoming" />
+  <t-tab-panel label="Past"     value="past" />
+</t-tabs>
+
+<loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="4" />
+<empty-state wx:elif="{{pageStatus === 'empty'}}" icon="📅" title="No bookings here yet" />
+<empty-state wx:elif="{{pageStatus === 'error'}}" icon="⚠️" title="Failed to load" subtitle="{{pageError}}" ctaText="Retry" bind:cta="onRetry" />
+
+<view wx:else class="list">
+  <view wx:for="{{filtered}}" wx:key="_id" class="row" bindtap="onTap" data-id="{{item._id}}">
+    <view class="row-main">
+      <view class="row-title">{{item.dateLabel}} · {{item.durationLabel}}</view>
+      <view class="row-sub">{{item.statusLabel}}</view>
+    </view>
+    <view class="row-amount">S${{item.mockPayment.amount}}</view>
+  </view>
+</view>

@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "My Availability",
+  "usingComponents": {
+    "mock-banner": "/components/mock-banner/index",
+    "t-button":    "tdesign-miniprogram/button/button",
+    "empty-state": "/components/empty-state/index"
+  }
+}

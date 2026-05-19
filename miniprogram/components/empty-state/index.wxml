@@ -1,0 +1,6 @@
+<view class="empty">
+  <view class="icon">{{icon}}</view>
+  <view class="title">{{title}}</view>
+  <view class="subtitle" wx:if="{{subtitle}}">{{subtitle}}</view>
+  <t-button wx:if="{{ctaText}}" theme="primary" size="medium" bindtap="onCta">{{ctaText}}</t-button>
+</view>

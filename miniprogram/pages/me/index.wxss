@@ -1,0 +1,5 @@
+.page { padding:16rpx; }
+.hero { display:flex; gap:20rpx; padding:24rpx; background:#fff; border-radius:16rpx; align-items:center; margin-bottom:16rpx; }
+.avatar { width:120rpx; height:120rpx; border-radius:60rpx; background:linear-gradient(135deg,#2563eb,#16a34a); }
+.name { font-size:32rpx; font-weight:600; }
+.oid { font-size:20rpx; color:#888; word-break:break-all; }

@@ -1,0 +1,39 @@
+<mock-banner />
+<offline-banner />
+<view class="page">
+  <t-tabs value="{{serviceType}}" bind:change="onTypeChange" class="type-tabs">
+    <t-tab-panel label="All"   value="all" />
+    <t-tab-panel label="遛狗"  value="walking" />
+    <t-tab-panel label="寄养"  value="boarding" />
+    <t-tab-panel label="日托"  value="daycare" />
+    <t-tab-panel label="上门"  value="house_visit" />
+    <t-tab-panel label="住家"  value="live_in" />
+  </t-tabs>
+  <view class="search-bar">
+    <t-search placeholder="Search name or area (e.g. mei, loyang)" model:value="{{q}}" bind:submit="onSearch" bind:change="onChange" bind:clear="onClearSearch" />
+  </view>
+
+  <loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="5" />
+
+  <empty-state
+    wx:elif="{{pageStatus === 'empty'}}"
+    icon="🐕"
+    title="No caregivers match"
+    subtitle="Try a different area or clear filters"
+    ctaText="Clear filters"
+    bind:cta="onClearSearch"
+  />
+
+  <empty-state
+    wx:elif="{{pageStatus === 'error'}}"
+    icon="⚠️"
+    title="Something went wrong"
+    subtitle="{{pageError}}"
+    ctaText="Retry"
+    bind:cta="onRetry"
+  />
+
+  <view wx:else class="list">
+    <walker-card wx:for="{{walkers}}" wx:key="_id" walker="{{item}}" />
+  </view>
+</view>

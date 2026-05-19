@@ -1,0 +1,14 @@
+{
+  "navigationBarTitleText": "Book a Walk",
+  "usingComponents": {
+    "mock-banner":   "/components/mock-banner/index",
+    "t-input":       "tdesign-miniprogram/input/input",
+    "t-radio-group": "tdesign-miniprogram/radio-group/radio-group",
+    "t-radio":       "tdesign-miniprogram/radio/radio",
+    "t-stepper":     "tdesign-miniprogram/stepper/stepper",
+    "t-button":      "tdesign-miniprogram/button/button",
+    "t-textarea":    "tdesign-miniprogram/textarea/textarea",
+    "dog-form":      "/components/dog-form/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  }
+}

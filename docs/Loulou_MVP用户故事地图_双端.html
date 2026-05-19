@@ -1,0 +1,304 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+body{font-size:13px;color:var(--color-text-primary)}
+.map{padding:1rem 0 2rem}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:1.25rem}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)}
+.leg-dot{width:9px;height:9px;border-radius:50%}
+
+.swimlane{width:100%;overflow-x:auto}
+.sw-inner{min-width:860px}
+
+.phase-row{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:6px}
+.phase-cell{background:#1D9E75;border-radius:8px;padding:7px 10px;text-align:center}
+.phase-cell .pt{font-size:12px;font-weight:500;color:#E1F5EE}
+.phase-cell .ps{display:block;font-size:10px;color:#9FE1CB;margin-top:1px}
+
+.act-row{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:10px}
+.act-cell{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:8px;padding:6px 8px;text-align:center;font-size:11px;font-weight:500;color:var(--color-text-primary);line-height:1.4}
+
+.mvp-line{margin:12px 0 10px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--color-text-tertiary)}
+.mvp-line::before,.mvp-line::after{content:'';flex:1;border-top:2px dashed #E24B4A}
+.mvp-label{background:#FCEBEB;color:#A32D2D;font-weight:500;padding:3px 12px;border-radius:99px;white-space:nowrap;font-size:11px}
+
+.persona-block{margin-bottom:14px}
+.persona-hd{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.pbadge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:3px 10px;border-radius:99px}
+.pb-teal{background:#E1F5EE;color:#085041}
+.pb-purple{background:#EEEDFE;color:#534AB7}
+
+.story-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.sc{border-radius:8px;padding:8px 9px;border:0.5px solid;cursor:pointer;transition:filter .15s}
+.sc:hover{filter:brightness(.94)}
+.sc-teal{background:#E1F5EE;border-color:#9FE1CB;color:#085041}
+.sc-purple{background:#EEEDFE;border-color:#CECBF6;color:#3C3489}
+.sc .st{font-size:12px;font-weight:500;line-height:1.4;margin-bottom:3px}
+.sc .sd{font-size:11px;opacity:.72;line-height:1.45}
+.sc .tag{display:inline-block;font-size:10px;margin-top:5px;padding:1px 7px;border-radius:99px;font-weight:500}
+.must{background:#FCEBEB;color:#A32D2D}
+.should{background:#FAEEDA;color:#854F0B}
+
+.detail-panel{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px 14px;margin-top:1rem;font-size:12px;color:var(--color-text-secondary);line-height:1.75;display:none}
+.detail-panel.open{display:block}
+.detail-panel strong{color:var(--color-text-primary);font-weight:500}
+.dp-close{float:right;font-size:11px;cursor:pointer;color:var(--color-text-tertiary);background:none;border:none;padding:0}
+
+.risk-strip{margin-top:1.25rem;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.risk-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.04em;margin-bottom:8px}
+.risks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.risk-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px}
+.risk-card .rl{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:2px}
+.risk-card .rm{font-size:11px;color:var(--color-text-secondary);line-height:1.5}
+.risk-pill{display:inline-flex;align-items:center;font-size:10px;padding:1px 7px;border-radius:99px;margin-bottom:4px}
+.rp-hh{background:#FCEBEB;color:#A32D2D}
+.rp-mh{background:#FAEEDA;color:#854F0B}
+
+.footer-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:1.25rem}
+button.fb{font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);cursor:pointer;transition:background .15s}
+button.fb:hover{background:var(--color-background-secondary)}
+</style>
+
+<div class="map">
+<h2 class="sr-only">Loulou 宠物服务平台 MVP 用户故事地图，基于已填写的问题与范围定义模板，双端并列展示客户端（宠物主人）与服务端（寄养服务方）的核心用户故事</h2>
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:#1D9E75"></div>旅程阶段</div>
+  <div class="leg"><div class="leg-dot" style="background:#E1F5EE;border:1px solid #9FE1CB"></div>客户端 · 宠物主人</div>
+  <div class="leg"><div class="leg-dot" style="background:#EEEDFE;border:1px solid #CECBF6"></div>服务端 · 照护者</div>
+  <div class="leg"><div class="leg-dot" style="background:#FCEBEB;border:1px solid #F09595"></div>必须 · MVP</div>
+  <div class="leg"><div class="leg-dot" style="background:#FAEEDA;border:1px solid #FAC775"></div>应有 · MVP</div>
+</div>
+
+<div class="swimlane"><div class="sw-inner">
+
+<div class="phase-row">
+  <div class="phase-cell"><span class="pt">注册与认证</span><span class="ps">Onboard</span></div>
+  <div class="phase-cell"><span class="pt">搜索与匹配</span><span class="ps">Search</span></div>
+  <div class="phase-cell"><span class="pt">预约与支付</span><span class="ps">Book</span></div>
+  <div class="phase-cell"><span class="pt">服务进行中</span><span class="ps">During</span></div>
+  <div class="phase-cell"><span class="pt">结束与评价</span><span class="ps">Complete</span></div>
+  <div class="phase-cell"><span class="pt">安全与保障</span><span class="ps">Safety</span></div>
+</div>
+
+<div class="act-row">
+  <div class="act-cell">手机号登录<br>建立宠物档案</div>
+  <div class="act-cell">地理位置搜索<br>筛选比较服务方</div>
+  <div class="act-cell">选服务 · 选时间<br>在线支付</div>
+  <div class="act-cell">实时状态跟进<br>沟通协调</div>
+  <div class="act-cell">确认完成<br>互评</div>
+  <div class="act-cell">问题上报<br>平台介入</div>
+</div>
+
+<div class="mvp-line"><span class="mvp-label">MVP 发布范围线 — 2026年9月</span></div>
+
+<div class="persona-block">
+  <div class="persona-hd">
+    <span class="pbadge pb-teal"><i class="ti ti-heart" style="font-size:11px" aria-hidden="true"></i> 客户端 · 宠物主人（20–50岁城市上班族）</span>
+  </div>
+  <div class="story-grid">
+    <div class="sc sc-teal" onclick="showD('c1')">
+      <div class="st">手机号/微信一键注册</div>
+      <div class="sd">填写姓名、联系方式</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c2')">
+      <div class="st">按位置搜索照护者</div>
+      <div class="sd">筛选服务类型：寄养/日托/遛狗/上门</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c3')">
+      <div class="st">查看照护者详情页</div>
+      <div class="sd">评分、过往评价、价格、可用档期</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c4')">
+      <div class="st">在线预约与支付</div>
+      <div class="sd">选时间、宠物信息、平台支付</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c5')">
+      <div class="st">收到服务状态更新</div>
+      <div class="sd">照片/动态推送，随时了解宠物状态</div>
+      <span class="tag should">应有</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c6')">
+      <div class="st">给出评价</div>
+      <div class="sd">服务结束后为照护者评分+评语</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c7')">
+      <div class="st">建立宠物档案</div>
+      <div class="sd">品种、年龄、疫苗记录、特殊需求</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c8')">
+      <div class="st">应用内即时通讯</div>
+      <div class="sd">与照护者沟通护理细节</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c9')">
+      <div class="st">查看订单与支付记录</div>
+      <div class="sd">历史订单、费用明细</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c10')">
+      <div class="st">收藏照护者</div>
+      <div class="sd">保存常用/信任的服务方</div>
+      <span class="tag should">应有</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c11')">
+      <div class="st">修改/取消预约</div>
+      <div class="sd">在规定时间内修改日期或取消</div>
+      <span class="tag should">应有</span>
+    </div>
+    <div class="sc sc-teal" onclick="showD('c12')">
+      <div class="st">联系客服上报问题</div>
+      <div class="sd">服务纠纷、宠物安全事故上报</div>
+      <span class="tag must">必须</span>
+    </div>
+  </div>
+</div>
+
+<div class="persona-block" style="margin-top:14px">
+  <div class="persona-hd">
+    <span class="pbadge pb-purple"><i class="ti ti-building-store" style="font-size:11px" aria-hidden="true"></i> 服务端 · 照护者（20–50岁，有爱，利用闲暇时间增收）</span>
+  </div>
+  <div class="story-grid">
+    <div class="sc sc-purple" onclick="showD('p1')">
+      <div class="st">注册并完成认证</div>
+      <div class="sd">实名认证、背景核查、室内环境照片</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p2')">
+      <div class="st">发布服务项目</div>
+      <div class="sd">寄养/日托/遛狗/上门，自由设价格</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p3')">
+      <div class="st">管理空档日历</div>
+      <div class="sd">设定可接单时间段，屏蔽忙碌日期</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p4')">
+      <div class="st">接受 / 合理拒绝预约</div>
+      <div class="sd">可拒绝危险宠物/不合理要求，有保护</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p5')">
+      <div class="st">发送宠物状态动态</div>
+      <div class="sd">图片+文字，让主人安心</div>
+      <span class="tag should">应有</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p6')">
+      <div class="st">确认完成并收款</div>
+      <div class="sd">标记结束，平台自动结算</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p7')">
+      <div class="st">自我介绍与主页编辑</div>
+      <div class="sd">展示经验、照片、服务特色</div>
+      <span class="tag should">应有</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p8')">
+      <div class="st">应用内即时通讯</div>
+      <div class="sd">与宠物主人沟通服务细节</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p9')">
+      <div class="st">查看收益与提现</div>
+      <div class="sd">订单收入、平台佣金明细、提现申请</div>
+      <span class="tag must">必须</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p10')">
+      <div class="st">查看宠物档案</div>
+      <div class="sd">接单前了解宠物品种、疫苗、注意事项</div>
+      <span class="tag should">应有</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p11')">
+      <div class="st">对宠物 / 主人评价</div>
+      <div class="sd">服务结束后双向评价</div>
+      <span class="tag should">应有</span>
+    </div>
+    <div class="sc sc-purple" onclick="showD('p12')">
+      <div class="st">联系客服</div>
+      <div class="sd">突发状况、安全事故应急支援</div>
+      <span class="tag must">必须</span>
+    </div>
+  </div>
+</div>
+
+</div></div>
+
+<div class="detail-panel" id="dp">
+  <button class="dp-close" onclick="closeD()">关闭 ✕</button>
+  <div id="dp-content"></div>
+</div>
+
+<div class="risk-strip">
+  <div class="risk-title">来自模板的关键风险（已识别）</div>
+  <div class="risks">
+    <div class="risk-card">
+      <span class="risk-pill rp-hh">高 · 高</span>
+      <div class="rl">上线初期照护者供给不足</div>
+      <div class="rm">应对：提前启动照护者招募计划，目标上线前备足首批50名认证照护者</div>
+    </div>
+    <div class="risk-card">
+      <span class="risk-pill rp-hh">高 · 低</span>
+      <div class="rl">安全事故（宠物受伤）</div>
+      <div class="rm">应对：背景核查 + 强制购买责任保险，平台建立紧急客服通道</div>
+    </div>
+    <div class="risk-card">
+      <span class="risk-pill rp-mh">中 · 高</span>
+      <div class="rl">佣金过高导致照护者流失</div>
+      <div class="rm">应对：阶梯佣金 + 忠诚度激励计划，初期可给早期入驻者优惠率</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-btns">
+  <button class="fb" onclick="sendPrompt('基于 Loulou 用户故事地图，为「搜索与匹配」阶段的客户端功能写详细用户故事格式（As a… I want… So that… + 验收标准）')">展开用户故事格式 ↗</button>
+  <button class="fb" onclick="sendPrompt('为 Loulou MVP 生成发布路线图，从现在到2026年9月，包含每个月的核心里程碑')">生成发布路线图 ↗</button>
+  <button class="fb" onclick="sendPrompt('用 HTML+CSS 生成 Loulou 宠物服务平台「搜索列表页」高保真视觉稿，375px，微信小程序风格，包含服务类型切换（寄养/日托/遛狗/上门）、照护者卡片列表')">生成搜索页视觉稿 ↗</button>
+</div>
+</div>
+
+<script>
+const details = {
+  c1:{who:'宠物主人',story:'作为城市宠物主人，我希望用手机号或微信快速注册，这样我不需要记忆额外密码就能开始使用 Loulou。',ac:['支持手机号验证码注册','支持微信授权一键登录','注册后引导填写宠物基本档案','全流程不超过60秒']},
+  c2:{who:'宠物主人',story:'作为宠物主人，我希望按当前位置和服务类型搜索照护者，这样我能找到距离合适、提供我需要服务的人。',ac:['支持定位/手动输入地址','可按服务类型筛选：寄养/日托/遛狗/上门','可按距离/评分/价格排序','搜索结果展示距离、评分、起步价']},
+  c3:{who:'宠物主人',story:'作为宠物主人，我希望查看照护者详细主页，包括过往评价和价格，这样我能在预约前建立足够信任。',ac:['展示认证状态与背景核查徽章','显示所有服务项目与价格','展示过往评价（含评分和文字）','显示近期可用日历']},
+  c4:{who:'宠物主人',story:'作为宠物主人，我希望在平台上选好时间后直接完成支付，这样资金有保障直到服务完成才结算给照护者。',ac:['选择服务类型、日期时间段','填写宠物信息或从档案选取','支持微信支付/支付宝','支付后推送确认通知给双方']},
+  c5:{who:'宠物主人',story:'作为宠物主人，我希望在服务期间收到宠物的照片和动态更新，这样出门在外也能安心。',ac:['照护者可发送照片+文字动态','宠物主人收到 Push 提醒','动态记录随订单保存可查看']},
+  c6:{who:'宠物主人',story:'作为宠物主人，我希望服务结束后为照护者评分，这样帮助其他用户做出更好的决策。',ac:['服务结束后24小时内提示评价','1–5星 + 文字评语','可上传照片（可选）','评价公开展示在照护者主页']},
+  c7:{who:'宠物主人',story:'作为宠物主人，我希望建立宠物档案并选择要携带的宠物，这样照护者在接单前能充分了解我的宠物。',ac:['填写品种、年龄、体重、性别','上传疫苗记录照片','填写饮食习惯和特殊注意事项','支持多只宠物档案']},
+  c8:{who:'宠物主人',story:'作为宠物主人，我希望通过应用内消息与照护者沟通，这样不需要交换私人联系方式也能协调护理细节。',ac:['订单确认后解锁消息功能','支持文字和图片','消息有已读/未读状态','平台可在纠纷时调取消息记录']},
+  c9:{who:'宠物主人',story:'作为宠物主人，我希望查看所有订单和支付明细，这样我能核对每一笔费用是否正确。',ac:['按时间列出历史订单','每笔显示服务类型、日期、金额','可查看费用明细（含平台服务费）','支持导出电子凭证']},
+  c10:{who:'宠物主人',story:'作为宠物主人，我希望收藏信任的照护者，这样下次需要时不用重新搜索。',ac:['详情页可收藏/取消收藏','收藏列表快速查看可用状态']},
+  c11:{who:'宠物主人',story:'作为宠物主人，我希望在规定时间内修改或取消预约，这样临时有变化时不会损失全部费用。',ac:['支持修改日期（照护者需重新确认）','按取消政策计算退款','取消后平台通知照护者']},
+  c12:{who:'宠物主人',story:'作为宠物主人，我希望遇到问题时能快速联系到平台客服，这样宠物安全事故可以得到及时处理。',ac:['应用内一键联系客服入口','客服响应时间 < 2小时','支持上传证据（照片/视频）']},
+  p1:{who:'照护者',story:'作为照护者，我希望通过实名认证和背景核查后获得认证徽章，这样宠物主人能信任我的主页。',ac:['填写姓名、联系方式、服务地址','上传身份证完成实名核查','上传室内环境照片（接受寄养必须）','平台审核24小时内完成']},
+  p2:{who:'照护者',story:'作为照护者，我希望自由发布服务项目并设置价格，这样我能控制自己的服务定位和收入。',ac:['可选服务类型：寄养/日托/遛狗/上门','每种服务独立定价','可设置额外加价项目（节假日加价等）','服务信息随时可编辑，即时生效']},
+  p3:{who:'照护者',story:'作为照护者，我希望在日历上管理我的可用时间，这样平台只展示我真实有空的档期给宠物主人。',ac:['按月视图查看/编辑','可批量设置可用日期','已确认订单日期自动锁定','变更实时同步到搜索结果']},
+  p4:{who:'照护者',story:'作为照护者，我希望有权拒绝危险或过于脏乱的宠物以及不合理的要求，这样平台能保护我的合法权益。',ac:['可查看宠物档案后再决定接/拒单','拒绝时可选择原因','拒绝危险宠物不影响账号评分','平台有明确的照护者权益保护条款']},
+  p5:{who:'照护者',story:'作为照护者，我希望向宠物主人发送宠物动态照片，这样主人放心也能留下好评。',ac:['应用内发送图文动态','宠物主人收到 Push 提醒','动态随订单记录保存']},
+  p6:{who:'照护者',story:'作为照护者，我希望服务结束后平台自动结算我的收入，这样不需要手动催款。',ac:['一键标记服务结束','评价期（48h）后自动打款','扣除平台佣金后到账','到账推送通知']},
+  p7:{who:'照护者',story:'作为照护者，我希望编辑个人主页和自我介绍，这样能让宠物主人在预约前了解我的经验和风格。',ac:['填写个人简介（养宠经历、专长）','上传个人和环境照片','展示擅长的宠物类型']},
+  p8:{who:'照护者',story:'作为照护者，我希望通过应用内消息与宠物主人沟通，这样能在服务前确认所有护理细节。',ac:['订单确认后解锁消息','支持文字和图片','可发送预设快捷回复']},
+  p9:{who:'照护者',story:'作为照护者，我希望查看我的收益明细并申请提现，这样我能清楚了解自己的收入状况。',ac:['展示本月/历史总收入','每笔订单明细可展开','显示平台佣金扣除金额','提现申请，T+1工作日到账']},
+  p10:{who:'照护者',story:'作为照护者，我希望在接单前查看宠物档案，这样我能评估是否有能力照顾这只宠物。',ac:['展示品种、年龄、体重','显示疫苗接种情况','可查看特殊需求和注意事项']},
+  p11:{who:'照护者',story:'作为照护者，我希望在服务结束后对宠物和宠物主人作出评价，这样能帮助其他照护者做出接单决策。',ac:['服务结束后可对主人/宠物评价','评价内容包括：按时、宠物友好、沟通顺畅','评价记录附在订单下方']},
+  p12:{who:'照护者',story:'作为照护者，我希望遇到突发状况（宠物生病、攻击事件）时能立即联系平台，这样得到及时支援和保护。',ac:['应用内紧急客服入口','可上传事故证据','客服响应时间 < 2小时','平台提供事故处理流程指引']},
+}
+function showD(id){
+  const d=details[id]
+  if(!d)return
+  const ac=d.ac.map(a=>`<li style="margin-bottom:3px">${a}</li>`).join('')
+  document.getElementById('dp-content').innerHTML=`<strong>${d.who}</strong><br><span style="display:block;margin:5px 0 6px">${d.story}</span><strong>验收标准：</strong><ul style="padding-left:16px;margin-top:4px">${ac}</ul>`
+  const p=document.getElementById('dp')
+  p.classList.add('open')
+  p.scrollIntoView({behavior:'smooth',block:'nearest'})
+}
+function closeD(){document.getElementById('dp').classList.remove('open')}
+</script>

@@ -1,0 +1,4 @@
+.page { padding: 16rpx; }
+.search-bar { margin-bottom: 16rpx; }
+.list { display: flex; flex-direction: column; }
+.type-tabs { background: #fff; }

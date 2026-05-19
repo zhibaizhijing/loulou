@@ -1,0 +1,10 @@
+.banner { padding:16rpx; background:#fef3c7; text-align:center; }
+.section { padding:24rpx; }
+.label { font-size:24rpx; color:#888; margin-bottom:12rpx; }
+.bk { padding:24rpx; background:#fff; border-radius:12rpx; margin-bottom:12rpx; }
+.bk-title { font-size:28rpx; }
+.bk-sub { font-size:24rpx; color:#888; }
+.report-form { padding:24rpx; background:#fff; margin-top:16rpx; display:flex; flex-direction:column; gap:16rpx; }
+.counter-row { display:flex; justify-content:space-between; align-items:center; font-size:28rpx; }
+.photo-row { display:flex; gap:12rpx; flex-wrap:wrap; align-items:center; }
+.thumb { width:120rpx; height:120rpx; border-radius:8rpx; }

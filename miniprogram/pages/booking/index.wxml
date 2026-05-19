@@ -1,0 +1,44 @@
+<mock-banner />
+<loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="5" />
+<empty-state wx:elif="{{pageStatus === 'error'}}" icon="⚠️" title="Booking missing" subtitle="{{pageError}}" ctaText="Back" bind:cta="onBack" />
+
+<view wx:else class="page">
+  <view class="section">
+    <view class="row"><text>When</text><text>{{dateLabel}}</text></view>
+    <view class="row"><text>Service</text><text>{{serviceLabel}}</text></view>
+    <view class="row"><text>Duration</text><text>{{durationDetailLabel}}</text></view>
+    <view class="row"><text>Status</text><t-tag>{{statusLabel}}</t-tag></view>
+    <view class="row"><text>Total</text><text>S${{booking.mockPayment.amount}}</text></view>
+    <view class="row" wx:if="{{booking.notes}}"><text>Notes</text><text>{{booking.notes}}</text></view>
+  </view>
+
+  <view class="section" wx:if="{{walker}}">
+    <view class="label">Walker</view>
+    <view class="walker-row" bindtap="onOpenWalker">
+      <image src="{{walker.avatar}}" class="avatar" />
+      <view class="walker-name">{{walker.name}}</view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{report}}">
+    <view class="label">Walk report</view>
+    <view class="report-notes">{{report.notes}}</view>
+    <view class="report-photos">
+      <image wx:for="{{report.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="report-photo" />
+    </view>
+    <view class="report-counts">
+      🚶 {{report.durationMin}} min  ·  💧 {{report.peeCount}}  ·  💩 {{report.poopCount}}
+    </view>
+  </view>
+
+  <view class="cta">
+    <t-button block bindtap="onOpenChat">Open chat</t-button>
+    <t-button wx:if="{{canReview}}" theme="primary" block bindtap="onLeaveReview">Leave a review</t-button>
+    <t-button wx:if="{{canCancel}}" theme="danger" variant="outline" block bindtap="onCancel">Cancel booking</t-button>
+    <view class="nav-row">
+      <t-button size="medium" variant="outline" bindtap="onGoHome">← Home</t-button>
+      <t-button size="medium" variant="outline" bindtap="onGoBookings">All bookings</t-button>
+    </view>
+  </view>
+</view>
+<custom-tab-bar />

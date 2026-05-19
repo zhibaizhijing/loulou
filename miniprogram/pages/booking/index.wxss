@@ -1,0 +1,14 @@
+.page { padding-bottom: 200rpx; }
+.section { padding:24rpx; background:#fff; margin-top:16rpx; }
+.row { display:flex; justify-content:space-between; padding:12rpx 0; font-size:28rpx; }
+.label { font-size:24rpx; color:#888; text-transform:uppercase; margin-bottom:12rpx; }
+.walker-row { display:flex; gap:16rpx; align-items:center; }
+.avatar { width:80rpx; height:80rpx; border-radius:40rpx; }
+.walker-name { font-size:28rpx; }
+.report-notes { font-size:28rpx; line-height:1.6; margin-bottom:12rpx; }
+.report-photos { display:flex; gap:12rpx; flex-wrap:wrap; margin-bottom:12rpx; }
+.report-photo { width:200rpx; height:200rpx; border-radius:12rpx; }
+.report-counts { font-size:26rpx; color:#555; }
+.cta { position:fixed; bottom: calc(100rpx + env(safe-area-inset-bottom)); left:0; right:0; padding:16rpx; background:#fff; display:flex; flex-direction:column; gap:12rpx; box-shadow:0 -2rpx 8rpx rgba(0,0,0,0.06); }
+.nav-row { display:flex; gap:12rpx; }
+.nav-row t-button { flex:1; }

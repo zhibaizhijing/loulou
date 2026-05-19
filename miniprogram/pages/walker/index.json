@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "Walker",
+  "usingComponents": {
+    "mock-banner":       "/components/mock-banner/index",
+    "review-item":       "/components/review-item/index",
+    "star-rating":       "/components/star-rating/index",
+    "loading-skeleton":  "/components/loading-skeleton/index",
+    "empty-state":       "/components/empty-state/index",
+    "t-button":          "tdesign-miniprogram/button/button",
+    "t-image":           "tdesign-miniprogram/image/image"
+  }
+}

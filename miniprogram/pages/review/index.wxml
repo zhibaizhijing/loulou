@@ -1,0 +1,11 @@
+<mock-banner />
+<view class="page">
+  <view class="label">How was your walk?</view>
+  <star-rating value="{{stars}}" bind:change="onStars" />
+
+  <view class="label">Tell us more</view>
+  <t-textarea model:value="{{text}}" placeholder="On time? Friendly? Photos shared?" />
+
+  <t-button theme="primary" block loading="{{submitting}}" bindtap="onSubmit">Submit</t-button>
+</view>
+<custom-tab-bar />

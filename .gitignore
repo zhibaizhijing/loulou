@@ -1,0 +1,10 @@
+node_modules/
+miniprogram/miniprogram_npm/
+cloudfunctions/*/node_modules/
+.superpowers/
+project.private.config.json
+.DS_Store
+*.log
+dist/
+coverage/
+.vitest/

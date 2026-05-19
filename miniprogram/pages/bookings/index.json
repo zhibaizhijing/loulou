@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "My Bookings",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "mock-banner":     "/components/mock-banner/index",
+    "offline-banner":  "/components/offline-banner/index",
+    "t-tabs":          "tdesign-miniprogram/tabs/tabs",
+    "t-tab-panel":     "tdesign-miniprogram/tab-panel/tab-panel",
+    "empty-state":     "/components/empty-state/index",
+    "loading-skeleton":"/components/loading-skeleton/index"
+  }
+}

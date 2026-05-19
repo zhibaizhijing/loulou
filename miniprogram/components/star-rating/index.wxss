@@ -1,0 +1,3 @@
+.stars { display:inline-flex; gap:6rpx; }
+.star  { font-size:40rpx; color:#d1d5db; }
+.star.on { color:#f59e0b; }

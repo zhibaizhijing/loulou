@@ -1,0 +1,27 @@
+<mock-banner />
+
+<empty-state wx:if="{{noCaregiver}}" icon="🚫" title="Not in caregiver mode" subtitle="Switch into a caregiver from the app entry first." />
+
+<view wx:else class="page">
+  <loading-skeleton wx:if="{{loading}}" count="3" />
+
+  <empty-state wx:elif="{{services.length === 0}}" icon="📭" title="No services yet" subtitle="Publish a service to start receiving bookings." ctaText="+ Publish a service" bind:cta="onAdd" />
+
+  <view wx:else>
+    <view wx:for="{{services}}" wx:key="_id" class="card">
+      <view class="row">
+        <view class="title">{{labels[item.serviceType]}}</view>
+        <t-switch value="{{item.active}}" bindchange="onToggle" data-id="{{item._id}}" />
+      </view>
+      <view class="row">
+        <view class="price">S${{item.price}} / {{unitLabels[item.serviceType]}}</view>
+        <view class="actions">
+          <t-button size="extra-small" variant="outline" bindtap="onEdit" data-id="{{item._id}}">Edit</t-button>
+          <t-button size="extra-small" theme="danger" variant="outline" bindtap="onDelete" data-id="{{item._id}}">Delete</t-button>
+        </view>
+      </view>
+    </view>
+
+    <t-button block theme="primary" bindtap="onAdd" style="margin-top:24rpx">+ Publish another service</t-button>
+  </view>
+</view>

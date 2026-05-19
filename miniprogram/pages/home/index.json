@@ -1,0 +1,15 @@
+{
+  "navigationBarTitleText": "Find a Walker",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "mock-banner":       "/components/mock-banner/index",
+    "offline-banner":    "/components/offline-banner/index",
+    "walker-card":       "/components/walker-card/index",
+    "empty-state":       "/components/empty-state/index",
+    "loading-skeleton":  "/components/loading-skeleton/index",
+    "t-search":          "tdesign-miniprogram/search/search",
+    "t-tag":             "tdesign-miniprogram/tag/tag",
+    "t-tabs":            "tdesign-miniprogram/tabs/tabs",
+    "t-tab-panel":       "tdesign-miniprogram/tab-panel/tab-panel"
+  }
+}

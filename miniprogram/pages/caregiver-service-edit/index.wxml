@@ -1,0 +1,27 @@
+<mock-banner />
+
+<view class="page">
+  <view class="section" wx:if="{{!editingExisting}}">
+    <view class="label">Service type</view>
+    <t-radio-group value="{{serviceType}}" bind:change="onTypeChange">
+      <t-radio wx:for="{{serviceOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
+    </t-radio-group>
+  </view>
+
+  <view class="section" wx:else>
+    <view class="label">Service type</view>
+    <view class="locked">{{labels[serviceType]}} (cannot change after creation)</view>
+  </view>
+
+  <view class="section">
+    <view class="label">Price (SGD) per {{unitLabel}}</view>
+    <t-input type="number" placeholder="e.g. 30" model:value="{{priceStr}}" />
+  </view>
+
+  <view class="section">
+    <view class="label">Surcharges or notes (optional)</view>
+    <t-textarea placeholder="e.g. +S$10 for large dogs, +50% on public holidays" model:value="{{surchargeRules}}" />
+  </view>
+
+  <t-button block theme="primary" loading="{{submitting}}" bindtap="onSubmit" style="margin-top:32rpx">{{editingExisting ? 'Save changes' : 'Publish service'}}</t-button>
+</view>

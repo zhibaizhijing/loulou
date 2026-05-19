@@ -1,0 +1,13 @@
+{
+  "navigationBarTitleText": "Walker Mode (Demo)",
+  "usingComponents": {
+    "mock-banner":        "/components/mock-banner/index",
+    "custom-tab-bar":     "/custom-tab-bar/index",
+    "t-button":           "tdesign-miniprogram/button/button",
+    "t-textarea":         "tdesign-miniprogram/textarea/textarea",
+    "t-stepper":          "tdesign-miniprogram/stepper/stepper",
+    "t-input":            "tdesign-miniprogram/input/input",
+    "loading-skeleton":   "/components/loading-skeleton/index",
+    "empty-state":        "/components/empty-state/index"
+  }
+}

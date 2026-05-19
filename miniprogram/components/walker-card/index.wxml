@@ -1,0 +1,13 @@
+<view class="card" bindtap="onTap">
+  <image class="avatar" src="{{walker.avatar}}" mode="aspectFill" />
+  <view class="body">
+    <view class="row">
+      <text class="name">{{walker.name}}</text>
+      <text class="rating">★ {{walker.rating}} ({{walker.reviewCount}})</text>
+    </view>
+    <view class="areas">
+      <text class="area-tag" wx:for="{{walker.areas}}" wx:for-item="a" wx:key="*this">{{a}}</text>
+    </view>
+    <view class="price">S${{walker.pricePerWalk}} / 30 min</view>
+  </view>
+</view>

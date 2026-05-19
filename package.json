@@ -1,0 +1,31 @@
+{
+  "name": "loulou-miniprogram",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint 'miniprogram/**/*.ts' 'cloudfunctions/**/*.ts' 'tests/**/*.ts'",
+    "test": "vitest run",
+    "test:mock": "vitest run mock.test",
+    "test:live": "vitest run --exclude '**/*.mock.test.ts'",
+    "test:watch": "vitest",
+    "build:tdesign": "echo 'Run \"工具 → 构建 npm\" in WeChat devtools'",
+    "shot": "tsx scripts/screenshot.ts",
+    "shots": "tsx scripts/screenshots-all.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "miniprogram-api-typings": "^4.0.0",
+    "miniprogram-automator": "^0.12.1",
+    "miniprogram-simulate": "^1.4.0",
+    "tsx": "^4.22.2",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  },
+  "dependencies": {
+    "tdesign-miniprogram": "^1.7.0"
+  }
+}

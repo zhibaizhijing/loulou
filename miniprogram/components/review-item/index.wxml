@@ -1,0 +1,5 @@
+<view class="item">
+  <star-rating value="{{review.stars}}" readonly="{{true}}" />
+  <view class="text">{{review.text}}</view>
+  <view class="date">{{dateText}}</view>
+</view>

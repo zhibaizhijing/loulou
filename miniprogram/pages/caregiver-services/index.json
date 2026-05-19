@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "My Services",
+  "usingComponents": {
+    "mock-banner":      "/components/mock-banner/index",
+    "t-button":         "tdesign-miniprogram/button/button",
+    "t-switch":         "tdesign-miniprogram/switch/switch",
+    "t-tag":            "tdesign-miniprogram/tag/tag",
+    "empty-state":      "/components/empty-state/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  }
+}

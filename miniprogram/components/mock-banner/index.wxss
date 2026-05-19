@@ -1,0 +1,9 @@
+.mock-banner {
+  background: #fef3c7;
+  color: #92400e;
+  text-align: center;
+  font-size: 22rpx;
+  padding: 8rpx 16rpx;
+  letter-spacing: 1rpx;
+  border-bottom: 1rpx solid #fbbf24;
+}

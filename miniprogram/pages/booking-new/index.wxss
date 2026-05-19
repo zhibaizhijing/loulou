@@ -1,0 +1,15 @@
+.page { padding-bottom: 200rpx; }
+.walker-strip { display:flex; gap:16rpx; padding:24rpx; background:#fff; align-items:center; }
+.avatar { width:96rpx; height:96rpx; border-radius:48rpx; }
+.name { font-size:30rpx; font-weight:500; }
+.price { font-size:24rpx; color:#16a34a; }
+.section { padding:24rpx; background:#fff; margin-top:16rpx; }
+.label { font-size:24rpx; color:#888; margin-bottom:12rpx; text-transform:uppercase; }
+.hint  { font-size:24rpx; color:#888; }
+.dog-list { display:flex; gap:12rpx; flex-wrap:wrap; }
+.dog-chip { padding:12rpx 24rpx; border-radius:24rpx; background:#f5f5f5; font-size:26rpx; }
+.dog-chip.on { background:#2563eb; color:#fff; }
+.add-dog-toggle { margin-top:16rpx; font-size:26rpx; color:#2563eb; }
+.picker-row { padding:16rpx 0; font-size:28rpx; color:#1f2329; border-bottom:1rpx solid #eee; }
+.total { font-size:36rpx; font-weight:600; color:#16a34a; }
+.cta { position:fixed; bottom: env(safe-area-inset-bottom); left:0; right:0; padding:24rpx; background:#fff; box-shadow:0 -2rpx 8rpx rgba(0,0,0,0.06); }

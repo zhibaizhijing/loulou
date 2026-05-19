@@ -1,0 +1,28 @@
+<mock-banner />
+<offline-banner />
+<view class="page">
+  <view class="hero">
+    <view class="avatar"></view>
+    <view>
+      <view class="name">{{profile.name || 'Pet Owner'}}</view>
+      <view class="oid">openid: {{openid}}</view>
+    </view>
+  </view>
+
+  <t-cell-group title="My dogs">
+    <t-cell wx:for="{{profile.dogs}}" wx:key="id" title="{{item.name}}" note="{{item.breed || ''}}" />
+    <t-cell title="+ Add a dog" hover bind:click="onAddDogToggle" />
+  </t-cell-group>
+
+  <dog-form wx:if="{{addingDog}}" bind:save="onSaveDog" />
+
+  <t-cell-group title="Demo">
+    <t-cell title="Reset mock data" hover bind:click="onResetMock" />
+    <t-cell title="Seed cloud demo data" hover bind:click="onSeedCloud" />
+    <t-cell wx:if="{{isCaregiver}}" title="Caregiver home" hover bind:click="onCaregiverHome" />
+    <t-cell wx:elif="{{hasApplication}}" title="My application" note="{{applicationStatusLabel}}" hover bind:click="onMyApplication" />
+    <t-cell wx:else title="Become a caregiver" hover bind:click="onApply" />
+    <t-cell wx:if="{{isCaregiver}}" title="Exit caregiver mode" hover bind:click="onExitCaregiver" />
+    <t-cell title="Legacy walker-mode page (deprecated)" hover bind:click="onWalker" />
+  </t-cell-group>
+</view>

@@ -1,0 +1,13 @@
+{
+  "navigationBarTitleText": "Become a Caregiver",
+  "usingComponents": {
+    "mock-banner":      "/components/mock-banner/index",
+    "t-input":          "tdesign-miniprogram/input/input",
+    "t-textarea":       "tdesign-miniprogram/textarea/textarea",
+    "t-button":         "tdesign-miniprogram/button/button",
+    "t-checkbox":       "tdesign-miniprogram/checkbox/checkbox",
+    "t-checkbox-group": "tdesign-miniprogram/checkbox-group/checkbox-group",
+    "t-tag":            "tdesign-miniprogram/tag/tag",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  }
+}

@@ -1,0 +1,22 @@
+.page { padding:24rpx; background:#fff; min-height:100vh; }
+.progress { font-size:24rpx; color:#888; margin-bottom:12rpx; }
+.progress-bar { height:8rpx; background:#eee; border-radius:4rpx; margin-bottom:32rpx; overflow:hidden; }
+.progress-fill { height:100%; background:#2563eb; transition: width 0.3s; }
+.section { display:flex; flex-direction:column; gap:16rpx; }
+.label { font-size:28rpx; font-weight:500; color:#1f2329; }
+.hint { font-size:24rpx; color:#888; }
+.thumb-wrap { display:flex; }
+.thumb-id { width:240rpx; height:160rpx; border-radius:8rpx; background:#eee; }
+.thumb-grid { display:flex; gap:12rpx; flex-wrap:wrap; }
+.thumb-grid-item { width:160rpx; height:160rpx; border-radius:8rpx; background:#eee; }
+.review-row { display:flex; gap:16rpx; padding:16rpx 0; border-bottom:1rpx solid #eee; font-size:26rpx; }
+.rk { color:#888; min-width:140rpx; }
+.nav-buttons { display:flex; gap:12rpx; margin-top:48rpx; }
+.nav-buttons t-button { flex:1; }
+
+.status-page { display:flex; align-items:center; justify-content:center; min-height:80vh; }
+.status-card { display:flex; flex-direction:column; align-items:stretch; gap:16rpx; width:500rpx; max-width:90vw; }
+.status-icon, .status-title, .status-sub { align-self:center; }
+.status-icon { font-size:120rpx; }
+.status-title { font-size:36rpx; font-weight:600; }
+.status-sub { font-size:26rpx; color:#666; text-align:center; }

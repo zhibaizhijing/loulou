@@ -1,0 +1,6 @@
+<view class="stars">
+  <text wx:for="{{[1,2,3,4,5]}}" wx:key="*this"
+        class="star {{item <= filled ? 'on' : ''}}"
+        data-v="{{item}}"
+        bindtap="onTap">★</text>
+</view>
