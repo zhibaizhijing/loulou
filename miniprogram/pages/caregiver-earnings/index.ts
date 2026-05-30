@@ -21,11 +21,11 @@ interface Data {
 }
 
 const KIND_LABEL: Record<PayoutKind, string> = {
-  credit:     '+ Owner paid',
-  commission: '− Commission',
-  payout:     '− Payout',
-  refund:     '− Refund',
-  adjustment: '± Adjustment'
+  credit:     '+ 主人支付',
+  commission: '− 平台佣金',
+  payout:     '− 结算到账',
+  refund:     '− 退款',
+  adjustment: '± 调整'
 }
 
 Page<Data, WechatMiniprogram.IAnyObject>({
@@ -45,7 +45,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
       ...p,
       dateLabel: formatDateTime(p.createdAt),
       kindLabel: KIND_LABEL[p.kind] || p.kind,
-      amountLabel: (p.amount >= 0 ? '+' : '') + 'S$' + p.amount.toFixed(2)
+      amountLabel: (p.amount >= 0 ? '+' : '') + '¥' + p.amount.toFixed(2)
     }))
     this.setData({
       noCaregiver: false, loading: false,

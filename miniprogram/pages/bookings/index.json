@@ -1,13 +1,11 @@
 {
-  "navigationBarTitleText": "My Bookings",
+  "navigationStyle": "custom",
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "mock-banner":     "/components/mock-banner/index",
-    "offline-banner":  "/components/offline-banner/index",
-    "t-tabs":          "tdesign-miniprogram/tabs/tabs",
-    "t-tab-panel":     "tdesign-miniprogram/tab-panel/tab-panel",
-    "t-tag":           "tdesign-miniprogram/tag/tag",
-    "empty-state":     "/components/empty-state/index",
-    "loading-skeleton":"/components/loading-skeleton/index"
+    "mock-banner":      "/components/mock-banner/index",
+    "offline-banner":   "/components/offline-banner/index",
+    "empty-state":      "/components/empty-state/index",
+    "loading-skeleton": "/components/loading-skeleton/index",
+    "ll-icon":          "/components/ll-icon/index"
   }
 }

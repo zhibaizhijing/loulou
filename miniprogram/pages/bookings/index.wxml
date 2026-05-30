@@ -1,20 +1,58 @@
-<mock-banner />
-<offline-banner />
-<t-tabs value="{{tab}}" bind:change="onTabChange">
-  <t-tab-panel label="Upcoming" value="upcoming" />
-  <t-tab-panel label="Past"     value="past" />
-</t-tabs>
+<view class="ll-page or-page">
+  <mock-banner />
+  <offline-banner />
 
-<loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="4" />
-<empty-state wx:elif="{{pageStatus === 'empty'}}" icon="📅" title="No bookings here yet" />
-<empty-state wx:elif="{{pageStatus === 'error'}}" icon="⚠️" title="Failed to load" subtitle="{{pageError}}" ctaText="Retry" bind:cta="onRetry" />
+  <!-- Header + Tabs -->
+  <view class="or-hdr">
+    <view class="or-title">订单</view>
+    <scroll-view scroll-x="true" enhanced show-scrollbar="{{false}}" class="or-tabs-scroll">
+      <view class="or-tabs">
+        <view
+          wx:for="{{tabs}}"
+          wx:key="*this"
+          class="or-tab {{tab === item ? 'is-on' : ''}}"
+          data-tab="{{item}}"
+          bindtap="onTab"
+        >{{item}}</view>
+      </view>
+    </scroll-view>
+  </view>
 
-<view wx:else class="list">
-  <view wx:for="{{filtered}}" wx:key="_id" class="row" bindtap="onTap" data-id="{{item._id}}">
-    <view class="row-main">
-      <view class="row-title">{{item.dateLabel}} · {{item.durationLabel}}</view>
-      <view class="row-sub">{{item.statusLabel}} · <t-tag size="small" theme="{{item.paymentTone}}">{{item.paymentLabel}}</t-tag></view>
+  <!-- List -->
+  <loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="4"/>
+  <empty-state wx:elif="{{filtered.length === 0}}" icon="📅" title="暂无订单" subtitle="开始预约第一次照护"/>
+
+  <view wx:else class="or-list">
+    <view wx:for="{{filtered}}" wx:key="_id" class="or-card" data-id="{{item._id}}" bindtap="onTap" hover-class="or-card-hover">
+      <view class="or-row1">
+        <view class="or-avatar or-avatar--{{item.bg}}">
+          <image wx:if="{{item.walkerAvatar}}" src="{{item.walkerAvatar}}" mode="aspectFill" class="or-avatar-img"/>
+          <text wx:else class="or-avatar-init">{{item.walkerInitial}}</text>
+        </view>
+        <view class="or-meta">
+          <view class="or-meta-name-row">
+            <text class="or-meta-name">{{item.walkerName}}</text>
+            <view class="or-badge" style="background:{{item.statusBg}};color:{{item.statusFg}};">{{item.statusLabel}}</view>
+          </view>
+          <text class="or-meta-svc">{{item.serviceLabel}} · {{item.dateLabel}}</text>
+          <text class="or-meta-pet">{{item.petLabel}}</text>
+        </view>
+        <ll-icon name="caret-right" size="26" color="#A0A0B0"/>
+      </view>
+
+      <view class="or-desc" style="color:{{item.descColor}};">
+        <view wx:if="{{item.status === 'requested'}}" class="or-pulse"></view>
+        <text>{{item.statusDesc}}</text>
+      </view>
+
+      <view wx:if="{{item.canAct}}" class="or-actions">
+        <view class="or-btn or-btn--ghost" catchtap="onOpenChat" data-id="{{item._id}}">
+          <ll-icon name="chat-circle-dots" size="24" color="#6B6B7A"/>
+          <text>查看对话</text>
+        </view>
+        <view wx:if="{{item.status === 'accepted'}}" class="or-btn or-btn--accept" catchtap="onPay" data-id="{{item._id}}">立即支付</view>
+        <view wx:elif="{{item.status === 'completed'}}" class="or-btn or-btn--review" catchtap="onReview" data-id="{{item._id}}">写评论</view>
+      </view>
     </view>
-    <view class="row-amount">S${{item.mockPayment.amount}}</view>
   </view>
 </view>

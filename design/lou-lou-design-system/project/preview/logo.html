@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Logo & Mark</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 24px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .cell { background: #fff; border-radius: 14px; padding: 14px; height: 132px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--ll-border); }
+  .cell.inv { background: var(--ll-ink); }
+  .cell.tint { background: var(--ll-lavender); border-color: transparent; }
+  .cell img { height: 70px; width: auto; }
+  .cell.inv img { filter: invert(1) brightness(2); }
+  .lbl { font-size: 10.5px; color: var(--ll-text-2); font-weight: 600; }
+  .cell.inv .lbl { color: rgba(255,255,255,0.7); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="cell">
+      <img src="../assets/logo.png" alt="Lou Lou logo">
+      <div class="lbl">Primary · on light</div>
+    </div>
+    <div class="cell inv">
+      <img src="../assets/logo.png" alt="Lou Lou logo inverted">
+      <div class="lbl">Inverted · on ink</div>
+    </div>
+    <div class="cell tint">
+      <img src="../assets/logo.png" alt="Lou Lou logo on tint">
+      <div class="lbl">On lavender stage</div>
+    </div>
+  </div>
+</body>
+</html>

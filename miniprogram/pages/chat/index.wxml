@@ -1,16 +1,69 @@
-<mock-banner />
-<view class="page">
-  <scroll-view scroll-y class="messages" scroll-into-view="{{lastScrollId}}">
-    <loading-skeleton wx:if="{{loading}}" count="3" />
-    <chat-bubble wx:for="{{messages}}" wx:key="_id"
-                 id="m-{{item._id}}"
-                 message="{{item}}"
-                 mine="{{item.senderRole === myRole}}" />
-  </scroll-view>
+<view class="ll-page chat-page">
+  <mock-banner />
 
-  <view class="composer">
-    <t-input model:value="{{draft}}" placeholder="Type a message" />
-    <t-button theme="primary" size="medium" bindtap="onSend" loading="{{sending}}">Send</t-button>
-  </view>
+  <!-- ─── Thread list mode (when no bookingId) ─── -->
+  <block wx:if="{{!bookingId}}">
+    <view class="ml-hdr">
+      <view class="ml-hdr-title-row">
+        <view class="ml-hdr-spacer"></view>
+        <text class="ml-hdr-title">消息</text>
+        <view class="ml-hdr-spacer"></view>
+      </view>
+      <view class="ml-hdr-actions">
+        <view class="ml-hdr-iconbtn">
+          <ll-icon name="magnifying-glass" size="32" color="#1E1E24"/>
+        </view>
+        <view class="ml-hdr-iconbtn">
+          <ll-icon name="headset" size="32" color="#1E1E24"/>
+        </view>
+      </view>
+    </view>
+
+    <view class="ml-list">
+      <empty-state wx:if="{{threads.length === 0}}" icon="💬" title="暂无消息" subtitle="开始一段预约以联系守护者"/>
+      <view
+        wx:for="{{threads}}"
+        wx:key="id"
+        class="ml-thread"
+        data-booking="{{item.bookingId}}"
+        bindtap="onOpenThread"
+        hover-class="ml-thread-hover"
+      >
+        <view class="ml-avatar ml-avatar--{{item.bg}}">
+          <image wx:if="{{item.photo}}" src="{{item.photo}}" mode="aspectFill" class="ml-avatar-img"/>
+          <text wx:else class="ml-avatar-init">{{item.initial}}</text>
+          <view wx:if="{{item.live}}" class="ml-live-dot"></view>
+        </view>
+        <view class="ml-body">
+          <view class="ml-thread-top">
+            <text class="ml-thread-name {{item.unread ? 'is-unread' : ''}}">{{item.name}}</text>
+            <text class="ml-thread-time">{{item.time}}</text>
+          </view>
+          <text class="ml-thread-last {{item.unread ? 'is-unread' : ''}}">{{item.last}}</text>
+        </view>
+        <view wx:if="{{item.unread}}" class="ml-unread ll-num">{{item.unread}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- ─── Chat view mode (when bookingId present) ─── -->
+  <block wx:else>
+    <ll-topnav title="聊天" bind:back="onBack"/>
+    <scroll-view scroll-y class="cv-messages" scroll-into-view="{{lastScrollId}}">
+      <loading-skeleton wx:if="{{loading}}" count="3" />
+      <chat-bubble
+        wx:for="{{messages}}" wx:key="_id"
+        id="m-{{item._id}}"
+        message="{{item}}"
+        mine="{{item.senderRole === myRole}}"
+      />
+    </scroll-view>
+
+    <view class="cv-composer">
+      <input class="cv-input" placeholder="输入消息…" placeholder-class="cv-input-hint" model:value="{{draft}}"/>
+      <view class="cv-send {{sending ? 'is-disabled' : ''}}" bindtap="onSend">
+        <ll-icon name="caret-right" weight="fill" size="36" color="#FFFFFF"/>
+      </view>
+    </view>
+  </block>
 </view>
-<custom-tab-bar />

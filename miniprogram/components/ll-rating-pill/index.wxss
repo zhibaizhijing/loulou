@@ -1,0 +1,10 @@
+.ll-ratepill {
+  display: inline-flex; align-items: center; gap: 8rpx;
+  padding: 8rpx 20rpx;
+  background: var(--ll-ink);
+  color: var(--ll-text-on-ink);
+  border-radius: var(--ll-radius-pill);
+  font-size: 24rpx; font-weight: 600;
+}
+.ll-ratepill-val { color: var(--ll-text-on-ink); }
+.ll-ratepill-cnt { color: rgba(255,255,255,0.6); font-weight: 500; }

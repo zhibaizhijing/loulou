@@ -1,11 +1,12 @@
 {
-  "navigationBarTitleText": "Booking",
+  "navigationStyle": "custom",
   "usingComponents": {
     "mock-banner":       "/components/mock-banner/index",
-    "custom-tab-bar":    "/custom-tab-bar/index",
-    "t-button":          "tdesign-miniprogram/button/button",
-    "t-tag":             "tdesign-miniprogram/tag/tag",
     "loading-skeleton":  "/components/loading-skeleton/index",
-    "empty-state":       "/components/empty-state/index"
+    "empty-state":       "/components/empty-state/index",
+    "ll-topnav":         "/components/ll-topnav/index",
+    "ll-card":           "/components/ll-card/index",
+    "ll-cta":            "/components/ll-cta/index",
+    "ll-icon":           "/components/ll-icon/index"
   }
 }

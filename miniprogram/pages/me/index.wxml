@@ -1,27 +1,127 @@
-<mock-banner />
-<offline-banner />
-<view class="page">
-  <view class="hero">
-    <view class="avatar"></view>
-    <view>
-      <view class="name">{{profile.name || 'Pet Owner'}}</view>
-      <view class="oid">openid: {{openid}}</view>
+<view class="ll-page me-page">
+  <mock-banner />
+  <offline-banner />
+
+  <!-- ─── Profile card ─── -->
+  <view class="me-profile">
+    <view class="me-avatar">
+      <view class="me-avatar-head"></view>
+      <view class="me-avatar-body"></view>
+    </view>
+    <view class="me-name">{{profile.name || '毛毛 M.'}}</view>
+    <view class="me-loc">
+      <ll-icon name="map-pin" size="22" color="#6B6B7A"/>
+      <text>朝阳区·望京</text>
+    </view>
+    <view class="me-edit-cta" bindtap="onEditProfile">
+      <ll-icon name="pencil-simple" size="28" color="#FFFFFF"/>
+      <text>编辑资料</text>
     </view>
   </view>
 
-  <t-cell-group title="My dogs">
-    <t-cell wx:for="{{profile.dogs}}" wx:key="id" title="{{item.name}}" note="{{item.breed || ''}}" />
-    <t-cell title="+ Add a dog" hover bind:click="onAddDogToggle" />
-  </t-cell-group>
+  <!-- ─── Tabs ─── -->
+  <view class="me-tabs">
+    <view class="me-tab-item {{tab === 'about' ? 'is-on' : ''}}"    data-tab="about"    bindtap="onTab"><text>关于我</text></view>
+    <view class="me-tab-item {{tab === 'feedback' ? 'is-on' : ''}}" data-tab="feedback" bindtap="onTab"><text>守护者反馈</text></view>
+    <view class="me-tab-item {{tab === 'pets' ? 'is-on' : ''}}"     data-tab="pets"     bindtap="onTab"><text>我的宠物</text></view>
+  </view>
 
-  <dog-form wx:if="{{addingDog}}" bind:save="onSaveDog" />
+  <view class="me-tab-body">
+    <!-- About -->
+    <view wx:if="{{tab === 'about'}}" class="me-about">
+      <view class="me-about-joined">
+        <ll-icon name="calendar-blank" size="32" color="#6B6B7A"/>
+        <text>2024年5月加入 Loulou</text>
+      </view>
+      <view class="me-section-divider"></view>
+      <view class="me-about-head">验证</view>
+      <view class="me-verify-row">
+        <ll-icon name="phone" size="32" color="#A0A0B0"/>
+        <text class="ll-hint">手机号暂未验证</text>
+      </view>
+      <view class="me-verify-row">
+        <ll-icon name="envelope-simple" size="32" color="#6B6B7A"/>
+        <text>邮箱已验证</text>
+        <ll-icon name="check-circle" weight="fill" size="28" color="#2C7A4B"/>
+      </view>
+    </view>
 
-  <t-cell-group title="Demo">
-    <t-cell title="Reset mock data" hover bind:click="onResetMock" />
-    <t-cell title="Seed cloud demo data" hover bind:click="onSeedCloud" />
-    <t-cell wx:if="{{isCaregiver}}" title="Caregiver home" hover bind:click="onCaregiverHome" />
-    <t-cell wx:elif="{{hasApplication}}" title="My application" note="{{applicationStatusLabel}}" hover bind:click="onMyApplication" />
-    <t-cell wx:else title="Become a caregiver" hover bind:click="onApply" />
-    <t-cell wx:if="{{isCaregiver}}" title="Exit caregiver mode" hover bind:click="onExitCaregiver" />
-  </t-cell-group>
+    <!-- Feedback -->
+    <view wx:elif="{{tab === 'feedback'}}" class="me-feedback">
+      <view class="me-feedback-head">守护者反馈 (0)</view>
+      <view class="me-feedback-desc">查看守护者对您的反馈，您可以回复任何反馈。</view>
+      <view class="me-feedback-empty">
+        <ll-icon name="chat-circle" size="80" color="#A0A0B0"/>
+        <text>暂无守护者反馈</text>
+      </view>
+    </view>
+
+    <!-- Pets -->
+    <view wx:else class="me-pets-tab">
+      <view class="me-pets-head">我的宠物 ({{(profile.dogs && profile.dogs.length) || 0}})</view>
+      <view class="me-pets-desc">帮助守护者了解您的宠物，接受您的申请，提供安全、贴心的照料。</view>
+
+      <view class="me-pet-list">
+        <view wx:for="{{profile.dogs}}" wx:key="id" class="me-pet">
+          <view class="me-pet-avatar me-pet-avatar--{{index % 2 === 0 ? 'butter' : 'lavender'}}">
+            <ll-icon name="paw-print" weight="fill" size="44" color="#22282C"/>
+          </view>
+          <view class="me-pet-body">
+            <view class="me-pet-name">{{item.name}}</view>
+            <view class="me-pet-breed">{{item.breed || '混血'}}</view>
+          </view>
+          <ll-icon name="caret-right" size="28" color="#A0A0B0"/>
+        </view>
+        <view wx:if="{{!profile.dogs || profile.dogs.length === 0}}" class="me-pets-empty">尚未添加宠物</view>
+      </view>
+
+      <view class="me-add-pet" bindtap="onAddDogToggle">
+        <ll-icon name="plus" size="28" color="#6B6B7A"/>
+        <text>{{addingDog ? '取消' : '添加宠物'}}</text>
+      </view>
+      <dog-form wx:if="{{addingDog}}" bind:save="onSaveDog"/>
+    </view>
+  </view>
+
+  <!-- Gray divider -->
+  <view class="me-band"></view>
+
+  <!-- ─── Menu rows ─── -->
+  <view class="me-menu">
+    <ll-menu-row
+      wx:if="{{isCaregiver}}"
+      icon="shield-check" iconBg="ink"
+      label="守护者工作台"
+      bind:tap="onCaregiverHome"
+    />
+    <ll-menu-row
+      wx:elif="{{hasApplication}}"
+      icon="shield-check" iconBg="ink"
+      label="守护者申请"
+      value="{{applicationStatusLabel}}"
+      bind:tap="onMyApplication"
+    />
+    <ll-menu-row
+      wx:else
+      icon="shield-check" iconBg="ink"
+      label="成为守护者"
+      bind:tap="onApply"
+    />
+    <ll-menu-row icon="ticket"        iconBg="butter"   label="我的优惠券" badge="2张" bind:tap="onCoupons"/>
+    <ll-menu-row icon="share-network" iconBg="lavender" label="我的邀请码"           bind:tap="onInvite"/>
+    <ll-menu-row icon="gear"          iconBg="neutral"  label="隐私与设置"           bind:tap="onSettings"/>
+    <ll-menu-row icon="info"          iconBg="neutral"  label="关于 Loulou" isLast="{{true}}" bind:tap="onAbout"/>
+  </view>
+
+  <!-- ─── Dev section ─── -->
+  <view class="me-band"></view>
+  <view class="me-menu">
+    <ll-menu-row icon="sliders-horizontal" iconBg="neutral" label="重置示例数据" bind:tap="onResetMock"/>
+    <ll-menu-row
+      wx:if="{{isCaregiver}}"
+      icon="x" iconBg="neutral" label="退出守护者模式"
+      isLast="{{true}}" danger="{{true}}"
+      bind:tap="onExitCaregiver"
+    />
+  </view>
 </view>

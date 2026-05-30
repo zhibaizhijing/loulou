@@ -1,0 +1,36 @@
+<view class="ll-page st-page">
+  <ll-topnav title="隐私与设置"/>
+
+  <view wx:for="{{sections}}" wx:key="title" wx:for-item="sec" wx:for-index="si">
+    <view wx:if="{{si > 0}}" class="st-band"></view>
+    <view class="st-sec-head">{{sec.title}}</view>
+    <view class="st-card">
+      <view
+        wx:for="{{sec.items}}"
+        wx:for-item="item"
+        wx:for-index="ii"
+        wx:key="label"
+        class="st-row {{ii === sec.items.length - 1 ? 'is-last' : ''}}"
+        data-key="{{item.key || ''}}"
+        data-type="{{item.type}}"
+        bindtap="onRowTap"
+      >
+        <text class="st-row-label">{{item.label}}</text>
+        <block wx:if="{{item.type === 'toggle'}}">
+          <ll-toggle value="{{item.key === 'notif' ? notif : mktg}}" data-key="{{item.key}}" catch:change="onToggleChange"/>
+        </block>
+        <block wx:else>
+          <text wx:if="{{item.value}}" class="st-row-val">{{item.value}}</text>
+          <ll-icon name="caret-right" size="24" color="#A0A0B0"/>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <view class="st-band"></view>
+  <view class="st-card">
+    <view class="st-row is-last is-danger" bindtap="onLogout">
+      <text class="st-logout">退出登录</text>
+    </view>
+  </view>
+</view>

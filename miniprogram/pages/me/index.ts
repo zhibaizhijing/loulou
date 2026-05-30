@@ -13,14 +13,36 @@ interface Data {
   isCaregiver: boolean
   hasApplication: boolean
   applicationStatusLabel: string
+  tab: 'about' | 'feedback' | 'pets'
+  __USE_MOCK__: boolean
 }
 
 const MOCK_OWNER_ID = 'mock-owner-1'
 
 Page<Data, WechatMiniprogram.IAnyObject>({
-  data: { profile: null, openid: '', addingDog: false, isCaregiver: false, hasApplication: false, applicationStatusLabel: '' },
+  data: {
+    profile: null, openid: '', addingDog: false,
+    isCaregiver: false, hasApplication: false, applicationStatusLabel: '',
+    tab: 'about',
+    __USE_MOCK__
+  },
 
-  onShow() { this.load() },
+  onTab(e: WechatMiniprogram.BaseEvent) {
+    const tab = e.currentTarget.dataset.tab as 'about' | 'feedback' | 'pets'
+    if (tab === 'pets') {
+      wx.navigateTo({ url: '/pages/pets/index' })
+      return
+    }
+    this.setData({ tab })
+  },
+
+  onShow() {
+    this.load()
+    const tb = this.getTabBar?.() as WechatMiniprogram.Component.TrivialInstance | undefined
+    if (tb && typeof tb.setData === 'function') {
+      tb.setData({ activePath: '/pages/me/index' })
+    }
+  },
 
   async load() {
     try {
@@ -47,6 +69,12 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     } catch (e) { showAppError(e) }
   },
 
+  onEditProfile() { wx.showToast({ title: '即将上线 · Coming soon', icon: 'none' }) },
+  onCoupons()     { wx.showToast({ title: '即将上线 · Coming soon', icon: 'none' }) },
+  onInvite()      { wx.showToast({ title: '即将上线 · Coming soon', icon: 'none' }) },
+  onSettings()    { wx.showToast({ title: '即将上线 · Coming soon', icon: 'none' }) },
+  onAbout()       { wx.showToast({ title: 'Loulou v1.0', icon: 'none' }) },
+
   onAddDogToggle() { this.setData({ addingDog: !this.data.addingDog }) },
 
   async onSaveDog(e: WechatMiniprogram.CustomEvent<{ dog: Dog }>) {
@@ -54,7 +82,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     try {
       if (__USE_MOCK__) {
         const u = mockDb.users.list().find(x => x._id === MOCK_OWNER_ID)
-        if (u) mockDb.users.update(u._id, { dogs } as any)
+        if (u) mockDb.users.update(u._id, { dogs } as Partial<User>)
       } else {
         await cloudCall('updateProfile', { name: this.data.profile?.name || 'Pet Owner', dogs })
       }
@@ -89,10 +117,10 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     finally { wx.hideLoading() }
   },
 
-  onApply() { wx.navigateTo({ url: '/pages/caregiver-apply/index' }) },
-  onMyApplication() { wx.navigateTo({ url: '/pages/caregiver-apply/index' }) },
-  onCaregiverHome() { wx.navigateTo({ url: '/pages/caregiver-home/index' }) },
-  async onExitCaregiver() {
+  onApply()          { wx.navigateTo({ url: '/pages/caregiver-apply/index' }) },
+  onMyApplication()  { wx.navigateTo({ url: '/pages/caregiver-apply/index' }) },
+  onCaregiverHome()  { wx.navigateTo({ url: '/pages/caregiver-home/index' }) },
+  onExitCaregiver()  {
     exitCaregiverMode()
     this.setData({ isCaregiver: false })
     wx.showToast({ title: 'Exited caregiver mode', icon: 'success' })

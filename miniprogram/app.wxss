@@ -1,8 +1,142 @@
 @import "/miniprogram_npm/tdesign-miniprogram/common/style/index.wxss";
 
+/* ============================================================================
+   Lou Lou Design System — tokens
+   Spec: docs/superpowers/specs/2026-05-30-loulou-design-system.md
+   Source: design/lou-lou-design-system/project/colors_and_type.css
+   ============================================================================ */
 page {
-  background-color: #f5f5f5;
-  font-size: 28rpx;
-  color: #1f2329;
-  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", sans-serif;
+  /* Colors */
+  --ll-ink:           #22282C;
+  --ll-ink-press:     #1A1F23;
+  --ll-ink-disabled:  rgba(34, 40, 44, 0.5);
+  --ll-bg:            #F8F8FC;
+  --ll-surface:       #FFFFFF;
+  --ll-surface-2:     #F0F0F5;
+  --ll-border:        #EEEEF2;
+  --ll-text:          #1E1E24;
+  --ll-text-2:        #6B6B7A;
+  --ll-text-3:        #A0A0B0;
+  --ll-text-on-ink:   #FFFFFF;
+
+  --ll-butter:        #FEE7A6;
+  --ll-lavender:      #D8CAE8;
+  --ll-mint:          #C7E8D8;
+  --ll-peach:         #FBD3C4;
+  --ll-mint-soft:     #E6F1EC;
+
+  --ll-success:       #3FAE6A;
+  --ll-warning:       #F0B100;
+  --ll-danger:        #E5484D;
+  --ll-info:          #5B7CFA;
+  --ll-heart:         #E63946;          /* logo only */
+
+  /* Radii */
+  --ll-radius-lg:     24rpx;            /* 12px */
+  --ll-radius-md:     16rpx;            /* 8px  */
+  --ll-radius-sm:     12rpx;            /* 6px  */
+  --ll-radius-xs:     8rpx;             /* 4px  */
+  --ll-radius-pill:   999rpx;
+  --ll-radius-none:   0;
+
+  /* Shadows */
+  --ll-shadow-card:   0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+  --ll-shadow-pop:    0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  --ll-shadow-lift:   0 16rpx 48rpx rgba(0, 0, 0, 0.10);
+
+  /* Spacing — 4px scale on a 750 baseline => 8rpx steps */
+  --ll-space-1:       8rpx;
+  --ll-space-2:       16rpx;
+  --ll-space-3:       24rpx;
+  --ll-space-4:       32rpx;
+  --ll-space-5:       40rpx;
+  --ll-space-6:       48rpx;
+  --ll-space-8:       64rpx;
+  --ll-space-10:      80rpx;
+  --ll-space-12:      96rpx;
+
+  /* Layout */
+  --ll-navbar-h:      128rpx;           /* 64px */
+  --ll-tabbar-h:      156rpx;           /* 78px chrome incl. safe-area pad */
+  --ll-hit-min:       88rpx;            /* 44px */
+  --ll-safe-x:        32rpx;            /* 16px gutter */
+
+  /* Typography */
+  --ll-h1-size:       56rpx;
+  --ll-h1-line:       72rpx;
+  --ll-h2-size:       44rpx;
+  --ll-h2-line:       60rpx;
+  --ll-h3-size:       34rpx;
+  --ll-h3-line:       48rpx;
+  --ll-body-size:     28rpx;
+  --ll-body-line:     44rpx;
+  --ll-caption-size:  24rpx;
+  --ll-caption-line:  36rpx;
+  --ll-tab-size:      20rpx;
+  --ll-tab-line:      28rpx;
+  --ll-tag-size:      22rpx;
+  --ll-tag-line:      32rpx;
+
+  /* Motion */
+  --ll-ease:          cubic-bezier(0.2, 0, 0, 1);
+  --ll-dur-fast:      120ms;
+  --ll-dur-slow:      240ms;
+
+  background-color: var(--ll-bg);
+  color: var(--ll-text);
+  font-size: var(--ll-body-size);
+  font-family: -apple-system, "SF Pro Text", "PingFang SC", "Helvetica Neue",
+               "Microsoft YaHei", "Noto Sans SC", Roboto, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ----- Type helpers ----- */
+.ll-h1       { font-size: var(--ll-h1-size); line-height: var(--ll-h1-line); font-weight: 700;
+               letter-spacing: -0.01em; color: var(--ll-text); }
+.ll-h2       { font-size: var(--ll-h2-size); line-height: var(--ll-h2-line); font-weight: 700;
+               letter-spacing: -0.005em; color: var(--ll-text); }
+.ll-h3       { font-size: var(--ll-h3-size); line-height: var(--ll-h3-line); font-weight: 600;
+               color: var(--ll-text); }
+.ll-body     { font-size: var(--ll-body-size); line-height: var(--ll-body-line); font-weight: 400;
+               color: var(--ll-text); }
+.ll-caption  { font-size: var(--ll-caption-size); line-height: var(--ll-caption-line);
+               color: var(--ll-text-2); }
+.ll-tag-text { font-size: var(--ll-tag-size); line-height: var(--ll-tag-line); font-weight: 600;
+               color: var(--ll-text); }
+.ll-hint     { color: var(--ll-text-3); }
+.ll-num      { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* ----- Common surfaces ----- */
+.ll-page          { background: var(--ll-bg); min-height: 100vh; }
+.ll-card          { background: var(--ll-surface); border-radius: var(--ll-radius-lg);
+                    box-shadow: var(--ll-shadow-card); padding: var(--ll-space-2); }
+.ll-divider       { height: 1px; background: var(--ll-border); border: 0; }
+.ll-section-gap   { height: var(--ll-space-3); }
+.ll-section-title { font-size: var(--ll-caption-size); line-height: var(--ll-caption-line);
+                    font-weight: 600; color: var(--ll-text-2); letter-spacing: 0.04em; padding: 0 var(--ll-safe-x); }
+
+/* ----- TDesign overrides (light touch — keep primitive behavior intact) ----- */
+.t-button--primary,
+.t-button--primary.t-button--variant-base {
+  --td-button-primary-color: var(--ll-text-on-ink);
+  --td-button-primary-bg-color: var(--ll-ink);
+  --td-button-primary-border-color: var(--ll-ink);
+  border-radius: var(--ll-radius-pill);
+}
+.t-tag { border-radius: var(--ll-radius-xs); }
+.t-cell, .t-cell--bordered-top, .t-cell--bordered-bottom {
+  --td-cell-border-color: var(--ll-border);
+  background-color: var(--ll-surface);
+}
+.t-input { --td-input-bg-color: var(--ll-surface); border-radius: var(--ll-radius-md); }
+.t-tabs__item--active { color: var(--ll-text); }
+.t-tabs__track { background-color: var(--ll-text); }
+.t-checkbox__icon--checked { color: var(--ll-ink); }
+
+/* Spinner for ll-cta loading state */
+@keyframes ll-spin { to { transform: rotate(360deg); } }
+.ll-spinner {
+  width: 32rpx; height: 32rpx; border-radius: 50%;
+  border: 4rpx solid rgba(255,255,255,0.3); border-top-color: #fff;
+  animation: ll-spin 0.8s linear infinite;
 }

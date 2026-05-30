@@ -1,0 +1,7 @@
+<image
+  wx:if="{{src}}"
+  src="{{src}}"
+  class="ll-icon-img"
+  style="width:{{size}}rpx;height:{{size}}rpx;"
+  mode="aspectFit"
+/>

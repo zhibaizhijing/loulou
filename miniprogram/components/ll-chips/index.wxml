@@ -1,0 +1,11 @@
+<scroll-view scroll-x="true" class="ll-chips-scroll" enhanced show-scrollbar="{{false}}">
+  <view class="ll-chips-row">
+    <view
+      wx:for="{{items}}"
+      wx:key="id"
+      class="ll-chip {{active === item.id ? 'is-on' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onPick"
+    >{{item.label}}</view>
+  </view>
+</scroll-view>

@@ -1,0 +1,15 @@
+<view class="ll-topnav {{transparent ? 'is-transparent' : ''}}">
+  <view class="ll-topnav-back" wx:if="{{back}}" bindtap="onBack">
+    <ll-icon name="caret-left" size="36" color="#FFFFFF"/>
+  </view>
+  <view wx:else class="ll-topnav-back ll-topnav-spacer"></view>
+
+  <view class="ll-topnav-title-wrap">
+    <view class="ll-topnav-title">{{title}}</view>
+    <view class="ll-topnav-subtitle" wx:if="{{subtitle}}">{{subtitle}}</view>
+  </view>
+
+  <view class="ll-topnav-trailing">
+    <slot name="trailing"/>
+  </view>
+</view>

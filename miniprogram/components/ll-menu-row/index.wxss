@@ -1,0 +1,29 @@
+.ll-row {
+  display: flex; align-items: center; gap: 24rpx;
+  padding: 28rpx 32rpx;
+  background: var(--ll-surface);
+  border-bottom: 1px solid var(--ll-border);
+}
+.ll-row.is-last { border-bottom: 0; }
+.ll-row-hover { background: var(--ll-surface-2); }
+.ll-row-icon {
+  width: 72rpx; height: 72rpx; border-radius: 20rpx; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-row-icon--ink      { background: var(--ll-ink); }
+.ll-row-icon--butter   { background: var(--ll-butter); }
+.ll-row-icon--lavender { background: var(--ll-lavender); }
+.ll-row-icon--mint     { background: var(--ll-mint); }
+.ll-row-icon--peach    { background: var(--ll-peach); }
+.ll-row-icon--neutral  { background: var(--ll-surface-2); }
+.ll-row-label  { flex: 1; font-size: 30rpx; font-weight: 500; color: var(--ll-text); }
+.ll-row.is-danger .ll-row-label { color: var(--ll-danger); }
+.ll-row-value  { font-size: 26rpx; color: var(--ll-text-3); margin-right: 8rpx; }
+.ll-row-badge  {
+  background: var(--ll-heart);
+  color: #fff;
+  font-size: 22rpx; font-weight: 700;
+  padding: 4rpx 16rpx; border-radius: var(--ll-radius-pill);
+  margin-right: 8rpx;
+}
+.ll-row-chev { display: flex; }

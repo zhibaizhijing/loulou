@@ -1,0 +1,73 @@
+.iv-page { padding-bottom: 64rpx; }
+
+.iv-stats {
+  background: var(--ll-ink);
+  padding: 48rpx 40rpx;
+  display: flex; flex-direction: row; justify-content: center; gap: 80rpx;
+}
+.iv-stat       { text-align: center; display: flex; flex-direction: column; gap: 6rpx; }
+.iv-stat-val   { font-size: 52rpx; font-weight: 800; color: #fff; letter-spacing: -0.01em; }
+.iv-stat-label { font-size: 24rpx; color: rgba(255, 255, 255, 0.6); }
+
+.iv-code-card {
+  margin: 28rpx var(--ll-safe-x) 0;
+  background: var(--ll-surface);
+  border-radius: 28rpx;
+  padding: 36rpx;
+  box-shadow: var(--ll-shadow-card);
+}
+.iv-code-label {
+  font-size: 25rpx; color: var(--ll-text-3);
+  text-align: center; margin-bottom: 20rpx;
+}
+.iv-code-row {
+  display: flex; flex-direction: row; align-items: center; gap: 20rpx;
+  background: var(--ll-bg);
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+}
+.iv-code-text {
+  flex: 1; text-align: center;
+  font-size: 48rpx; font-weight: 800;
+  color: var(--ll-text); letter-spacing: 0.2em;
+}
+.iv-copy {
+  height: 72rpx; padding: 0 32rpx;
+  border-radius: var(--ll-radius-pill);
+  background: var(--ll-ink); color: #fff;
+  font-size: 26rpx; font-weight: 600;
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+.iv-copy.is-copied { background: #2C7A4B; }
+
+.iv-qr-wrap {
+  margin-top: 32rpx;
+  display: flex; flex-direction: column; align-items: center; gap: 16rpx;
+}
+.iv-qr {
+  width: 220rpx; height: 220rpx;
+  background: var(--ll-bg);
+  border-radius: 24rpx; border: 1px solid var(--ll-border);
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+}
+.iv-qr-caption { font-size: 24rpx; color: var(--ll-text-3); }
+
+.iv-rules {
+  margin: 24rpx var(--ll-safe-x) 0;
+  background: var(--ll-surface);
+  border-radius: 28rpx;
+  padding: 28rpx 32rpx;
+  box-shadow: var(--ll-shadow-card);
+}
+.iv-rules-head { font-size: 26rpx; font-weight: 700; color: var(--ll-text); margin-bottom: 20rpx; }
+.iv-rule {
+  display: flex; flex-direction: row; gap: 16rpx;
+  font-size: 25rpx; color: var(--ll-text-2); line-height: 1.6;
+  margin-bottom: 16rpx;
+}
+.iv-rule:last-child { margin-bottom: 0; }
+.iv-rule-num  { color: var(--ll-text-3); font-weight: 600; flex: 0 0 auto; }
+.iv-rule-text { flex: 1; }
+
+.iv-cta { padding: 32rpx var(--ll-safe-x) 0; }

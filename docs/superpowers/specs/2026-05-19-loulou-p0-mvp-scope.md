@@ -5,6 +5,8 @@
 **Source:** product roadmap reprioritised after discussion of anti-飞单 (off-platform leakage), service-account push, response-time SLAs, and new-user retention.
 **Launch target:** still 2026-09 (per `宠物寄养应用问题与范围定义0518.docx`).
 
+> **Visuals.** All visual decisions follow `docs/superpowers/specs/2026-05-30-loulou-design-system.md` (Lou Lou Design System v1.0). If this P0 spec implies a different surface or layout from the design spec, the design spec wins for appearance only — behavior here remains authoritative.
+
 > **Reading order:** Sections 1–4 = scope at three priority tiers. Section 5 details the *net-new* capabilities introduced by this reprioritisation (not present in the prior spec). Section 6 = data-model deltas. Section 7 = launch acceptance criteria. Section 8 = how to absorb this into the existing plan. Section 9 = open decisions. Section 10 = compatibility with the in-flight Phase-1 implementation.
 
 ---

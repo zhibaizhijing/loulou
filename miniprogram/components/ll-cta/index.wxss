@@ -1,0 +1,33 @@
+.ll-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  height: 104rpx;                       /* 52px */
+  padding: 0 48rpx;
+  border-radius: var(--ll-radius-pill);
+  background: var(--ll-ink);
+  color: var(--ll-text-on-ink);
+  font-size: 30rpx;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background var(--ll-dur-fast) var(--ll-ease),
+              transform  var(--ll-dur-fast) var(--ll-ease);
+  box-sizing: border-box;
+  border: 0;
+}
+.ll-cta.is-full       { width: 100%; padding: 0; }
+.ll-cta.is-pressed    { background: var(--ll-ink-press); transform: scale(0.985); }
+.ll-cta.is-disabled   { background: var(--ll-ink-disabled); }
+.ll-cta.is-secondary  {
+  background: var(--ll-surface);
+  color: var(--ll-text);
+  box-shadow: inset 0 0 0 2rpx var(--ll-border);
+}
+.ll-cta.is-secondary.is-pressed { background: var(--ll-surface-2); }
+.ll-cta.is-danger     {
+  background: var(--ll-surface);
+  color: var(--ll-danger);
+  box-shadow: inset 0 0 0 2rpx var(--ll-border);
+}
+.ll-cta-text { font-family: inherit; }

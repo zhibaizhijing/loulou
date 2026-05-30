@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Tab Bar</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+  body { margin: 0; padding: 24px; background: #f3f3f8; font-family: var(--font-sans); }
+  .frame { background: #fff; border-radius: 24px; box-shadow: var(--ll-shadow-pop); overflow: hidden; }
+
+  /* 小程序底部 Tab 栏规范:
+     - 高度 98rpx (≈49pt) + iOS home indicator 安全区
+     - 图标 48rpx × 48rpx (24×24px)
+     - 文字 20rpx (10px), 与图标间距 4rpx
+     - 2–5 个 tab; 当前 5 个 */
+  .strip {
+    height: 49px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-top: 1px solid var(--ll-border);
+    background: #fff;
+  }
+  .item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--ll-text-3);
+    position: relative;
+    min-height: var(--ll-hit-min);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .item.on { color: var(--ll-text); }
+  .icon-wrap {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .item i { font-size: 22px; line-height: 1; }
+  .lbl {
+    font-size: var(--ll-tab-size);
+    line-height: var(--ll-tab-line);
+    font-weight: var(--ll-tab-weight);
+    letter-spacing: 0.01em;
+  }
+  .item.on .lbl { font-weight: 600; }
+
+  /* badge — 红点 / 数字角标, 小程序常用规范 */
+  .badge {
+    position: absolute;
+    top: -3px; right: -8px;
+    min-width: 16px; height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--ll-heart);
+    color: #fff;
+    font-size: 10px; line-height: 16px;
+    font-weight: 600;
+    text-align: center;
+    box-sizing: border-box;
+    border: 1.5px solid #fff;
+  }
+  .dot {
+    position: absolute;
+    top: -1px; right: -1px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ll-heart);
+    border: 1.5px solid #fff;
+    box-sizing: border-box;
+  }
+
+  /* iOS home indicator 安全区占位 */
+  .safe-area {
+    height: 34px;
+    background: #fff;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 8px;
+  }
+  .safe-area::after {
+    content: "";
+    width: 134px; height: 5px;
+    background: #1E1E24;
+    border-radius: 3px;
+    opacity: 0.9;
+  }
+
+  /* meta labels */
+  .label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ll-text-3);
+    padding: 0 0 10px 4px;
+  }
+  .specs {
+    margin-top: 24px;
+    padding: 16px 18px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: var(--ll-shadow-card);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 18px;
+    color: var(--ll-text-2);
+  }
+  .specs b { color: var(--ll-text); font-weight: 600; }
+  .specs .kv { display: grid; grid-template-columns: 92px 1fr; gap: 4px 12px; }
+</style>
+</head>
+<body>
+  <div class="label">底部 Tab 栏 · 98rpx · 5 tabs · 图标 + 文字 · Phosphor</div>
+  <div class="frame">
+    <div class="strip">
+      <div class="item on" role="tab" aria-selected="true">
+        <div class="icon-wrap"><i class="ph-fill ph-house"></i></div>
+        <div class="lbl">首页</div>
+      </div>
+      <div class="item" role="tab">
+        <div class="icon-wrap">
+          <i class="ph ph-receipt"></i>
+          <span class="badge">2</span>
+        </div>
+        <div class="lbl">订单</div>
+      </div>
+      <div class="item" role="tab">
+        <div class="icon-wrap">
+          <i class="ph ph-chat-circle-dots"></i>
+          <span class="dot"></span>
+        </div>
+        <div class="lbl">消息</div>
+      </div>
+      <div class="item" role="tab">
+        <div class="icon-wrap"><i class="ph ph-paw-print"></i></div>
+        <div class="lbl">守护时刻</div>
+      </div>
+      <div class="item" role="tab">
+        <div class="icon-wrap"><i class="ph ph-user"></i></div>
+        <div class="lbl">我的</div>
+      </div>
+    </div>
+    <div class="safe-area" aria-hidden="true"></div>
+  </div>
+
+  <div class="specs">
+    <div class="kv">
+      <span>高度</span><span><b>98rpx</b> (49pt) + 安全区 34pt</span>
+      <span>图标</span><span><b>48rpx</b> (24×24px) · Phosphor regular / fill</span>
+      <span>文字</span><span><b>20rpx</b> (10px) · weight 500 / 选中 600</span>
+      <span>选中色</span><span><b>--ll-text</b> #1E1E24</span>
+      <span>未选中色</span><span><b>--ll-text-3</b> #A0A0B0</span>
+      <span>角标</span><span>红点 8×8 / 数字 16h · <b>--ll-heart</b> #E63946</span>
+      <span>触控目标</span><span>≥ 44pt — 整栏均匀分布</span>
+    </div>
+  </div>
+</body>
+</html>

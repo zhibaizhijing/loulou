@@ -2,11 +2,18 @@
   "pages": [
     "pages/home/index",
     "pages/bookings/index",
+    "pages/chat/index",
+    "pages/activity/index",
     "pages/me/index",
     "pages/walker/index",
     "pages/booking-new/index",
     "pages/booking/index",
-    "pages/chat/index",
+    "pages/search-results/index",
+    "pages/coupons/index",
+    "pages/invite/index",
+    "pages/settings/index",
+    "pages/about/index",
+    "pages/pets/index",
     "pages/review/index",
     "pages/caregiver-apply/index",
     "pages/caregiver-services/index",
@@ -24,14 +31,16 @@
   },
   "tabBar": {
     "custom": true,
-    "color": "#888888",
-    "selectedColor": "#2563eb",
-    "backgroundColor": "#ffffff",
+    "color": "#A0A0B0",
+    "selectedColor": "#1E1E24",
+    "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/home/index",     "text": "Home" },
-      { "pagePath": "pages/bookings/index", "text": "Bookings" },
-      { "pagePath": "pages/me/index",       "text": "Me" }
+      { "pagePath": "pages/home/index",     "text": "首页" },
+      { "pagePath": "pages/bookings/index", "text": "订单" },
+      { "pagePath": "pages/chat/index",     "text": "消息" },
+      { "pagePath": "pages/activity/index", "text": "守护时刻" },
+      { "pagePath": "pages/me/index",       "text": "我的" }
     ]
   },
   "style": "v2",

@@ -2,6 +2,7 @@
 
 **Date:** 2026-05-19
 **Companion spec:** `docs/superpowers/specs/2026-05-19-loulou-p0-mvp-scope.md` (decisions locked §9)
+**Design spec + rollout plan:** `docs/superpowers/specs/2026-05-30-loulou-design-system.md` + `docs/superpowers/plans/2026-05-30-design-rollout.md` — all visual + component decisions live there.
 **Predecessor plan:** `docs/superpowers/plans/2026-05-16-petbacker-dogwalking-mvp.md` (Phase 1 dog-walking slice, Tasks 1–110)
 **Launch target:** closed pilot, single city, 50–100 invited testers, 2026-09
 **This plan is outline-level.** Detailed TDD-step bodies emerge when each P0 stage enters implementation; mirrors the depth of Phase 2–8 outlines in the predecessor plan.

@@ -1,0 +1,19 @@
+.ll-hero {
+  display: inline-flex; align-items: center; gap: 12rpx;
+  background: var(--ll-ink);
+  border-radius: var(--ll-radius-pill);
+  padding: 8rpx;
+}
+.ll-hero-avatar, .ll-hero-paw, .ll-hero-bell {
+  width: 80rpx; height: 80rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-hero-avatar { background: var(--ll-butter); overflow: hidden; }
+.ll-hero-avatar-img { width: 100%; height: 100%; }
+.ll-hero-bell   { background: #fff; position: relative; }
+.ll-hero-bell-dot {
+  position: absolute; top: 8rpx; right: 8rpx;
+  width: 16rpx; height: 16rpx; border-radius: 50%;
+  background: var(--ll-heart);
+  border: 2rpx solid #fff;
+}

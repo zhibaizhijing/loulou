@@ -1,0 +1,214 @@
+/* ==========================================================================
+   Lou Lou Design System — Core Tokens
+   小程序设计系统 v1.0
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Font stacks
+   - 中文: PingFang SC (system on iOS/macOS), fallback to Noto Sans SC
+   - 拉丁/数字: SF Pro Text (system on Apple), fallback Helvetica Neue / Roboto
+   -------------------------------------------------------------------------- */
+:root {
+  --font-sans:
+    -apple-system, "SF Pro Text", "PingFang SC", "Helvetica Neue",
+    "Microsoft YaHei", "Noto Sans SC", Roboto, "Segoe UI", Arial, sans-serif;
+  --font-display:
+    -apple-system, "SF Pro Display", "PingFang SC", "Helvetica Neue",
+    "Microsoft YaHei", "Noto Sans SC", Roboto, sans-serif;
+  --font-mono:
+    "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* -----------------------------------------------------------------------
+     Brand colors
+     ----------------------------------------------------------------------- */
+  /* Primary — used for CTAs, dominant text, top-of-pet-card pill */
+  --ll-ink: #22282C;
+  --ll-ink-press: #1A1F23;   /* CTA pressed (-10% L) */
+  --ll-ink-disabled: rgba(34, 40, 44, 0.5);
+
+  /* Pastel accents — pet-card backgrounds, tags, highlights */
+  --ll-lavender: #D8CAE8;    /* Auxiliary 1 */
+  --ll-butter: #FEE7A6;      /* Auxiliary 2 */
+  --ll-mint: #C7E8D8;        /* Optional extended pastel */
+  --ll-peach: #FBD3C4;       /* Optional extended pastel */
+
+  /* Surfaces */
+  --ll-bg: #F8F8FC;          /* page background */
+  --ll-surface: #FFFFFF;     /* cards */
+  --ll-border: #EEEEF2;      /* hairline dividers, borders */
+
+  /* Text */
+  --ll-text: #1E1E24;        /* primary */
+  --ll-text-2: #6B6B7A;      /* secondary, captions */
+  --ll-text-3: #A0A0B0;      /* hint / placeholder / disabled */
+  --ll-text-on-ink: #FFFFFF; /* text on dark CTAs */
+
+  /* Status — derived; not in spec but provided for completeness */
+  --ll-success: #3FAE6A;
+  --ll-warning: #F0B100;
+  --ll-danger:  #E5484D;
+  --ll-info:    #5B7CFA;
+
+  /* Accent — heart red from the logo */
+  --ll-heart: #E63946;
+
+  /* -----------------------------------------------------------------------
+     Radii (designed for 750px base → rpx-aware)
+     spec: 24rpx / 16rpx / 12rpx / 8rpx / 48rpx (pill)
+     converted at 1rpx ≈ 0.5px on a 375 viewport
+     ----------------------------------------------------------------------- */
+  --ll-radius-lg: 12px;   /* 24rpx — large cards, sheets */
+  --ll-radius-md: 8px;    /* 16rpx — list items, medium cards */
+  --ll-radius-sm: 6px;    /* 12rpx — avatars, small cards */
+  --ll-radius-xs: 4px;    /* 8rpx  — tags */
+  --ll-radius-pill: 999px;/* 48rpx pill CTA */
+  --ll-radius-none: 0;    /* nav / tab bar */
+
+  /* -----------------------------------------------------------------------
+     Shadows — kept extremely light per 小程序 aesthetic
+     ----------------------------------------------------------------------- */
+  --ll-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --ll-shadow-pop:  0 4px 12px rgba(0, 0, 0, 0.08);
+  --ll-shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.10);
+
+  /* -----------------------------------------------------------------------
+     Spacing — 4px scale, with 16px the workhorse
+     ----------------------------------------------------------------------- */
+  --ll-space-1: 4px;
+  --ll-space-2: 8px;
+  --ll-space-3: 12px;
+  --ll-space-4: 16px;
+  --ll-space-5: 20px;
+  --ll-space-6: 24px;
+  --ll-space-8: 32px;
+  --ll-space-10: 40px;
+  --ll-space-12: 48px;
+
+  /* -----------------------------------------------------------------------
+     Layout — 小程序 specifics
+     ----------------------------------------------------------------------- */
+  --ll-navbar-h: 64px;       /* 128rpx */
+  --ll-tabbar-h: 49px;       /* 98rpx */
+  --ll-hit-min: 44px;        /* min touch target (75rpx ≈ 37.5px; bumped to 44 per WCAG) */
+  --ll-safe-x: 16px;         /* gutter */
+
+  /* -----------------------------------------------------------------------
+     Typography — px values per 小程序 spec (350-design viewport)
+     ----------------------------------------------------------------------- */
+  --ll-h1-size: 28px;   --ll-h1-line: 36px;   --ll-h1-weight: 700;
+  --ll-h2-size: 22px;   --ll-h2-line: 30px;   --ll-h2-weight: 700;
+  --ll-h3-size: 17px;   --ll-h3-line: 24px;   --ll-h3-weight: 600;  /* nav titles, list titles */
+  --ll-body-size: 14px; --ll-body-line: 22px; --ll-body-weight: 400; /* summary / small btn — 28rpx */
+  --ll-caption-size: 12px; --ll-caption-line: 18px; --ll-caption-weight: 400; /* nicknames / time */
+  --ll-tab-size: 10px;  --ll-tab-line: 14px;  --ll-tab-weight: 500;  /* tab text — 20rpx */
+  --ll-tag-size: 11px;  --ll-tag-line: 16px;  --ll-tag-weight: 600;
+}
+
+/* ==========================================================================
+   Semantic element styles
+   ========================================================================== */
+html, body {
+  font-family: var(--font-sans);
+  color: var(--ll-text);
+  background: var(--ll-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, .ll-h1 {
+  font-family: var(--font-display);
+  font-size: var(--ll-h1-size);
+  line-height: var(--ll-h1-line);
+  font-weight: var(--ll-h1-weight);
+  letter-spacing: -0.01em;
+  color: var(--ll-text);
+  margin: 0;
+}
+
+h2, .ll-h2 {
+  font-family: var(--font-display);
+  font-size: var(--ll-h2-size);
+  line-height: var(--ll-h2-line);
+  font-weight: var(--ll-h2-weight);
+  letter-spacing: -0.005em;
+  color: var(--ll-text);
+  margin: 0;
+}
+
+h3, .ll-h3 {
+  font-size: var(--ll-h3-size);
+  line-height: var(--ll-h3-line);
+  font-weight: var(--ll-h3-weight);
+  color: var(--ll-text);
+  margin: 0;
+}
+
+p, .ll-body {
+  font-size: var(--ll-body-size);
+  line-height: var(--ll-body-line);
+  font-weight: var(--ll-body-weight);
+  color: var(--ll-text);
+  margin: 0;
+}
+
+.ll-caption {
+  font-size: var(--ll-caption-size);
+  line-height: var(--ll-caption-line);
+  color: var(--ll-text-2);
+}
+
+.ll-tab-label {
+  font-size: var(--ll-tab-size);
+  line-height: var(--ll-tab-line);
+  font-weight: var(--ll-tab-weight);
+}
+
+.ll-hint, ::placeholder {
+  color: var(--ll-text-3);
+}
+
+/* ==========================================================================
+   Common building blocks
+   ========================================================================== */
+.ll-card {
+  background: var(--ll-surface);
+  border-radius: var(--ll-radius-lg);
+  box-shadow: var(--ll-shadow-card);
+}
+
+.ll-divider {
+  height: 1px;
+  background: var(--ll-border);
+  border: 0;
+}
+
+.ll-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--ll-radius-xs);
+  font-size: var(--ll-tag-size);
+  font-weight: var(--ll-tag-weight);
+  color: var(--ll-text);
+  background: var(--ll-butter);
+}
+
+/* CTA — pill, dark, white text */
+.ll-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--ll-hit-min);
+  padding: 0 24px;
+  border-radius: var(--ll-radius-pill);
+  background: var(--ll-ink);
+  color: var(--ll-text-on-ink);
+  font-size: 15px;
+  font-weight: 600;
+  border: 0;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+.ll-cta:active   { background: var(--ll-ink-press); transform: scale(0.985); }
+.ll-cta:disabled { background: var(--ll-ink-disabled); cursor: not-allowed; }

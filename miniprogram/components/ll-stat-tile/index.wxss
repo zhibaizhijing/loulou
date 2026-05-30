@@ -1,0 +1,19 @@
+.ll-stat {
+  flex: 1;
+  border-radius: 32rpx;
+  padding: 28rpx 32rpx;
+  min-height: 184rpx;
+  display: flex; flex-direction: column; justify-content: space-between;
+  box-sizing: border-box;
+}
+.ll-stat--butter    { background: var(--ll-butter); }
+.ll-stat--lavender  { background: var(--ll-lavender); }
+.ll-stat--mint      { background: var(--ll-mint); }
+.ll-stat--peach     { background: var(--ll-peach); }
+.ll-stat--mint-soft { background: var(--ll-mint-soft); }
+.ll-stat-label { font-size: 24rpx; font-weight: 500; color: rgba(30,30,36,0.6); }
+.ll-stat-value {
+  font-size: 48rpx; font-weight: 700; color: var(--ll-text);
+  letter-spacing: -0.01em; line-height: 1.05;
+}
+.ll-stat-unit { font-size: 28rpx; font-weight: 600; color: rgba(30,30,36,0.55); margin-left: 4rpx; }

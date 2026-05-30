@@ -1,0 +1,136 @@
+<view class="ll-page sr-page">
+  <!-- Sticky top -->
+  <view class="sr-sticky">
+    <view class="sr-topbar">
+      <view class="sr-back" bindtap="onBack">
+        <ll-icon name="caret-left" size="30" color="#1E1E24"/>
+      </view>
+      <view class="sr-topbar-center">
+        <view class="sr-topbar-title">搜索结果</view>
+        <view class="sr-topbar-sub">{{q.svcType}} · {{q.address}}</view>
+      </view>
+      <view class="sr-back sr-spacer"></view>
+    </view>
+
+    <view class="sr-summary">
+      <view class="sr-summary-card">
+        <view class="sr-summary-row">
+          <view class="sr-chip" bindtap="onPickPet">
+            <ll-icon name="paw-print" size="22" color="#6B6B7A"/>
+            <text>{{q.petType}}</text>
+            <ll-icon name="caret-down" size="18" color="#A0A0B0"/>
+          </view>
+          <view class="sr-dot"></view>
+          <view class="sr-chip" bindtap="onPickSvc">
+            <ll-icon name="hand-waving" size="22" color="#6B6B7A"/>
+            <text>{{q.svcType}}</text>
+            <ll-icon name="caret-down" size="18" color="#A0A0B0"/>
+          </view>
+          <view class="sr-dot"></view>
+          <view class="sr-chip" bindtap="onPickAddress">
+            <ll-icon name="map-pin" size="22" color="#6B6B7A"/>
+            <text>{{q.address}}</text>
+            <ll-icon name="caret-down" size="18" color="#A0A0B0"/>
+          </view>
+        </view>
+        <view class="sr-summary-row sr-summary-dates">
+          <view class="sr-chip" bindtap="onPickDate">
+            <ll-icon name="calendar-blank" size="22" color="#6B6B7A"/>
+            <text>{{q.startDate}}</text>
+            <ll-icon name="caret-down" size="18" color="#A0A0B0"/>
+          </view>
+          <text class="sr-arrow">→</text>
+          <view class="sr-chip" bindtap="onPickDate">
+            <text>{{q.endDate}}</text>
+            <ll-icon name="caret-down" size="18" color="#A0A0B0"/>
+          </view>
+          <view wx:if="{{q.nights}}" class="sr-nights ll-num">{{q.nights}} {{q.unit}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="sr-filterbar">
+      <view class="sr-filterbtn {{filterCount ? 'is-on' : ''}}" bindtap="onOpenFilter">
+        <ll-icon name="sliders-horizontal" size="26" color="{{filterCount ? '#FFFFFF' : '#1E1E24'}}"/>
+        <text>筛选</text>
+        <view wx:if="{{filterCount}}" class="sr-filterbtn-count ll-num">{{filterCount}}</view>
+      </view>
+      <view class="sr-flex"></view>
+      <view class="sr-sortchip" bindtap="onOpenSort">
+        <text>{{sort}}</text>
+        <ll-icon name="caret-down" size="18" color="#A0A0B0"/>
+      </view>
+    </view>
+  </view>
+
+  <!-- Result count -->
+  <view class="sr-count">
+    <text class="sr-count-prefix">共</text>
+    <text class="sr-count-num ll-num">{{guardians.length}}</text>
+    <text class="sr-count-suffix">位守护者</text>
+    <view class="sr-count-loc">
+      <ll-icon name="map-pin" size="20" color="#A0A0B0"/>
+      <text>{{q.address}}</text>
+    </view>
+  </view>
+
+  <!-- Guardian cards -->
+  <view class="sr-list">
+    <empty-state wx:if="{{!loading && guardians.length === 0}}" icon="🔍" title="暂无匹配的守护者" subtitle="试试调整筛选条件或扩大搜索范围"/>
+    <loading-skeleton wx:if="{{loading}}" count="4"/>
+
+    <view wx:for="{{guardians}}" wx:key="id" class="sr-card" data-id="{{item.id}}" bindtap="onOpenGuardian">
+      <view class="sr-fav" catchtap="onToggleFav" data-id="{{item.id}}">
+        <ll-icon name="paw-print" weight="{{item.favorited ? 'fill' : 'regular'}}" size="32" color="{{item.favorited ? '#E63946' : '#A0A0B0'}}"/>
+      </view>
+
+      <view class="sr-card-top">
+        <view class="sr-photo sr-photo--{{item.initialBg}}">
+          <image wx:if="{{item.photo}}" src="{{item.photo}}" mode="aspectFill" class="sr-photo-img"/>
+          <text wx:else class="sr-photo-init">{{item.initial}}</text>
+          <view wx:if="{{item.cert}}" class="sr-cert">
+            <ll-icon name="check" size="20" color="#FFFFFF"/>
+          </view>
+        </view>
+
+        <view class="sr-meta">
+          <view class="sr-meta-name-row">
+            <text class="sr-name">{{item.name}}</text>
+            <view wx:if="{{item.badge}}" class="sr-badge">{{item.badge}}守护者</view>
+          </view>
+          <view class="sr-info-row">
+            <view class="sr-info-rating ll-num">
+              <ll-icon name="star" weight="fill" size="20" color="#F0B100"/>
+              <text class="sr-rating">{{item.rating}}</text>
+              <text class="sr-reviews">({{item.reviews}})</text>
+            </view>
+            <view class="sr-info-dot"></view>
+            <text class="sr-info-dist ll-num">{{item.dist}} km</text>
+            <text class="sr-info-sep">·</text>
+            <text class="sr-info-city">{{item.city}}</text>
+          </view>
+          <text class="sr-bio">{{item.bio}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{item.reused || item.features.length}}" class="sr-tags">
+        <view wx:if="{{item.reused}}" class="sr-tag sr-tag--relation">托付过</view>
+        <view
+          wx:for="{{item.features}}"
+          wx:for-item="f"
+          wx:key="*this"
+          class="sr-tag sr-tag--{{f.cat}}"
+        >{{f.label}}</view>
+      </view>
+
+      <view class="sr-bottom">
+        <view class="sr-price">
+          <text class="sr-price-currency">¥</text>
+          <text class="sr-price-amount ll-num">{{item.price}}</text>
+          <text class="sr-price-unit">/{{item.unit}}起</text>
+        </view>
+        <text class="sr-orders">已服务 <text class="sr-orders-num ll-num">{{item.orders}}</text> 单</text>
+      </view>
+    </view>
+  </view>
+</view>

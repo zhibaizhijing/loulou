@@ -1,0 +1,23 @@
+.st-page { padding-bottom: 64rpx; }
+
+.st-sec-head {
+  padding: 20rpx 32rpx 8rpx;
+  font-size: 23rpx; font-weight: 600;
+  color: var(--ll-text-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.st-card { background: var(--ll-surface); }
+.st-row {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 28rpx 32rpx;
+  border-bottom: 1px solid var(--ll-border);
+  gap: 16rpx;
+}
+.st-row.is-last { border-bottom: 0; }
+.st-row-label { flex: 1; font-size: 29rpx; color: var(--ll-text); font-weight: 500; }
+.st-row-val   { font-size: 26rpx; color: var(--ll-text-3); margin-right: 8rpx; }
+.st-band      { height: 16rpx; background: var(--ll-bg); }
+
+.st-row.is-danger { justify-content: center; }
+.st-logout { font-size: 30rpx; font-weight: 600; color: #CC2200; }

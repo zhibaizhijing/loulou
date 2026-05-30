@@ -6,11 +6,28 @@ import { createPageState } from '../../utils/usePageState'
 import { showAppError } from '../../utils/errorHandler'
 import type { Walker, Review, ServiceType, PricingUnit, PetType, SizeBand } from '../../models/index'
 
-interface ServicePrice { serviceType: ServiceType; price: number; unitLabel: string }
+interface Tier  { size: string; range: string; price: number }
+interface Extra { label: string; price: string }
+interface ServicePrice {
+  serviceType: ServiceType
+  price: number
+  unitShort: string
+  locLabel: string
+  tiers: Tier[]
+  extras: Extra[]
+}
+
 interface Data {
   walker: Walker | null
   reviews: Review[]
   servicePrices: ServicePrice[]
+  tagline: string
+  areaLabel: string
+  heroPhoto: string
+  photos: string[]
+  photoIdx: number
+  liked: boolean
+  tab: 'info' | 'services'
   labels: Record<ServiceType, string>
   petTypeLabels: Record<PetType, string>
   sizeBandLabels: Record<SizeBand, string>
@@ -18,17 +35,28 @@ interface Data {
   pageError: string
 }
 
-const PRICING_UNIT_LABEL: Record<PricingUnit, string> = {
-  per_walk: '/ 30 min',
-  per_night: '/ night',
-  per_day: '/ day',
-  per_visit: '/ visit',
-  per_stay: '/ night'
+const UNIT_SHORT: Record<PricingUnit, string> = {
+  per_walk: '次',
+  per_night: '晚',
+  per_day: '天',
+  per_visit: '次',
+  per_stay: '晚'
+}
+
+const LOC_LABEL: Record<ServiceType, string> = {
+  boarding:    '在守护者家',
+  daycare:     '在守护者家',
+  walking:     '在你的小区周边',
+  house_visit: '在宠物主家',
+  live_in:     '在宠物主家'
 }
 
 Page<Data, WechatMiniprogram.IAnyObject>({
   data: {
     walker: null, reviews: [], servicePrices: [],
+    tagline: '', areaLabel: '',
+    heroPhoto: '', photos: [], photoIdx: 0, liked: false,
+    tab: 'info',
     labels: SERVICE_TYPE_LABEL,
     petTypeLabels: PET_TYPE_LABEL,
     sizeBandLabels: SIZE_BAND_LABEL,
@@ -49,18 +77,55 @@ Page<Data, WechatMiniprogram.IAnyObject>({
         listReviewsForWalker(this.walkerId, 20),
         listActiveServicesForCaregiver(this.walkerId).catch(() => [])
       ]))
-      const servicePrices: ServicePrice[] = services.map(s => ({
-        serviceType: s.serviceType,
-        price: s.price,
-        unitLabel: PRICING_UNIT_LABEL[PRICING_UNIT_FOR[s.serviceType]]
-      }))
-      this.setData({ walker, reviews, servicePrices })
+      const servicePrices: ServicePrice[] = services.map(s => {
+        const base = s.price
+        const tiers: Tier[] = s.serviceType === 'walking' || s.serviceType === 'house_visit'
+          ? [
+              { size: '小型',   range: '0–7 公斤',   price: base },
+              { size: '中型',   range: '7–18 公斤',  price: Math.round(base * 1.15) },
+              { size: '大型',   range: '18–45 公斤', price: Math.round(base * 1.3) }
+            ]
+          : [
+              { size: '小型',   range: '0–7 公斤',   price: base },
+              { size: '中型',   range: '7–18 公斤',  price: Math.round(base * 1.13) },
+              { size: '大型',   range: '18–45 公斤', price: Math.round(base * 1.25) }
+            ]
+        const extras: Extra[] = s.serviceType === 'boarding' || s.serviceType === 'live_in'
+          ? [
+              { label: '节假日加价',         price: '+¥17' },
+              { label: '每增加 1 只',         price: '+¥48' },
+              { label: '幼宠',               price: '+¥11' },
+              { label: '紧急预约',           price: '+¥15' },
+              { label: '长期订单（7 晚+）',   price: '-10%' }
+            ]
+          : [
+              { label: '节假日加价',         price: '+¥10' },
+              { label: '每增加 1 只',         price: '+¥20' },
+              { label: '紧急预约',           price: '+¥8' }
+            ]
+        return {
+          serviceType: s.serviceType,
+          price: base,
+          unitShort: UNIT_SHORT[PRICING_UNIT_FOR[s.serviceType]],
+          locLabel: LOC_LABEL[s.serviceType],
+          tiers,
+          extras
+        }
+      })
+      const heroPhoto = walker.avatar || (walker.photos && walker.photos[0]) || ''
+      const photos = (walker.photos && walker.photos.length) ? walker.photos : (heroPhoto ? [heroPhoto] : [])
+      const tagline = walker.bio ? walker.bio.split('\n')[0].slice(0, 28) : '专业守护者，提供贴心照护'
+      const areaLabel = walker.areas && walker.areas.length ? `${walker.areas.join('、')}` : ''
+      this.setData({ walker, reviews, servicePrices, heroPhoto, photos, tagline, areaLabel })
     } catch (e) { showAppError(e) }
   },
 
-  onBook() {
-    wx.navigateTo({ url: `/pages/booking-new/index?walkerId=${this.walkerId}` })
+  onTab(e: WechatMiniprogram.BaseEvent) {
+    this.setData({ tab: e.currentTarget.dataset.tab as 'info' | 'services' })
   },
 
-  onBack() { wx.navigateBack() }
+  onLike()  { this.setData({ liked: !this.data.liked }) },
+  onShare() { wx.showToast({ title: '分享即将上线', icon: 'none' }) },
+  onBook()  { wx.navigateTo({ url: `/pages/booking-new/index?walkerId=${this.walkerId}` }) },
+  onBack()  { wx.navigateBack({}).catch?.(() => undefined) }
 })

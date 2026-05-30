@@ -1,0 +1,7 @@
+<view class="ll-ring-wrap" style="width:{{size}}rpx;height:{{size}}rpx;">
+  <image class="ll-ring-svg" src="{{src}}" style="width:{{size}}rpx;height:{{size}}rpx;" mode="aspectFit"/>
+  <view class="ll-ring-center">
+    <view class="ll-ring-pct ll-num">{{percent}}%</view>
+    <view class="ll-ring-target" wx:if="{{target}}">目标 {{target}}</view>
+  </view>
+</view>

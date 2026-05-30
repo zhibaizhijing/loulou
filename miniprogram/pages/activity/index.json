@@ -1,0 +1,9 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "ll-icon":          "/components/ll-icon/index",
+    "ll-stat-tile":     "/components/ll-stat-tile/index",
+    "ll-progress-ring": "/components/ll-progress-ring/index",
+    "ll-cta":           "/components/ll-cta/index"
+  }
+}

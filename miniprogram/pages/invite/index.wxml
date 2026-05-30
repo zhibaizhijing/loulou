@@ -1,0 +1,44 @@
+<view class="ll-page iv-page">
+  <ll-topnav title="我的邀请码"/>
+
+  <!-- Stats hero -->
+  <view class="iv-stats">
+    <view class="iv-stat">
+      <view class="iv-stat-val ll-num">{{invitedCount}} 位</view>
+      <view class="iv-stat-label">已邀请好友</view>
+    </view>
+    <view class="iv-stat">
+      <view class="iv-stat-val ll-num">¥{{rewardAmount}}</view>
+      <view class="iv-stat-label">获得奖励</view>
+    </view>
+  </view>
+
+  <!-- Code card -->
+  <view class="iv-code-card">
+    <view class="iv-code-label">我的专属邀请码</view>
+    <view class="iv-code-row">
+      <text class="iv-code-text ll-num">{{code}}</text>
+      <view class="iv-copy {{copied ? 'is-copied' : ''}}" bindtap="onCopy">{{copied ? '✓ 已复制' : '复制'}}</view>
+    </view>
+
+    <view class="iv-qr-wrap">
+      <view class="iv-qr">
+        <ll-icon name="qr-code" size="100" color="#A0A0B0"/>
+      </view>
+      <view class="iv-qr-caption">好友扫码注册，自动绑定邀请关系</view>
+    </view>
+  </view>
+
+  <!-- Rules -->
+  <view class="iv-rules">
+    <view class="iv-rules-head">邀请规则</view>
+    <view wx:for="{{rules}}" wx:key="*this" class="iv-rule">
+      <text class="iv-rule-num ll-num">{{index + 1}}.</text>
+      <text class="iv-rule-text">{{item}}</text>
+    </view>
+  </view>
+
+  <view class="iv-cta">
+    <ll-cta text="分享给好友" bind:tap="onShare"/>
+  </view>
+</view>

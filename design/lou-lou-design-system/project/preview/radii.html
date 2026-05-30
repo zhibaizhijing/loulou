@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Radii</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 28px 24px; }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .swatch { width: 92px; height: 64px; background: var(--ll-ink); }
+  .pill { width: 92px; height: 38px; background: var(--ll-ink); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; }
+  .label { font-size: 11px; font-weight: 600; color: var(--ll-text); }
+  .sub { font-family: var(--font-mono); font-size: 10.5px; color: var(--ll-text-2); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="cell"><div class="swatch" style="border-radius: 4px;"></div><div class="label">Tag</div><div class="sub">8rpx · 4px</div></div>
+    <div class="cell"><div class="swatch" style="border-radius: 6px;"></div><div class="label">Avatar</div><div class="sub">12rpx · 6px</div></div>
+    <div class="cell"><div class="swatch" style="border-radius: 8px;"></div><div class="label">List item</div><div class="sub">16rpx · 8px</div></div>
+    <div class="cell"><div class="swatch" style="border-radius: 12px;"></div><div class="label">Card / Sheet</div><div class="sub">24rpx · 12px</div></div>
+    <div class="cell"><div class="pill" style="border-radius: 999px;">Book</div><div class="label">CTA pill</div><div class="sub">48rpx · 999px</div></div>
+  </div>
+</body>
+</html>

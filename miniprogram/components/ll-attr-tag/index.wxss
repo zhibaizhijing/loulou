@@ -1,0 +1,14 @@
+.ll-attrtag {
+  flex: 1;
+  border-radius: 28rpx;
+  padding: 20rpx 24rpx;
+  display: flex; flex-direction: column; align-items: center; gap: 4rpx;
+}
+.ll-attrtag--butter    { background: var(--ll-butter); }
+.ll-attrtag--lavender  { background: var(--ll-lavender); }
+.ll-attrtag--mint      { background: var(--ll-mint); }
+.ll-attrtag--mint-soft { background: var(--ll-mint-soft); }
+.ll-attrtag--peach     { background: var(--ll-peach); }
+.ll-attrtag--neutral   { background: var(--ll-surface-2); }
+.ll-attrtag-label { font-size: 26rpx; font-weight: 700; color: var(--ll-text); }
+.ll-attrtag-value { font-size: 24rpx; color: rgba(30,30,36,0.62); }

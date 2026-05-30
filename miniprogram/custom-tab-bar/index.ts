@@ -1,9 +1,13 @@
+// 5-tab uniform bar per Lou Lou design (app.jsx). No mode split.
+
 interface Tab { path: string; label: string; icon: string }
 
 const TABS: Tab[] = [
-  { path: '/pages/home/index',     label: 'Home',     icon: '🏠' },
-  { path: '/pages/bookings/index', label: 'Bookings', icon: '📅' },
-  { path: '/pages/me/index',       label: 'Me',       icon: '👤' }
+  { path: '/pages/home/index',     label: '首页',     icon: 'house' },
+  { path: '/pages/bookings/index', label: '订单',     icon: 'receipt' },
+  { path: '/pages/chat/index',     label: '消息',     icon: 'chat-circle-dots' },
+  { path: '/pages/activity/index', label: '守护时刻', icon: 'paw-print' },
+  { path: '/pages/me/index',       label: '我的',     icon: 'user' }
 ]
 
 function currentPagePath(): string {

@@ -1,0 +1,7 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "ll-topnav": "/components/ll-topnav/index",
+    "ll-icon":   "/components/ll-icon/index"
+  }
+}

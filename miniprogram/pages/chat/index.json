@@ -1,11 +1,11 @@
 {
-  "navigationBarTitleText": "Chat",
+  "navigationStyle": "custom",
   "usingComponents": {
     "mock-banner":      "/components/mock-banner/index",
-    "custom-tab-bar":   "/custom-tab-bar/index",
     "chat-bubble":      "/components/chat-bubble/index",
-    "t-input":          "tdesign-miniprogram/input/input",
-    "t-button":         "tdesign-miniprogram/button/button",
-    "loading-skeleton": "/components/loading-skeleton/index"
+    "loading-skeleton": "/components/loading-skeleton/index",
+    "empty-state":      "/components/empty-state/index",
+    "ll-icon":          "/components/ll-icon/index",
+    "ll-topnav":        "/components/ll-topnav/index"
   }
 }

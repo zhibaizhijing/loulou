@@ -1,13 +1,19 @@
-<view class="card" bindtap="onTap">
-  <image class="avatar" src="{{walker.avatar}}" mode="aspectFill" />
-  <view class="body">
-    <view class="row">
-      <text class="name">{{walker.name}}</text>
-      <text class="rating">★ {{walker.rating}} ({{walker.reviewCount}})</text>
+<view class="wc-card" bindtap="onTap" hover-class="wc-card-hover">
+  <view class="wc-avatar">
+    <image wx:if="{{walker.avatar}}" src="{{walker.avatar}}" mode="aspectFill" class="wc-avatar-img"/>
+    <ll-icon wx:else name="paw-print" weight="fill" size="48" color="#22282C"/>
+  </view>
+  <view class="wc-body">
+    <view class="wc-row-top">
+      <text class="wc-name">{{walker.name}}</text>
+      <ll-rating-pill value="{{walker.rating}}" count="{{walker.reviewCount}}"/>
     </view>
-    <view class="areas">
-      <text class="area-tag" wx:for="{{walker.areas}}" wx:for-item="a" wx:key="*this">{{a}}</text>
+    <view class="wc-areas">
+      <text class="wc-area" wx:for="{{walker.areas}}" wx:for-item="a" wx:key="*this">{{a}}</text>
     </view>
-    <view class="price">S${{walker.pricePerWalk}} / 30 min</view>
+    <view class="wc-row-btm">
+      <text class="wc-price ll-num">S${{walker.pricePerWalk}}</text>
+      <text class="wc-price-unit">/ 30 min</text>
+    </view>
   </view>
 </view>

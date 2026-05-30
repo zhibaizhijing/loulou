@@ -1,0 +1,9 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "ll-topnav": "/components/ll-topnav/index",
+    "ll-icon":   "/components/ll-icon/index",
+    "ll-cta":    "/components/ll-cta/index",
+    "dog-form":  "/components/dog-form/index"
+  }
+}

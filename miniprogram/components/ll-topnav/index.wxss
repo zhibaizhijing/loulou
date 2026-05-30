@@ -1,0 +1,20 @@
+.ll-topnav {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 24rpx;
+  height: 112rpx;
+  padding: 0 var(--ll-safe-x);
+  background: var(--ll-bg);
+  box-sizing: border-box;
+}
+.ll-topnav.is-transparent { background: transparent; }
+.ll-topnav-back {
+  width: 80rpx; height: 80rpx; border-radius: 50%;
+  background: var(--ll-ink);
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+.ll-topnav-spacer { background: transparent; }
+.ll-topnav-title-wrap { flex: 1; text-align: center; }
+.ll-topnav-title    { font-size: 32rpx; font-weight: 600; color: var(--ll-text); }
+.ll-topnav-subtitle { font-size: 22rpx; color: var(--ll-text-2); margin-top: 4rpx; }
+.ll-topnav-trailing { width: 80rpx; display: flex; justify-content: flex-end; }

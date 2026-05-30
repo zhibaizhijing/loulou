@@ -1,0 +1,44 @@
+.ab-page { padding-bottom: 64rpx; }
+
+.ab-info {
+  background: var(--ll-surface);
+  padding: 56rpx 40rpx;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 8rpx;
+}
+.ab-logo {
+  width: 124rpx; height: 124rpx; border-radius: 32rpx;
+  background: var(--ll-butter);
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+  margin-bottom: 24rpx;
+}
+.ab-name    { font-size: 36rpx; font-weight: 800; color: var(--ll-text); }
+.ab-sub     { font-size: 25rpx; color: var(--ll-text-3); }
+.ab-version { font-size: 25rpx; color: var(--ll-text-3); margin-top: 6rpx; }
+
+.ab-band { height: 16rpx; background: var(--ll-bg); }
+
+.ab-docs { background: var(--ll-surface); }
+.ab-doc-head {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 30rpx 32rpx;
+  border-bottom: 1px solid var(--ll-border);
+}
+.ab-doc-label { flex: 1; font-size: 29rpx; font-weight: 500; color: var(--ll-text); }
+.ab-doc-body {
+  padding: 28rpx 32rpx 36rpx;
+  background: var(--ll-bg);
+  border-bottom: 1px solid var(--ll-border);
+}
+.ab-doc-body text {
+  font-size: 26rpx; color: var(--ll-text-2); line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.ab-footer {
+  padding: 48rpx 32rpx;
+  text-align: center;
+  display: flex; flex-direction: column; gap: 6rpx;
+}
+.ab-copy { font-size: 24rpx; color: var(--ll-text-3); }
+.ab-icp  { font-size: 23rpx; color: var(--ll-text-3); }

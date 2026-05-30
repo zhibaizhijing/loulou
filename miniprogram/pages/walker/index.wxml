@@ -1,80 +1,180 @@
-<mock-banner />
-<loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="6" />
+<view class="ll-page gp-page">
+  <mock-banner />
+  <loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="6"/>
+  <empty-state wx:elif="{{pageStatus === 'error'}}" icon="⚠️" title="守护者未找到" subtitle="{{pageError}}" ctaText="返回" bind:cta="onBack"/>
 
-<empty-state wx:elif="{{pageStatus === 'error'}}"
-  icon="⚠️" title="Walker not found" subtitle="{{pageError}}" ctaText="Back" bind:cta="onBack" />
-
-<view wx:else class="page">
-  <view class="hero">
-    <image class="avatar" src="{{walker.avatar}}" mode="aspectFill" />
-    <view class="meta">
-      <view class="name">{{walker.name}}</view>
-      <view class="rating">★ {{walker.rating}} ({{walker.reviewCount}} reviews)</view>
-      <view class="price">S${{walker.pricePerWalk}} / 30 min</view>
+  <view wx:else class="gp-body">
+    <!-- Sticky nav -->
+    <view class="gp-nav">
+      <view class="gp-nav-back" bindtap="onBack">
+        <ll-icon name="caret-left" size="32" color="#1E1E24"/>
+      </view>
+      <view class="gp-nav-title">守护者</view>
+      <view class="gp-nav-back gp-nav-spacer"></view>
     </view>
-  </view>
 
-  <view class="section">
-    <view class="label">About</view>
-    <view class="bio">{{walker.bio}}</view>
-  </view>
+    <!-- Hero photo + actions -->
+    <view class="gp-hero">
+      <view class="gp-hero-photo">
+        <image wx:if="{{heroPhoto}}" src="{{heroPhoto}}" mode="aspectFill" class="gp-hero-img"/>
+        <view wx:else class="gp-hero-fallback">
+          <ll-icon name="paw-print" weight="fill" size="220" color="#22282C"/>
+        </view>
+        <view class="gp-hero-actions">
+          <view class="gp-hero-iconbtn" bindtap="onShare">
+            <ll-icon name="share-network" size="28" color="#6B6B7A"/>
+          </view>
+          <view class="gp-hero-iconbtn {{liked ? 'is-liked' : ''}}" bindtap="onLike">
+            <ll-icon name="paw-print" weight="{{liked ? 'fill' : 'regular'}}" size="28" color="{{liked ? '#E63946' : '#A0A0B0'}}"/>
+          </view>
+        </view>
+        <view wx:if="{{photos.length > 1}}" class="gp-hero-dots">
+          <view
+            wx:for="{{photos}}"
+            wx:key="*this"
+            class="gp-hero-dot {{photoIdx === index ? 'is-on' : ''}}"
+          ></view>
+        </view>
+      </view>
 
-  <view class="section intake">
-    <view class="label">What I accept</view>
-    <view class="intake-row">
-      <text class="ik">Pets</text>
-      <view class="tags">
-        <text wx:for="{{walker.acceptedPetTypes}}" wx:key="*this" class="tag intake-tag">{{petTypeLabels[item]}}</text>
+      <!-- Avatar overlapping carousel -->
+      <view class="gp-hero-info">
+        <view class="gp-avatar">
+          <image wx:if="{{heroPhoto}}" src="{{heroPhoto}}" mode="aspectFill" class="gp-avatar-img"/>
+          <ll-icon wx:else name="paw-print" weight="fill" size="48" color="#22282C"/>
+        </view>
+        <view class="gp-info-spacer"></view>
+        <view class="gp-name">{{walker.name}}</view>
+        <view class="gp-tagline">{{tagline}}</view>
+        <view class="gp-area">{{areaLabel}}</view>
+        <view class="gp-reviews">
+          <text class="gp-reviews-num ll-num">{{walker.reviewCount}}</text>
+          <text>条评价</text>
+          <view class="gp-rating">
+            <ll-icon name="star" weight="fill" size="22" color="#F0B100"/>
+            <text class="ll-num">{{walker.rating}}</text>
+          </view>
+        </view>
       </view>
     </view>
-    <view class="intake-row">
-      <text class="ik">Sizes</text>
-      <view class="tags">
-        <text wx:for="{{walker.acceptedSizeBands}}" wx:key="*this" class="tag intake-tag">{{sizeBandLabels[item]}}</text>
+
+    <!-- Tab nav -->
+    <view class="gp-tabs">
+      <view class="gp-tab {{tab === 'info' ? 'is-on' : ''}}" data-tab="info" bindtap="onTab">信息</view>
+      <view class="gp-tab {{tab === 'services' ? 'is-on' : ''}}" data-tab="services" bindtap="onTab">服务</view>
+    </view>
+
+    <!-- Info tab -->
+    <view wx:if="{{tab === 'info'}}" class="gp-tab-body">
+      <view class="gp-section">
+        <view class="gp-sec-head">关于守护者</view>
+        <view class="gp-bio">{{walker.bio || '此守护者尚未填写自我介绍。'}}</view>
+      </view>
+      <view class="gp-divider"></view>
+
+      <view class="gp-section">
+        <view class="gp-sec-head">守护范围</view>
+        <view class="gp-kv-row">
+          <text class="gp-kv-key">可接受宠物</text>
+          <view class="gp-kv-tags">
+            <text wx:for="{{walker.acceptedPetTypes}}" wx:key="*this" class="gp-kv-tag">{{petTypeLabels[item]}}</text>
+          </view>
+        </view>
+        <view class="gp-kv-row">
+          <text class="gp-kv-key">体型</text>
+          <view class="gp-kv-tags">
+            <text wx:for="{{walker.acceptedSizeBands}}" wx:key="*this" class="gp-kv-tag gp-kv-tag--lavender">{{sizeBandLabels[item]}}</text>
+          </view>
+        </view>
+        <view class="gp-kv-row">
+          <text class="gp-kv-key">同时照护数</text>
+          <text class="gp-kv-val ll-num">{{walker.maxConcurrent}} 只</text>
+        </view>
+        <view class="gp-flags">
+          <view wx:if="{{walker.canMedicate}}" class="gp-flag">
+            <ll-icon name="check-circle" weight="fill" size="24" color="#2C7A4B"/>
+            <text>可投药</text>
+          </view>
+          <view wx:if="{{walker.acceptsPuppy}}" class="gp-flag">
+            <ll-icon name="check-circle" weight="fill" size="24" color="#2C7A4B"/>
+            <text>幼宠可接</text>
+          </view>
+          <view wx:if="{{walker.acceptsSenior}}" class="gp-flag">
+            <ll-icon name="check-circle" weight="fill" size="24" color="#2C7A4B"/>
+            <text>老龄可接</text>
+          </view>
+          <view wx:if="{{walker.acceptsAggressive}}" class="gp-flag">
+            <ll-icon name="check-circle" weight="fill" size="24" color="#2C7A4B"/>
+            <text>警戒犬可接</text>
+          </view>
+        </view>
+        <view wx:if="{{walker.intakeNotes}}" class="gp-notes">{{walker.intakeNotes}}</view>
+      </view>
+      <view class="gp-divider"></view>
+
+      <view class="gp-section">
+        <view class="gp-sec-head">服务区域</view>
+        <view class="gp-areas">
+          <text class="gp-area-tag" wx:for="{{walker.areas}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+      <view class="gp-divider"></view>
+
+      <view class="gp-section">
+        <view class="gp-sec-head">评价 · {{walker.reviewCount}}</view>
+        <empty-state wx:if="{{reviews.length === 0}}" icon="📝" title="暂无评价"/>
+        <review-item wx:for="{{reviews}}" wx:key="_id" review="{{item}}"/>
       </view>
     </view>
-    <view class="intake-row">
-      <text class="ik">Max at once</text>
-      <text>{{walker.maxConcurrent}}</text>
+
+    <!-- Services tab -->
+    <view wx:if="{{tab === 'services'}}" class="gp-tab-body">
+      <view class="gp-svc-list">
+        <view wx:for="{{servicePrices}}" wx:key="serviceType" class="gp-svc-card">
+          <view class="gp-svc-head">
+            <view class="gp-svc-title">{{labels[item.serviceType]}}</view>
+            <view class="gp-svc-sub">{{item.locLabel}}</view>
+          </view>
+          <view class="gp-svc-price-row">
+            <text class="gp-svc-price-currency">¥</text>
+            <text class="gp-svc-price-amount ll-num">{{item.price}}</text>
+            <text class="gp-svc-price-unit">/{{item.unitShort}}起</text>
+          </view>
+
+          <!-- Weight tier pricing -->
+          <view class="gp-svc-tiers">
+            <view wx:for="{{item.tiers}}" wx:for-item="tier" wx:key="size" class="gp-svc-tier">
+              <view class="gp-svc-tier-info">
+                <text class="gp-svc-tier-size">{{tier.size}}</text>
+                <text class="gp-svc-tier-range">{{tier.range}}</text>
+              </view>
+              <text class="gp-svc-tier-price ll-num">¥{{tier.price}}/{{item.unitShort}}</text>
+            </view>
+          </view>
+
+          <!-- Extras -->
+          <view wx:if="{{item.extras.length}}" class="gp-svc-extras">
+            <view class="gp-svc-extras-head">附加费</view>
+            <view wx:for="{{item.extras}}" wx:for-item="ex" wx:key="label" class="gp-svc-extra">
+              <text class="gp-svc-extra-label">{{ex.label}}</text>
+              <text class="gp-svc-extra-price ll-num">{{ex.price}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
-    <view class="intake-flags">
-      <text wx:if="{{walker.canMedicate}}" class="tag flag-on">💊 Medication</text>
-      <text wx:if="{{walker.acceptsPuppy}}" class="tag flag-on">🐶 Puppies OK</text>
-      <text wx:if="{{walker.acceptsSenior}}" class="tag flag-on">🦴 Seniors OK</text>
-      <text wx:if="{{walker.acceptsAggressive}}" class="tag flag-on">⚠️ Reactive OK</text>
-    </view>
-    <view wx:if="{{walker.intakeNotes}}" class="intake-notes">{{walker.intakeNotes}}</view>
   </view>
 
-  <view class="section">
-    <view class="label">Service areas</view>
-    <view class="tags">
-      <text wx:for="{{walker.areas}}" wx:key="*this" class="tag">{{item}}</text>
+  <!-- Sticky booking bar -->
+  <view wx:if="{{pageStatus !== 'loading' && pageStatus !== 'error'}}" class="gp-stickybar">
+    <view class="gp-stickybar-price">
+      <text class="gp-stickybar-from">起价</text>
+      <text class="gp-stickybar-currency">¥</text>
+      <text class="gp-stickybar-amount ll-num">{{walker.pricePerWalk}}</text>
+      <text class="gp-stickybar-unit">/晚起</text>
     </view>
-  </view>
-
-  <view class="section" wx:if="{{servicePrices.length > 0}}">
-    <view class="label">Services &amp; pricing</view>
-    <view wx:for="{{servicePrices}}" wx:key="serviceType" class="service-price-row">
-      <text class="sp-name">{{labels[item.serviceType]}}</text>
-      <text class="sp-amount">S${{item.price}} {{item.unitLabel}}</text>
+    <view class="gp-stickybar-cta">
+      <ll-cta text="立即预约" bind:tap="onBook"/>
     </view>
-  </view>
-
-  <view class="section" wx:if="{{walker.photos.length}}">
-    <view class="label">Photos</view>
-    <view class="photos">
-      <image wx:for="{{walker.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="photo" />
-    </view>
-  </view>
-
-  <view class="section">
-    <view class="label">Reviews</view>
-    <empty-state wx:if="{{reviews.length === 0}}" icon="📝" title="No reviews yet" />
-    <review-item wx:for="{{reviews}}" wx:key="_id" review="{{item}}" />
-  </view>
-
-  <view class="cta">
-    <t-button theme="primary" size="large" block bindtap="onBook">Book a walk</t-button>
   </view>
 </view>

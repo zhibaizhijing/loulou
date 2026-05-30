@@ -1,0 +1,5 @@
+<view class="ll-ratepill">
+  <ll-icon name="star" weight="fill" size="24" color="#F0B100"/>
+  <text class="ll-ratepill-val ll-num">{{value}}</text>
+  <text wx:if="{{count}}" class="ll-ratepill-cnt ll-num">·{{count}}</text>
+</view>

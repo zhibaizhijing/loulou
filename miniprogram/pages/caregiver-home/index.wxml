@@ -1,48 +1,49 @@
-<mock-banner />
+<view class="ll-page ch-page">
+  <mock-banner />
+  <ll-topnav title="守护者工作台" back="{{false}}"/>
 
-<empty-state wx:if="{{noCaregiver}}" icon="🚫" title="Not in caregiver mode" subtitle="Use the Me tab to apply or switch into a caregiver." ctaText="Back to Me" bind:cta="onBackToMe" />
+  <empty-state wx:if="{{noCaregiver}}" icon="🚫" title="未进入守护者模式" subtitle="请先在「我的」中申请或切换" ctaText="返回我的" bind:cta="onBackToMe" />
 
-<view wx:elif="{{loading}}" class="page">
-  <loading-skeleton count="5" />
-</view>
+  <view wx:elif="{{loading}}" class="ch-body">
+    <loading-skeleton count="5" />
+  </view>
 
-<view wx:else class="page">
-  <view class="hero">
-    <image class="avatar" src="{{caregiver.avatar || 'data:image/png;base64,iVBORw0KGgo='}}" mode="aspectFill" />
-    <view class="meta">
-      <view class="name">{{caregiver.name}}</view>
-      <view class="rating">★ {{caregiver.rating}} ({{caregiver.reviewCount}} reviews)</view>
-      <view class="tags">
-        <t-tag wx:for="{{caregiver.serviceTypes}}" wx:key="*this" style="margin-right:8rpx">{{labels[item]}}</t-tag>
+  <view wx:else class="ch-body">
+    <!-- Hero -->
+    <view class="ch-hero">
+      <view class="ch-hero-avatar">
+        <image wx:if="{{caregiver.avatar}}" src="{{caregiver.avatar}}" mode="aspectFill" class="ch-hero-img"/>
+        <ll-icon wx:else name="paw-print" weight="fill" size="64" color="#22282C"/>
       </view>
+      <view class="ch-hero-meta">
+        <view class="ll-h2">{{caregiver.name}}</view>
+        <view class="ch-hero-tags">
+          <text wx:for="{{caregiver.serviceTypes}}" wx:key="*this" class="ch-svc-tag">{{labels[item]}}</text>
+        </view>
+      </view>
+      <ll-rating-pill value="{{caregiver.rating}}" count="{{caregiver.reviewCount}}"/>
     </view>
-  </view>
 
-  <view class="card" bindtap="onOpenInbox">
-    <view class="card-title">Pending bookings</view>
-    <view class="card-value">{{pendingCount}}</view>
-    <view class="card-sub">{{pendingCount === 0 ? 'No new requests' : 'Tap to review →'}}</view>
-  </view>
+    <!-- Stat tiles -->
+    <view class="ch-stats">
+      <ll-stat-tile label="待处理订单" value="{{pendingCount}}" bg="butter"/>
+      <ll-stat-tile label="在售服务"   value="{{activeServicesCount}}" bg="mint-soft"/>
+    </view>
+    <view class="ch-stats">
+      <ll-stat-tile label="本月忙日" value="{{blockedThisMonth}}" bg="lavender"/>
+      <ll-stat-tile label="评分"     value="{{caregiver.rating}}" unit="★" bg="peach"/>
+    </view>
 
-  <view class="card" bindtap="onManageServices">
-    <view class="card-title">Active services</view>
-    <view class="card-value">{{activeServicesCount}}</view>
-    <view class="card-sub">Tap to manage →</view>
-  </view>
+    <!-- Menu -->
+    <view class="ch-menu">
+      <ll-menu-row icon="receipt"            iconBg="ink"      label="收件箱"   bind:tap="onOpenInbox"/>
+      <ll-menu-row icon="sliders-horizontal" iconBg="butter"   label="服务管理" bind:tap="onManageServices"/>
+      <ll-menu-row icon="calendar-blank"     iconBg="lavender" label="日历"     bind:tap="onOpenCalendar"/>
+      <ll-menu-row icon="currency-cny"       iconBg="mint"     label="收益"     isLast="{{true}}" bind:tap="onOpenEarnings"/>
+    </view>
 
-  <view class="card" bindtap="onOpenCalendar">
-    <view class="card-title">This month — blocked days</view>
-    <view class="card-value">{{blockedThisMonth}}</view>
-    <view class="card-sub">Tap to edit availability →</view>
-  </view>
-
-  <view class="card" bindtap="onOpenEarnings">
-    <view class="card-title">Earnings</view>
-    <view class="card-value">View ledger</view>
-    <view class="card-sub">Credits, commission, payouts →</view>
-  </view>
-
-  <view class="actions">
-    <t-button block variant="outline" bindtap="onExitMode">Exit caregiver mode</t-button>
+    <view class="ch-exit">
+      <ll-cta text="退出守护者模式" secondary="{{true}}" bind:tap="onExitMode"/>
+    </view>
   </view>
 </view>

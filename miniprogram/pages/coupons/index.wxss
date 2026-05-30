@@ -1,0 +1,69 @@
+.cp-page { padding-bottom: 64rpx; }
+
+.cp-subtabs {
+  display: flex; flex-direction: row;
+  background: var(--ll-surface);
+  border-bottom: 1px solid var(--ll-border);
+}
+.cp-subtab {
+  flex: 1; height: 84rpx;
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+  font-size: 27rpx; font-weight: 500; color: var(--ll-text-3);
+  border-bottom: 4rpx solid transparent;
+}
+.cp-subtab.is-on { color: var(--ll-text); font-weight: 700; border-bottom-color: var(--ll-text); }
+
+.cp-list { padding: 28rpx 32rpx; display: flex; flex-direction: column; gap: 24rpx; }
+
+.cp-empty {
+  text-align: center; padding: 80rpx 0;
+  display: flex; flex-direction: column; align-items: center; gap: 20rpx;
+}
+.cp-empty text { font-size: 27rpx; color: var(--ll-text-3); }
+
+.cp-card {
+  border-radius: 28rpx; overflow: hidden;
+  background: var(--ll-surface);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  display: flex; flex-direction: row;
+}
+.cp-card.is-expired { opacity: 0.6; }
+
+.cp-strip {
+  width: 124rpx;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10rpx;
+  padding: 32rpx 12rpx;
+  box-sizing: border-box;
+}
+.cp-strip--butter   { background: var(--ll-butter); }
+.cp-strip--lavender { background: var(--ll-lavender); }
+.cp-strip--mint     { background: var(--ll-mint); }
+.cp-strip--peach    { background: var(--ll-peach); }
+.cp-strip--neutral  { background: #EBEBF0; }
+.cp-strip-type {
+  font-size: 19rpx; font-weight: 600;
+  color: var(--ll-text-2); text-align: center; line-height: 1.3;
+}
+
+.cp-dashed {
+  width: 1px;
+  background-image: linear-gradient(to bottom, #DDD 0, #DDD 8rpx, transparent 8rpx, transparent 16rpx);
+  background-size: 1px 16rpx;
+  background-repeat: repeat-y;
+}
+
+.cp-content {
+  flex: 1;
+  padding: 28rpx;
+  display: flex; flex-direction: column; gap: 8rpx;
+}
+.cp-title-row { display: flex; flex-direction: row; align-items: flex-start; gap: 12rpx; }
+.cp-title { flex: 1; font-size: 28rpx; font-weight: 700; color: var(--ll-text); }
+.cp-tag {
+  font-size: 20rpx; font-weight: 600;
+  padding: 4rpx 12rpx; border-radius: var(--ll-radius-xs);
+  background: var(--ll-peach); color: var(--ll-text);
+  flex: 0 0 auto;
+}
+.cp-desc { font-size: 26rpx; color: var(--ll-text-2); }
+.cp-expires { font-size: 22rpx; color: var(--ll-text-3); }

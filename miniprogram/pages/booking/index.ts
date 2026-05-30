@@ -12,26 +12,48 @@ import type { Booking, Walker, WalkReport } from '../../models/index'
 interface Data {
   booking: Booking | null
   walker: Walker | null
+  walkerInitial: string
   report: WalkReport | null
   dateLabel: string
   statusLabel: string
   durationDetailLabel: string
   serviceLabel: string
+  svcIcon: string
+  petLabel: string
+  serviceFee: number
+  paymentStatusLabel: string
   canReview: boolean
   canCancel: boolean
   pageStatus: string
   pageError: string
 }
 
+const PAY_STATUS_LABEL: Record<string, string> = {
+  unpaid:   '待支付',
+  held:     '已托管',
+  released: '已结算',
+  refunded: '已退款'
+}
+
 const LABELS: Record<Booking['status'], string> = {
-  requested: 'Awaiting walker', accepted: 'Confirmed', declined: 'Declined',
-  in_progress: 'In progress', completed: 'Completed', cancelled: 'Cancelled'
+  requested: '等待守护者', accepted: '已确认', declined: '已拒绝',
+  in_progress: '进行中', completed: '已完成', cancelled: '已取消'
+}
+
+const SVC_ICON: Record<string, string> = {
+  boarding:    'house',
+  daycare:     'sun',
+  walking:     'sneaker',
+  house_visit: 'hand-waving',
+  live_in:     'moon-stars'
 }
 
 Page<Data, WechatMiniprogram.IAnyObject>({
   data: {
-    booking: null, walker: null, report: null,
+    booking: null, walker: null, walkerInitial: '?', report: null,
     dateLabel: '', statusLabel: '', durationDetailLabel: '', serviceLabel: '',
+    svcIcon: 'paw-print', petLabel: '宠物', serviceFee: 0,
+    paymentStatusLabel: '',
     canReview: false, canCancel: false,
     pageStatus: 'loading', pageError: ''
   },
@@ -58,19 +80,26 @@ Page<Data, WechatMiniprogram.IAnyObject>({
         cloudCall<{ report: WalkReport | null }>('getWalkReport', { bookingId: booking._id }).catch(() => ({ report: null })),
         cloudCall<{ reviews: unknown[] }>('listReviewsForBooking', { bookingId: booking._id }).catch(() => ({ reviews: [] }))
       ])
-      const unit = booking.serviceType === 'walking' || booking.serviceType === 'house_visit' ? 'min'
-                : booking.serviceType === 'daycare' ? (booking.durationMin > 1 ? 'days' : 'day')
-                : (booking.durationMin > 1 ? 'nights' : 'night')
+      const unit = booking.serviceType === 'walking' || booking.serviceType === 'house_visit' ? '分钟'
+                : booking.serviceType === 'daycare' ? '天'
+                : '晚'
       const durationDetailLabel = `${booking.durationMin} ${unit}`
       const serviceLabel = SERVICE_TYPE_LABEL[booking.serviceType] || booking.serviceType
+      const payState = booking.payment?.state || 'unpaid'
+      const walkerInitial = (walker?.name || '?').charAt(0)
       this.setData({
         booking,
         walker,
+        walkerInitial,
         report: reportRes.report,
         dateLabel: formatDateTime(booking.date),
         statusLabel: LABELS[booking.status],
         durationDetailLabel,
         serviceLabel,
+        svcIcon: SVC_ICON[booking.serviceType] || 'paw-print',
+        petLabel: '宠物',
+        serviceFee: booking.mockPayment.amount,
+        paymentStatusLabel: PAY_STATUS_LABEL[payState] || payState,
         canReview: booking.status === 'completed' && existingReviews.reviews.length === 0,
         canCancel: booking.status === 'requested' || booking.status === 'accepted'
       })

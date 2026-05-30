@@ -1,0 +1,16 @@
+<view
+  class="ll-row {{danger ? 'is-danger' : ''}} {{isLast ? 'is-last' : ''}}"
+  bindtap="onTap"
+  hover-class="ll-row-hover"
+>
+  <view wx:if="{{icon}}" class="ll-row-icon ll-row-icon--{{iconBg || 'neutral'}}">
+    <ll-icon name="{{icon}}" size="36" color="{{iconBg === 'ink' ? '#FFFFFF' : '#1E1E24'}}"/>
+  </view>
+  <view class="ll-row-label">{{label}}</view>
+  <view wx:if="{{badge}}" class="ll-row-badge">{{badge}}</view>
+  <view wx:if="{{value}}" class="ll-row-value">{{value}}</view>
+  <view wx:if="{{!hideChevron && !danger}}" class="ll-row-chev">
+    <ll-icon name="caret-right" size="28" color="#A0A0B0"/>
+  </view>
+  <slot name="trailing"/>
+</view>

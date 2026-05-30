@@ -1,0 +1,8 @@
+<view
+  class="ll-toggle {{value ? 'is-on' : ''}} {{disabled ? 'is-disabled' : ''}}"
+  bindtap="onTap"
+>
+  <view class="ll-toggle-knob">
+    <ll-icon wx:if="{{value}}" name="check" size="22" color="#22282C"/>
+  </view>
+</view>

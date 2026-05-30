@@ -1,0 +1,28 @@
+<view class="ll-page act-page">
+  <view class="act-head">
+    <text class="act-title">守护时刻</text>
+    <view class="act-iconbtn">
+      <ll-icon name="calendar-blank" size="36" color="#1E1E24"/>
+    </view>
+  </view>
+
+  <view class="act-sub">今日陪伴</view>
+
+  <view class="act-stats">
+    <ll-stat-tile label="陪伴时长" value="{{minutes}}" unit=" 分钟" bg="butter"/>
+    <ll-stat-tile label="互动里程" value="{{km}}"      unit=" 公里" bg="lavender"/>
+  </view>
+
+  <view class="act-progress-card">
+    <view class="act-progress-title">守护进度</view>
+    <view class="act-progress-ring">
+      <ll-progress-ring percent="{{percent}}" target="{{target}}" size="400"/>
+    </view>
+  </view>
+
+  <view class="act-cta">
+    <ll-cta text="记录守护时刻" bind:tap="onLog"/>
+  </view>
+
+  <view class="act-history" bindtap="onHistory">查看历史</view>
+</view>

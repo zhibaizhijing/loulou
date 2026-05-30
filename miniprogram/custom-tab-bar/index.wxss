@@ -1,21 +1,25 @@
-.tab-bar {
+.ll-tabbar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  height: 100rpx;
+  height: 156rpx;
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
-  background: #ffffff;
-  border-top: 1rpx solid #ececec;
+  background: var(--ll-surface, #fff);
+  border-top: 1px solid var(--ll-border, #EEEEF2);
   z-index: 100;
 }
-.tab {
+.ll-tab {
   flex: 1;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 4rpx;
-  color: #888;
-  font-size: 22rpx;
+  gap: 6rpx;
+  color: var(--ll-text-3, #A0A0B0);
 }
-.tab.on { color: #2563eb; }
-.icon { font-size: 40rpx; line-height: 1; }
-.label { font-size: 20rpx; }
+.ll-tab.is-on { color: var(--ll-text, #1E1E24); }
+.ll-tab-icon { line-height: 1; }
+.ll-tab-label {
+  font-size: 21rpx;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.ll-tab.is-on .ll-tab-label { font-weight: 600; }

@@ -1,0 +1,3 @@
+<view class="ll-card pad-{{padding}} {{flat ? 'is-flat' : ''}}">
+  <slot/>
+</view>

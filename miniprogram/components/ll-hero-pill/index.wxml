@@ -1,0 +1,13 @@
+<view class="ll-hero">
+  <view class="ll-hero-avatar" bindtap="onAvatar">
+    <image wx:if="{{avatar}}" class="ll-hero-avatar-img" src="{{avatar}}" mode="aspectFill"/>
+    <ll-icon wx:else name="user" weight="fill" size="40" color="#22282C"/>
+  </view>
+  <view class="ll-hero-paw">
+    <ll-icon name="paw-print" weight="fill" size="40" color="#FEE7A6"/>
+  </view>
+  <view class="ll-hero-bell" bindtap="onBell">
+    <ll-icon name="bell" size="36" color="#1E1E24"/>
+    <view wx:if="{{hasBadge}}" class="ll-hero-bell-dot"></view>
+  </view>
+</view>

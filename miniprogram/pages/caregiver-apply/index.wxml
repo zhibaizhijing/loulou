@@ -1,128 +1,169 @@
-<mock-banner />
+<view class="ll-page bg-page">
+  <mock-banner />
+  <ll-topnav title="成为守护者"/>
 
-<view wx:if="{{phase === 'form'}}" class="page">
-  <view class="progress">Step {{step}} of {{totalSteps}}</view>
-  <view class="progress-bar"><view class="progress-fill" style="width: {{(step * 100) / totalSteps}}%"></view></view>
-
-  <view wx:if="{{step === 1}}" class="section">
-    <view class="label">Your real name</view>
-    <t-input placeholder="Enter your full name" model:value="{{realName}}" bind:change="onFieldChange" />
-  </view>
-
-  <view wx:if="{{step === 2}}" class="section">
-    <view class="label">Government ID photo</view>
-    <view class="hint">Used for identity verification (mock — not stored anywhere real).</view>
-    <view wx:if="{{idPhotoUrl}}" class="thumb-wrap">
-      <image src="{{idPhotoUrl}}" mode="aspectFill" class="thumb-id" />
-    </view>
-    <t-button bindtap="onPickIdPhoto">{{idPhotoUrl ? 'Replace photo' : '+ Add ID photo'}}</t-button>
-  </view>
-
-  <view wx:if="{{step === 3}}" class="section">
-    <view class="label">Photos of where pets will stay (1-3)</view>
-    <view class="thumb-grid">
-      <image wx:for="{{indoorPhotos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb-grid-item" />
-    </view>
-    <t-button wx:if="{{indoorPhotos.length < 3}}" bindtap="onPickIndoorPhotos">+ Add photo ({{indoorPhotos.length}}/3)</t-button>
-  </view>
-
-  <view wx:if="{{step === 4}}" class="section">
-    <view class="label">About you</view>
-    <t-textarea placeholder="Tell pet owners about your experience, home setup, etc. (min 10 chars)" model:value="{{bio}}" bind:change="onFieldChange" />
-    <view class="label" style="margin-top:24rpx">Services you'll offer</view>
-    <t-checkbox-group value="{{proposedServiceTypes}}" bind:change="onServicesChange">
-      <t-checkbox wx:for="{{serviceOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
-    </t-checkbox-group>
-  </view>
-
-  <view wx:if="{{step === 5}}" class="section">
-    <view class="label">What pets you accept</view>
-    <view class="hint">Owners use these as search filters.</view>
-
-    <view class="sub-label">Pet types</view>
-    <t-checkbox-group value="{{acceptedPetTypes}}" bind:change="onPetTypesChange">
-      <t-checkbox wx:for="{{petTypeOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
-    </t-checkbox-group>
-
-    <view class="sub-label">Size bands</view>
-    <t-checkbox-group value="{{acceptedSizeBands}}" bind:change="onSizeBandsChange">
-      <t-checkbox wx:for="{{sizeBandOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
-    </t-checkbox-group>
-
-    <view class="sub-label">Max pets at a time</view>
-    <t-stepper value="{{maxConcurrent}}" min="{{1}}" max="{{5}}" bind:change="onMaxConcurrentChange" />
-
-    <view class="sub-label">Care capabilities</view>
-    <view class="switch-row">
-      <view>Can administer medication</view>
-      <t-switch value="{{canMedicate}}" bind:change="onCanMedicateChange" />
-    </view>
-    <view class="switch-row">
-      <view>Accepts puppies (&lt;6 months)</view>
-      <t-switch value="{{acceptsPuppy}}" bind:change="onAcceptsPuppyChange" />
-    </view>
-    <view class="switch-row">
-      <view>Accepts seniors (&gt;10 years)</view>
-      <t-switch value="{{acceptsSenior}}" bind:change="onAcceptsSeniorChange" />
-    </view>
-    <view class="switch-row">
-      <view>Accepts aggressive / reactive pets</view>
-      <t-switch value="{{acceptsAggressive}}" bind:change="onAcceptsAggressiveChange" />
+  <!-- Intro landing (default) -->
+  <view wx:if="{{phase === 'intro'}}">
+    <!-- Hero -->
+    <view class="bg-hero">
+      <view class="bg-hero-icon">
+        <ll-icon name="paw-print" weight="fill" size="88" color="#FEE7A6"/>
+      </view>
+      <view class="bg-hero-title">成为 Loulou 守护者</view>
+      <view class="bg-hero-sub">与爱宠为伴，为宠主提供专业照护，同时赚取额外收入</view>
     </view>
 
-    <view class="sub-label">Notes (optional, ≤200 chars)</view>
-    <t-textarea placeholder="Any specifics owners should know" model:value="{{intakeNotes}}" maxlength="{{200}}" />
-  </view>
-
-  <view wx:if="{{step === 6}}" class="section">
-    <view class="label">Review your application</view>
-    <view class="review-row"><text class="rk">Name</text><text>{{realName}}</text></view>
-    <view class="review-row"><text class="rk">Bio</text><text>{{bio}}</text></view>
-    <view class="review-row">
-      <text class="rk">Services</text>
-      <view>
-        <t-tag wx:for="{{proposedServiceTypes}}" wx:key="*this" style="margin-right:8rpx">{{serviceLabels[item]}}</t-tag>
+    <!-- Benefits -->
+    <view class="bg-card">
+      <view class="bg-card-head">守护者权益</view>
+      <view wx:for="{{benefits}}" wx:key="text" class="bg-row {{index === benefits.length - 1 ? 'is-last' : ''}}">
+        <view class="bg-row-icon">
+          <ll-icon name="{{item.icon}}" size="32" color="#1E1E24"/>
+        </view>
+        <text class="bg-row-text">{{item.text}}</text>
       </view>
     </view>
-    <view class="review-row">
-      <text class="rk">Pet types</text>
-      <view>
-        <t-tag wx:for="{{acceptedPetTypes}}" wx:key="*this" style="margin-right:8rpx">{{petTypeLabels[item]}}</t-tag>
+
+    <!-- Requirements -->
+    <view class="bg-card">
+      <view class="bg-card-head">申请条件</view>
+      <view wx:for="{{requirements}}" wx:key="*this" class="bg-req-row {{index === requirements.length - 1 ? 'is-last' : ''}}">
+        <ll-icon name="check-circle" weight="fill" size="28" color="#2C7A4B"/>
+        <text class="bg-req-text">{{item}}</text>
       </view>
     </view>
-    <view class="review-row">
-      <text class="rk">Sizes</text>
-      <view>
-        <t-tag wx:for="{{acceptedSizeBands}}" wx:key="*this" style="margin-right:8rpx">{{sizeBandLabels[item]}}</t-tag>
-      </view>
+
+    <view class="bg-cta">
+      <ll-cta text="立即申请成为守护者" bind:tap="onStartApply"/>
     </view>
-    <view class="review-row"><text class="rk">Max at once</text><text>{{maxConcurrent}}</text></view>
-    <view class="review-row"><text class="rk">Can medicate</text><text>{{canMedicate ? 'Yes' : 'No'}}</text></view>
-    <view class="review-row"><text class="rk">Puppies</text><text>{{acceptsPuppy ? 'Yes' : 'No'}}</text></view>
-    <view class="review-row"><text class="rk">Seniors</text><text>{{acceptsSenior ? 'Yes' : 'No'}}</text></view>
-    <view wx:if="{{intakeNotes}}" class="review-row"><text class="rk">Notes</text><text>{{intakeNotes}}</text></view>
-    <view class="review-row"><text class="rk">ID photo</text><image src="{{idPhotoUrl}}" mode="aspectFill" class="thumb-id" /></view>
-    <view class="review-row"><text class="rk">Indoor photos</text>
+  </view>
+
+  <!-- Form (existing wizard) -->
+  <view wx:if="{{phase === 'form'}}" class="page">
+    <view class="progress">第 {{step}} 步 / 共 {{totalSteps}} 步</view>
+    <view class="progress-bar"><view class="progress-fill" style="width: {{(step * 100) / totalSteps}}%"></view></view>
+
+    <view wx:if="{{step === 1}}" class="section">
+      <view class="label">真实姓名</view>
+      <t-input placeholder="请输入您的真实姓名" model:value="{{realName}}" bind:change="onFieldChange" />
+    </view>
+
+    <view wx:if="{{step === 2}}" class="section">
+      <view class="label">身份证照片</view>
+      <view class="hint">用于身份认证（示例数据，非真实存储）</view>
+      <view wx:if="{{idPhotoUrl}}" class="thumb-wrap">
+        <image src="{{idPhotoUrl}}" mode="aspectFill" class="thumb-id" />
+      </view>
+      <t-button bindtap="onPickIdPhoto">{{idPhotoUrl ? '替换照片' : '+ 添加照片'}}</t-button>
+    </view>
+
+    <view wx:if="{{step === 3}}" class="section">
+      <view class="label">宠物寄养环境照片（1-3 张）</view>
       <view class="thumb-grid">
         <image wx:for="{{indoorPhotos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb-grid-item" />
       </view>
+      <t-button wx:if="{{indoorPhotos.length < 3}}" bindtap="onPickIndoorPhotos">+ 添加照片 ({{indoorPhotos.length}}/3)</t-button>
+    </view>
+
+    <view wx:if="{{step === 4}}" class="section">
+      <view class="label">关于您</view>
+      <t-textarea placeholder="请简单介绍您的经验、家庭环境等（至少 10 字）" model:value="{{bio}}" bind:change="onFieldChange" />
+      <view class="label" style="margin-top:24rpx">您将提供的服务</view>
+      <t-checkbox-group value="{{proposedServiceTypes}}" bind:change="onServicesChange">
+        <t-checkbox wx:for="{{serviceOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
+      </t-checkbox-group>
+    </view>
+
+    <view wx:if="{{step === 5}}" class="section">
+      <view class="label">您可以照护的宠物</view>
+      <view class="hint">主人将根据这些条件筛选守护者。</view>
+
+      <view class="sub-label">宠物类型</view>
+      <t-checkbox-group value="{{acceptedPetTypes}}" bind:change="onPetTypesChange">
+        <t-checkbox wx:for="{{petTypeOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
+      </t-checkbox-group>
+
+      <view class="sub-label">体型</view>
+      <t-checkbox-group value="{{acceptedSizeBands}}" bind:change="onSizeBandsChange">
+        <t-checkbox wx:for="{{sizeBandOptions}}" wx:key="value" value="{{item.value}}" label="{{item.label}}" />
+      </t-checkbox-group>
+
+      <view class="sub-label">同时照护数量</view>
+      <t-stepper value="{{maxConcurrent}}" min="{{1}}" max="{{5}}" bind:change="onMaxConcurrentChange" />
+
+      <view class="sub-label">护理能力</view>
+      <view class="switch-row">
+        <view>可投药</view>
+        <t-switch value="{{canMedicate}}" bind:change="onCanMedicateChange" />
+      </view>
+      <view class="switch-row">
+        <view>接受幼宠（小于 6 个月）</view>
+        <t-switch value="{{acceptsPuppy}}" bind:change="onAcceptsPuppyChange" />
+      </view>
+      <view class="switch-row">
+        <view>接受老龄（大于 10 岁）</view>
+        <t-switch value="{{acceptsSenior}}" bind:change="onAcceptsSeniorChange" />
+      </view>
+      <view class="switch-row">
+        <view>接受警戒 / 反应性宠物</view>
+        <t-switch value="{{acceptsAggressive}}" bind:change="onAcceptsAggressiveChange" />
+      </view>
+
+      <view class="sub-label">补充说明（选填，≤200 字）</view>
+      <t-textarea placeholder="您希望主人了解的事项" model:value="{{intakeNotes}}" maxlength="{{200}}" />
+    </view>
+
+    <view wx:if="{{step === 6}}" class="section">
+      <view class="label">确认申请信息</view>
+      <view class="review-row"><text class="rk">姓名</text><text>{{realName}}</text></view>
+      <view class="review-row"><text class="rk">介绍</text><text>{{bio}}</text></view>
+      <view class="review-row">
+        <text class="rk">服务</text>
+        <view>
+          <t-tag wx:for="{{proposedServiceTypes}}" wx:key="*this" style="margin-right:8rpx">{{serviceLabels[item]}}</t-tag>
+        </view>
+      </view>
+      <view class="review-row">
+        <text class="rk">宠物类型</text>
+        <view>
+          <t-tag wx:for="{{acceptedPetTypes}}" wx:key="*this" style="margin-right:8rpx">{{petTypeLabels[item]}}</t-tag>
+        </view>
+      </view>
+      <view class="review-row">
+        <text class="rk">体型</text>
+        <view>
+          <t-tag wx:for="{{acceptedSizeBands}}" wx:key="*this" style="margin-right:8rpx">{{sizeBandLabels[item]}}</t-tag>
+        </view>
+      </view>
+      <view class="review-row"><text class="rk">同时数量</text><text>{{maxConcurrent}}</text></view>
+      <view class="review-row"><text class="rk">可投药</text><text>{{canMedicate ? '是' : '否'}}</text></view>
+      <view class="review-row"><text class="rk">幼宠</text><text>{{acceptsPuppy ? '是' : '否'}}</text></view>
+      <view class="review-row"><text class="rk">老龄</text><text>{{acceptsSenior ? '是' : '否'}}</text></view>
+      <view wx:if="{{intakeNotes}}" class="review-row"><text class="rk">补充</text><text>{{intakeNotes}}</text></view>
+      <view class="review-row"><text class="rk">身份证</text><image src="{{idPhotoUrl}}" mode="aspectFill" class="thumb-id" /></view>
+      <view class="review-row"><text class="rk">环境照片</text>
+        <view class="thumb-grid">
+          <image wx:for="{{indoorPhotos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb-grid-item" />
+        </view>
+      </view>
+    </view>
+
+    <view class="nav-buttons">
+      <t-button wx:if="{{step > 1}}" variant="outline" bindtap="onBack">上一步</t-button>
+      <t-button wx:if="{{step < totalSteps}}" theme="primary" bindtap="onNext">下一步</t-button>
+      <t-button wx:if="{{step === totalSteps}}" theme="primary" loading="{{submitting}}" bindtap="onSubmit">提交申请</t-button>
     </view>
   </view>
 
-  <view class="nav-buttons">
-    <t-button wx:if="{{step > 1}}" variant="outline" bindtap="onBack">Back</t-button>
-    <t-button wx:if="{{step < totalSteps}}" theme="primary" bindtap="onNext">Next</t-button>
-    <t-button wx:if="{{step === totalSteps}}" theme="primary" loading="{{submitting}}" bindtap="onSubmit">Submit application</t-button>
-  </view>
-</view>
-
-<view wx:if="{{phase === 'status'}}" class="page status-page">
-  <view class="status-card">
-    <view class="status-icon">{{statusIcon}}</view>
-    <view class="status-title">{{statusTitle}}</view>
-    <view class="status-sub">{{statusSub}}</view>
-    <loading-skeleton wx:if="{{application.status === 'submitted' || application.status === 'reviewing'}}" count="2" />
-    <t-button wx:if="{{application.status === 'approved'}}" theme="primary" block bindtap="onSwitchToCaregiver">Switch to caregiver mode</t-button>
-    <t-button wx:if="{{application.status === 'approved'}}" variant="outline" block bindtap="onBackHome">Back to home</t-button>
+  <!-- Status -->
+  <view wx:if="{{phase === 'status'}}" class="page status-page">
+    <view class="status-card">
+      <view class="status-icon">{{statusIcon}}</view>
+      <view class="status-title">{{statusTitle}}</view>
+      <view class="status-sub">{{statusSub}}</view>
+      <loading-skeleton wx:if="{{application.status === 'submitted' || application.status === 'reviewing'}}" count="2" />
+      <t-button wx:if="{{application.status === 'approved'}}" theme="primary" block bindtap="onSwitchToCaregiver">切换至守护者模式</t-button>
+      <t-button wx:if="{{application.status === 'approved'}}" variant="outline" block bindtap="onBackHome">返回首页</t-button>
+    </view>
   </view>
 </view>

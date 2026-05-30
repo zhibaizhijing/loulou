@@ -1,0 +1,6 @@
+<view class="ll-stat ll-stat--{{bg}}">
+  <view class="ll-stat-label">{{label}}</view>
+  <view class="ll-stat-value ll-num">
+    {{value}}<text class="ll-stat-unit" wx:if="{{unit}}">{{unit}}</text>
+  </view>
+</view>

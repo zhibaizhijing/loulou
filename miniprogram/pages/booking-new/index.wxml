@@ -1,73 +1,300 @@
-<mock-banner />
-<view class="page" wx:if="{{walker}}">
-  <view class="walker-strip">
-    <image src="{{walker.avatar}}" class="avatar" />
-    <view>
-      <view class="name">{{walker.name}}</view>
-      <view class="price">S${{walker.pricePerWalk}} / 30 min</view>
+<view class="ll-page bn-page">
+  <mock-banner />
+
+  <!-- Top nav -->
+  <view class="bn-nav">
+    <view class="bn-nav-back" bindtap="onBack">
+      <ll-icon name="caret-left" size="26" color="#6B6B7A"/>
+      <text>返回</text>
+    </view>
+    <view class="bn-nav-title">{{stage === 'success' ? '预约提交' : '预约详情'}}</view>
+    <view class="bn-nav-spacer"></view>
+  </view>
+
+  <!-- ─── FORM STAGE ─── -->
+  <block wx:if="{{stage === 'form' && walker}}">
+    <view class="bn-body">
+      <!-- Walker strip -->
+      <view class="bn-walker">
+        <view class="bn-walker-avatar">
+          <image wx:if="{{walker.avatar}}" src="{{walker.avatar}}" mode="aspectFill" class="bn-walker-img"/>
+          <ll-icon wx:else name="paw-print" weight="fill" size="44" color="#22282C"/>
+        </view>
+        <view class="bn-walker-meta">
+          <view class="bn-walker-name">{{walker.name}}</view>
+          <view class="ll-caption ll-num">¥{{walker.pricePerWalk}} / 30 分钟</view>
+        </view>
+      </view>
+
+      <!-- ① 服务 -->
+      <view class="bn-group-head">服务</view>
+      <view class="bn-section bn-row-card" bindtap="onOpenSvcSheet">
+        <view class="bn-svc-info">
+          <view class="bn-svc-title">{{serviceLabelCN}}</view>
+          <view class="bn-svc-loc bn-svc-loc--{{locColor}}">{{locLabel}}</view>
+        </view>
+        <ll-icon name="caret-right" size="24" color="#A0A0B0"/>
+      </view>
+
+      <!-- ② 宠物 -->
+      <view class="bn-group-head">宠物</view>
+      <view class="bn-section">
+        <view class="bn-card">
+          <view wx:if="{{dogs.length === 0}}" class="bn-empty">
+            <text class="ll-caption">尚未添加宠物</text>
+          </view>
+          <view
+            wx:for="{{dogs}}" wx:key="id"
+            class="bn-pet-row {{index === dogs.length - 1 ? 'is-last' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="onTogglePet"
+          >
+            <view class="bn-pet-check {{selectedDogIds[item.id] ? 'is-on' : ''}}">
+              <ll-icon wx:if="{{selectedDogIds[item.id]}}" name="check" size="22" color="#FFFFFF"/>
+            </view>
+            <view class="bn-pet-avatar bn-pet-avatar--{{index % 2 === 0 ? 'butter' : 'lavender'}}">
+              <ll-icon name="paw-print" weight="fill" size="32" color="#22282C"/>
+            </view>
+            <view class="bn-pet-info">
+              <view class="bn-pet-name">{{item.name}}</view>
+              <view class="bn-pet-breed">{{item.breed || '混血'}}</view>
+            </view>
+          </view>
+          <view class="bn-add-pet" catchtap="onToggleAddDog">
+            <ll-icon name="{{addingDog ? 'x' : 'plus'}}" size="24" color="#6B6B7A"/>
+            <text>{{addingDog ? '取消' : '添加宠物'}}</text>
+          </view>
+          <dog-form wx:if="{{addingDog}}" bind:save="onSaveDog"/>
+        </view>
+      </view>
+
+      <!-- ③ 日期 -->
+      <view class="bn-group-head">日期</view>
+      <view class="bn-section">
+        <view class="bn-card">
+          <picker mode="date" start="{{minDate}}" value="{{datePart}}" bindchange="onDate">
+            <view class="bn-row">
+              <text class="bn-row-key">{{variant === 'range' ? '入住' : '日期'}}</text>
+              <text class="bn-row-val {{!datePart ? 'is-hint' : ''}}">{{datePart || '选择日期'}}</text>
+              <ll-icon name="caret-right" size="22" color="#A0A0B0"/>
+            </view>
+          </picker>
+          <picker wx:if="{{variant === 'range'}}" mode="date" start="{{minCheckOutDate}}" value="{{checkOutDate}}" bindchange="onCheckOutDate">
+            <view class="bn-row">
+              <text class="bn-row-key">退房</text>
+              <text class="bn-row-val {{!checkOutDate ? 'is-hint' : ''}}">{{checkOutDate || '选择日期'}}</text>
+              <ll-icon name="caret-right" size="22" color="#A0A0B0"/>
+            </view>
+          </picker>
+          <view wx:if="{{variant === 'range' && durationMin > 0 && checkOutDate}}" class="bn-row is-last">
+            <text class="bn-row-key">晚数</text>
+            <text class="bn-row-val ll-num">{{durationMin}} 晚</text>
+          </view>
+          <picker wx:if="{{variant !== 'range'}}" mode="time" value="{{timePart}}" bindchange="onTime">
+            <view class="bn-row is-last">
+              <text class="bn-row-key">时间</text>
+              <text class="bn-row-val {{!timePart ? 'is-hint' : ''}}">{{timePart || '选择时间'}}</text>
+              <ll-icon name="caret-right" size="22" color="#A0A0B0"/>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <!-- ④ 时间段 (drop-off / pickup) for boarding/daycare/live_in -->
+      <block wx:if="{{variant === 'range'}}">
+        <view class="bn-group-head">时间段</view>
+        <view class="bn-section">
+          <view class="bn-card">
+            <picker mode="time" value="{{dropoffTime}}" bindchange="onDropoff">
+              <view class="bn-row">
+                <text class="bn-row-key">{{dropoffLabel}}</text>
+                <text class="bn-row-val {{!dropoffTime ? 'is-hint' : ''}}">{{dropoffTime || '选择时间'}}</text>
+                <ll-icon name="caret-right" size="22" color="#A0A0B0"/>
+              </view>
+            </picker>
+            <picker mode="time" value="{{pickupTime}}" bindchange="onPickup">
+              <view class="bn-row is-last">
+                <text class="bn-row-key">{{pickupLabel}}</text>
+                <text class="bn-row-val {{!pickupTime ? 'is-hint' : ''}}">{{pickupTime || '选择时间'}}</text>
+                <ll-icon name="caret-right" size="22" color="#A0A0B0"/>
+              </view>
+            </picker>
+          </view>
+        </view>
+      </block>
+
+      <!-- ⑤ 时长 for minute / stepper variants -->
+      <block wx:if="{{variant === 'minute'}}">
+        <view class="bn-group-head">{{durationLabel === 'Walk duration' ? '遛狗时长' : '到访时长'}}</view>
+        <view class="bn-section">
+          <view class="bn-card">
+            <view class="bn-min-list">
+              <view
+                wx:for="{{minuteOptions}}" wx:key="*this"
+                class="bn-min {{durationMin === item ? 'is-on' : ''}}"
+                data-value="{{item}}"
+                bindtap="onMinTap"
+              >{{item}} 分钟</view>
+            </view>
+          </view>
+        </view>
+      </block>
+      <block wx:if="{{variant === 'stepper'}}">
+        <view class="bn-group-head">天数</view>
+        <view class="bn-section">
+          <view class="bn-card">
+            <view class="bn-stepper">
+              <view class="bn-step-btn {{durationMin <= 1 ? 'is-disabled' : ''}}" bindtap="onStepDec">
+                <ll-icon name="minus" size="24" color="{{durationMin <= 1 ? '#A0A0B0' : '#FFFFFF'}}"/>
+              </view>
+              <text class="bn-step-val ll-num">{{durationMin}} 天</text>
+              <view class="bn-step-btn" bindtap="onStepInc">
+                <ll-icon name="plus" size="24" color="#FFFFFF"/>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <!-- ⑥ 附加服务 -->
+      <view class="bn-group-head">附加服务</view>
+      <view class="bn-section">
+        <view class="bn-card">
+          <view wx:for="{{extras}}" wx:key="id" class="bn-extra-row {{index === extras.length - 1 ? 'is-last' : ''}}">
+            <view class="bn-extra-info">
+              <view class="bn-extra-label">{{item.label}}</view>
+              <view class="bn-extra-desc">{{item.desc}}</view>
+            </view>
+            <view class="bn-extra-price ll-num">+¥{{item.price}}</view>
+            <view class="bn-extra-stepper">
+              <view class="bn-step-btn-sm {{item.qty <= 0 ? 'is-disabled' : ''}}" data-id="{{item.id}}" catchtap="onExtraDec">
+                <ll-icon name="minus" size="18" color="{{item.qty <= 0 ? '#A0A0B0' : '#FFFFFF'}}"/>
+              </view>
+              <text class="bn-step-val-sm ll-num">{{item.qty}}</text>
+              <view class="bn-step-btn-sm" data-id="{{item.id}}" catchtap="onExtraInc">
+                <ll-icon name="plus" size="18" color="#FFFFFF"/>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- ⑦ 留言 -->
+      <view class="bn-group-head">留言</view>
+      <view class="bn-section">
+        <view class="bn-card">
+          <textarea
+            class="bn-notes-input"
+            placeholder="向守护者介绍您的宠物和需求…"
+            placeholder-class="bn-notes-hint"
+            model:value="{{notes}}"
+            auto-height
+          />
+        </view>
+      </view>
+
+      <view class="bn-spacer"></view>
+    </view>
+
+    <!-- Price bar -->
+    <view class="bn-pricebar" bindtap="onOpenPriceDrawer">
+      <view class="bn-pricebar-info">
+        <view class="bn-pricebar-desc">{{serviceLabelCN}} · {{priceSummary}}</view>
+        <view class="bn-pricebar-total ll-num">总计 ¥{{computedAmount > 0 ? computedAmount : '--'}}</view>
+      </view>
+      <view class="bn-pricebar-link">
+        <text>查看明细</text>
+        <ll-icon name="caret-up" size="20" color="#A0A0B0"/>
+      </view>
+    </view>
+
+    <!-- Sticky CTA -->
+    <view class="bn-stickybar">
+      <ll-cta
+        text="申请预约"
+        loading="{{submitting}}"
+        bind:tap="onSubmit"
+      />
+    </view>
+  </block>
+
+  <!-- ─── SUCCESS STAGE ─── -->
+  <block wx:if="{{stage === 'success'}}">
+    <view class="bn-success">
+      <view class="bn-success-icon">
+        <ll-icon name="check-circle" weight="fill" size="160" color="#2C7A4B"/>
+      </view>
+      <view class="bn-success-title">申请已发送</view>
+      <view class="bn-success-sub">守护者通常会在 30 分钟内回复</view>
+
+      <view class="bn-steps">
+        <view wx:for="{{successSteps}}" wx:key="title" class="bn-step">
+          <view class="bn-step-icon bn-step-icon--{{item.bg}}">
+            <ll-icon name="{{item.icon}}" size="32" color="#1E1E24"/>
+          </view>
+          <view class="bn-step-text">
+            <view class="bn-step-title">{{item.title}}</view>
+            <view class="bn-step-desc">{{item.desc}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="bn-success-cta">
+        <ll-cta text="查看申请单状态" bind:tap="onGoToOrders"/>
+      </view>
+    </view>
+  </block>
+
+  <!-- ─── Service picker sheet ─── -->
+  <view wx:if="{{svcSheetOpen}}" class="bn-mask" bindtap="onCloseSvcSheet"></view>
+  <view wx:if="{{svcSheetOpen}}" class="bn-sheet">
+    <view class="bn-sheet-grab"></view>
+    <view class="bn-sheet-head">
+      <text class="bn-sheet-title">选择服务类型</text>
+      <view class="bn-sheet-close" bindtap="onCloseSvcSheet">
+        <ll-icon name="x" size="24" color="#1E1E24"/>
+      </view>
+    </view>
+    <view
+      wx:for="{{serviceChips}}"
+      wx:key="id"
+      class="bn-sheet-row {{serviceType === item.id ? 'is-on' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onPickSvcFromSheet"
+    >
+      <view class="bn-sheet-row-info">
+        <text class="bn-sheet-row-title">{{item.label}}</text>
+        <text class="bn-sheet-row-sub">{{item.loc}}</text>
+      </view>
+      <ll-icon wx:if="{{serviceType === item.id}}" name="check-circle" weight="fill" size="32" color="#22282C"/>
     </view>
   </view>
 
-  <view class="section">
-    <view class="label">Pick your dog</view>
-    <view wx:if="{{dogs.length === 0}}" class="hint">No dogs yet — add one below.</view>
-    <view wx:else class="dog-list">
-      <view wx:for="{{dogs}}" wx:key="id"
-            class="dog-chip {{selectedDogId === item.id ? 'on' : ''}}"
-            bindtap="onPickDog" data-id="{{item.id}}">{{item.name}}</view>
+  <!-- ─── Price detail drawer ─── -->
+  <view wx:if="{{priceDrawerOpen}}" class="bn-mask" bindtap="onClosePriceDrawer"></view>
+  <view wx:if="{{priceDrawerOpen}}" class="bn-drawer">
+    <view class="bn-sheet-grab"></view>
+    <view class="bn-sheet-head">
+      <text class="bn-sheet-title">费用明细</text>
+      <view class="bn-sheet-close" bindtap="onClosePriceDrawer">
+        <ll-icon name="x" size="24" color="#1E1E24"/>
+      </view>
     </view>
-    <view class="add-dog-toggle" bindtap="onToggleAddDog">{{addingDog ? '× Cancel' : '+ Add a dog'}}</view>
-    <dog-form wx:if="{{addingDog}}" bind:save="onSaveDog" />
-  </view>
-
-  <view class="section">
-    <view class="label">{{variant === 'range' ? 'Check-in date & time' : 'Date & start time'}}</view>
-    <picker mode="date" start="{{minDate}}" value="{{datePart}}" bindchange="onDate">
-      <view class="picker-row">{{datePart || 'Choose date'}}</view>
-    </picker>
-    <picker mode="time" value="{{timePart}}" bindchange="onTime">
-      <view class="picker-row">{{timePart || (variant === 'range' ? 'Choose drop-off time' : 'Choose time')}}</view>
-    </picker>
-  </view>
-
-  <view class="section" wx:if="{{variant === 'range'}}">
-    <view class="label">Check-out date</view>
-    <picker mode="date" start="{{minCheckOutDate}}" value="{{checkOutDate}}" bindchange="onCheckOutDate">
-      <view class="picker-row">{{checkOutDate || 'Choose check-out date'}}</view>
-    </picker>
-    <view class="hint" wx:if="{{durationMin > 0 && checkOutDate}}">{{durationMin}} night{{durationMin > 1 ? 's' : ''}}</view>
-  </view>
-
-  <view class="section" wx:if="{{availableServices.length > 1}}">
-    <view class="label">Service</view>
-    <t-radio-group value="{{serviceType}}" bind:change="onServiceTypeChange">
-      <t-radio wx:for="{{availableServices}}" wx:key="*this" value="{{item}}" label="{{labels[item]}}" />
-    </t-radio-group>
-  </view>
-
-  <view class="section" wx:if="{{variant !== 'range'}}">
-    <view class="label">{{durationLabel}}</view>
-    <t-radio-group wx:if="{{variant === 'minute'}}" value="{{durationMin}}" bind:change="onDuration">
-      <t-radio wx:for="{{minuteOptions}}" wx:key="*this" value="{{item}}" label="{{item}} min" />
-    </t-radio-group>
-    <t-stepper wx:if="{{variant === 'stepper'}}" value="{{durationMin}}" min="{{1}}" max="{{maxQuantity}}" bind:change="onStepper" />
-  </view>
-
-  <view class="section">
-    <view class="label">Notes (optional)</view>
-    <t-textarea model:value="{{notes}}" placeholder="Anything the walker should know?" />
-  </view>
-
-  <view class="section pay">
-    <view class="label">Payment</view>
-    <view class="total">Total: S${{computedAmount}}</view>
-    <view class="hint">{{priceFormula}}</view>
-    <view class="hint">Funds held in platform escrow until service complete (mock WeChat Pay).</view>
-  </view>
-
-  <view class="cta">
-    <t-button theme="primary" size="large" block loading="{{submitting}}" bindtap="onSubmit">Pay S${{computedAmount}} & book</t-button>
+    <view class="bn-drawer-row">
+      <text class="bn-drawer-label">{{priceFormula}}</text>
+      <text class="bn-drawer-val ll-num">¥{{serviceSubtotal}}</text>
+    </view>
+    <view wx:for="{{extrasBreakdown}}" wx:key="id" class="bn-drawer-row">
+      <text class="bn-drawer-label">{{item.label}} × {{item.qty}}</text>
+      <text class="bn-drawer-val ll-num">+¥{{item.subtotal}}</text>
+    </view>
+    <view class="bn-drawer-row">
+      <text class="bn-drawer-label">平台服务费（15%）</text>
+      <text class="bn-drawer-val ll-num">¥{{platformFee}}</text>
+    </view>
+    <view class="bn-drawer-row bn-drawer-total">
+      <text class="bn-drawer-total-label">总计</text>
+      <text class="bn-drawer-total-val ll-num">¥{{computedAmount}}</text>
+    </view>
   </view>
 </view>
-
-<loading-skeleton wx:else count="5" />

@@ -1,0 +1,19 @@
+<view
+  class="ll-stage ll-stage--{{bg}}"
+  style="margin-top:{{offset}}rpx;"
+  bindtap="onTap"
+>
+  <view class="ll-stage-title">{{title}}</view>
+  <view class="ll-stage-sub">{{sub}}</view>
+
+  <view class="ll-stage-arrow">
+    <ll-icon name="caret-right" size="28" color="#1E1E24"/>
+  </view>
+
+  <image
+    wx:if="{{image}}"
+    class="ll-stage-img"
+    src="{{image}}"
+    mode="aspectFit"
+  />
+</view>

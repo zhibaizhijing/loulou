@@ -1,0 +1,4 @@
+<view class="ll-attrtag ll-attrtag--{{bg}}">
+  <view class="ll-attrtag-label">{{label}}</view>
+  <view class="ll-attrtag-value ll-num">{{value}}</view>
+</view>

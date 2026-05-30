@@ -1,57 +1,132 @@
-<mock-banner />
-<loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="5" />
-<empty-state wx:elif="{{pageStatus === 'error'}}" icon="⚠️" title="Booking missing" subtitle="{{pageError}}" ctaText="Back" bind:cta="onBack" />
+<view class="ll-page bs-page">
+  <mock-banner />
 
-<view wx:else class="page">
-  <view class="section">
-    <view class="row"><text>When</text><text>{{dateLabel}}</text></view>
-    <view class="row"><text>Service</text><text>{{serviceLabel}}</text></view>
-    <view class="row"><text>Duration</text><text>{{durationDetailLabel}}</text></view>
-    <view class="row"><text>Status</text><t-tag>{{statusLabel}}</t-tag></view>
-    <view class="row"><text>Total</text><text>S${{booking.mockPayment.amount}}</text></view>
-    <view class="row" wx:if="{{booking.payment}}">
-      <text>Payment</text>
-      <t-tag wx:if="{{booking.payment.state === 'unpaid'}}" theme="warning">Unpaid</t-tag>
-      <t-tag wx:elif="{{booking.payment.state === 'held'}}" theme="primary">Held in escrow</t-tag>
-      <t-tag wx:elif="{{booking.payment.state === 'released'}}" theme="success">Released to caregiver</t-tag>
-      <t-tag wx:elif="{{booking.payment.state === 'refunded'}}" theme="danger">Refunded</t-tag>
-    </view>
-    <view class="row" wx:if="{{booking.payment.state === 'refunded' && booking.payment.refundAmount}}">
-      <text>Refunded</text><text>S${{booking.payment.refundAmount}}</text>
-    </view>
-    <view class="row" wx:if="{{booking.payment.state === 'released'}}">
-      <text>Caregiver receives</text><text>S${{booking.payment.payoutAmount}}</text>
-    </view>
-    <view class="row" wx:if="{{booking.notes}}"><text>Notes</text><text>{{booking.notes}}</text></view>
-  </view>
+  <loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="5" />
+  <empty-state wx:elif="{{pageStatus === 'error'}}" icon="⚠️" title="预约未找到" subtitle="{{pageError}}" ctaText="返回" bind:cta="onBack" />
 
-  <view class="section" wx:if="{{walker}}">
-    <view class="label">Walker</view>
-    <view class="walker-row" bindtap="onOpenWalker">
-      <image src="{{walker.avatar}}" class="avatar" />
-      <view class="walker-name">{{walker.name}}</view>
+  <view wx:else>
+    <!-- Top nav (text-button back style per design) -->
+    <view class="bs-nav">
+      <view class="bs-nav-back" bindtap="onBack">
+        <ll-icon name="caret-left" size="26" color="#6B6B7A"/>
+        <text>返回</text>
+      </view>
+      <view class="bs-nav-title">预约摘要</view>
+      <view class="bs-nav-spacer"></view>
     </view>
-  </view>
 
-  <view class="section" wx:if="{{report}}">
-    <view class="label">Walk report</view>
-    <view class="report-notes">{{report.notes}}</view>
-    <view class="report-photos">
-      <image wx:for="{{report.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="report-photo" />
+    <!-- Status banner -->
+    <view wx:if="{{booking.status === 'cancelled'}}" class="bs-banner bs-banner--danger">
+      <ll-icon name="x" size="28" color="#CC2200"/>
+      <text>订单已取消，退款将在 3–5 个工作日内处理</text>
     </view>
-    <view class="report-counts">
-      🚶 {{report.durationMin}} min  ·  💧 {{report.peeCount}}  ·  💩 {{report.poopCount}}
+    <view wx:elif="{{booking.status === 'requested'}}" class="bs-banner bs-banner--pending">
+      <text class="bs-banner-icon">⚠️</text>
+      <text>该请求尚未确认，等待守护者回复中</text>
     </view>
-  </view>
 
-  <view class="cta">
-    <t-button block bindtap="onOpenChat">Open chat</t-button>
-    <t-button wx:if="{{canReview}}" theme="primary" block bindtap="onLeaveReview">Leave a review</t-button>
-    <t-button wx:if="{{canCancel}}" theme="danger" variant="outline" block bindtap="onCancel">Cancel booking</t-button>
-    <view class="nav-row">
-      <t-button size="medium" variant="outline" bindtap="onGoHome">← Home</t-button>
-      <t-button size="medium" variant="outline" bindtap="onGoBookings">All bookings</t-button>
+    <view class="bs-body">
+      <!-- Dark summary card -->
+      <view class="bs-dark-card">
+        <view class="bs-dark-head">
+          <view class="bs-svc-icon">
+            <ll-icon name="{{svcIcon}}" weight="fill" size="44" color="#FFFFFF"/>
+          </view>
+          <view class="bs-dark-meta">
+            <view class="bs-dark-svc">{{serviceLabel}}</view>
+            <view class="bs-dark-dates">{{dateLabel}}</view>
+          </view>
+        </view>
+
+        <view class="bs-dark-row">
+          <view class="bs-dark-row-kv">
+            <text class="bs-dark-key">宠物</text>
+            <text class="bs-dark-val">{{petLabel}}</text>
+          </view>
+          <view class="bs-dark-row-kv">
+            <text class="bs-dark-key">时长</text>
+            <text class="bs-dark-val ll-num">{{durationDetailLabel}}</text>
+          </view>
+        </view>
+
+        <view wx:if="{{walker}}" class="bs-dark-walker" bindtap="onOpenWalker">
+          <view class="bs-walker-avatar">
+            <image wx:if="{{walker.avatar}}" src="{{walker.avatar}}" mode="aspectFill" class="bs-walker-img"/>
+            <text wx:else class="bs-walker-init">{{walkerInitial}}</text>
+          </view>
+          <view class="bs-walker-meta">
+            <text class="bs-walker-name">{{walker.name}}</text>
+            <text class="bs-walker-sub">查看守护者资料</text>
+          </view>
+          <ll-icon name="caret-right" size="22" color="rgba(255,255,255,0.4)"/>
+        </view>
+      </view>
+
+      <!-- Pricing breakdown -->
+      <view class="bs-pricing">
+        <view class="bs-pricing-head">费用明细</view>
+        <view class="bs-pricing-row">
+          <text class="bs-pricing-label">服务费</text>
+          <text class="bs-pricing-val ll-num">¥{{serviceFee}}</text>
+        </view>
+        <view wx:if="{{booking.payment.state === 'released'}}" class="bs-pricing-row">
+          <text class="bs-pricing-label">守护者结算</text>
+          <text class="bs-pricing-val ll-num">¥{{booking.payment.payoutAmount}}</text>
+        </view>
+        <view wx:if="{{booking.payment.state === 'refunded' && booking.payment.refundAmount}}" class="bs-pricing-row">
+          <text class="bs-pricing-label">退款金额</text>
+          <text class="bs-pricing-val bs-refund ll-num">¥{{booking.payment.refundAmount}}</text>
+        </view>
+        <view class="bs-pricing-divider"></view>
+        <view class="bs-pricing-total">
+          <text>总金额</text>
+          <text class="ll-num">¥{{booking.mockPayment.amount}}</text>
+        </view>
+        <view class="bs-payment-state bs-payment-state--{{booking.payment.state || 'unpaid'}}">
+          <ll-icon name="{{booking.payment.state === 'released' ? 'check-circle' : booking.payment.state === 'refunded' ? 'x' : 'clock'}}" weight="{{booking.payment.state === 'released' ? 'fill' : 'regular'}}" size="22" color="#1E1E24"/>
+          <text>{{paymentStatusLabel}}</text>
+        </view>
+      </view>
+
+      <!-- Notes -->
+      <view wx:if="{{booking.notes}}" class="bs-notes">
+        <view class="bs-notes-head">备注</view>
+        <text class="bs-notes-text">{{booking.notes}}</text>
+      </view>
+
+      <!-- Walk report -->
+      <view wx:if="{{report}}" class="bs-report">
+        <view class="bs-report-head">服务报告</view>
+        <text class="bs-report-notes">{{report.notes}}</text>
+        <view wx:if="{{report.photos.length}}" class="bs-report-photos">
+          <image wx:for="{{report.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="bs-report-photo"/>
+        </view>
+        <view class="bs-report-counts ll-num">
+          {{report.durationMin}} 分钟 · 排尿 {{report.peeCount}} · 排便 {{report.poopCount}}
+        </view>
+      </view>
+
+      <!-- Cancel info -->
+      <view wx:if="{{canCancel}}" class="bs-cancel-info">
+        <view class="bs-cancel-head">取消政策</view>
+        <text class="bs-cancel-text">在服务开始前一天 12:00 之前申请取消，可享免费取消（全额退款）。</text>
+      </view>
+    </view>
+
+    <!-- Sticky CTAs -->
+    <view class="bs-stickybar">
+      <view class="bs-cta-row">
+        <view class="bs-cta bs-cta--ghost" bindtap="onOpenChat">
+          <ll-icon name="chat-circle-dots" size="24" color="#6B6B7A"/>
+          <text>打开聊天</text>
+        </view>
+        <view wx:if="{{canReview}}" class="bs-cta bs-cta--ink" bindtap="onLeaveReview">
+          <text>留下评价</text>
+        </view>
+        <view wx:if="{{canCancel}}" class="bs-cta bs-cta--danger" bindtap="onCancel">
+          <text>取消订单</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>
-<custom-tab-bar />

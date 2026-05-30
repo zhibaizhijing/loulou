@@ -5,10 +5,12 @@ import { showAppError } from '../../utils/errorHandler'
 import { SERVICE_TYPE_LABEL, PET_TYPE_LABEL, SIZE_BAND_LABEL } from '../../models/index'
 import type { ServiceType, CaregiverApplication, PetType, SizeBand, CaregiverIntake } from '../../models/index'
 
-type Phase = 'form' | 'status'
+type Phase = 'intro' | 'form' | 'status'
 
 interface Data {
   phase: Phase
+  benefits: { icon: string; text: string }[]
+  requirements: string[]
   step: number
   totalSteps: number
   realName: string
@@ -44,15 +46,25 @@ const ALL_SIZE_BANDS: SizeBand[] = ['xs', 's', 'm', 'l', 'xl']
 const TOTAL_STEPS = 6
 
 const STATUS_VIEW: Record<string, { icon: string; title: string; sub: string }> = {
-  submitted: { icon: '📨', title: 'Application submitted',  sub: 'We have received your details.' },
-  reviewing: { icon: '🔍', title: 'Under review',           sub: 'An admin is verifying your photos.' },
-  approved:  { icon: '🎉', title: 'You\'re approved!',      sub: 'You can now start receiving bookings.' },
-  rejected:  { icon: '❌', title: 'Application rejected',   sub: 'Please contact support.' }
+  submitted: { icon: '📨', title: '已提交申请',  sub: '我们已收到您的资料' },
+  reviewing: { icon: '🔍', title: '审核中',     sub: '审核员正在验证您的照片' },
+  approved:  { icon: '🎉', title: '审核通过',   sub: '您现在可以开始接受预约' },
+  rejected:  { icon: '❌', title: '申请被拒',   sub: '请联系客服了解详情' }
 }
+
+const BENEFITS = [
+  { icon: 'currency-cny',   text: '灵活赚取收入，自定服务价格' },
+  { icon: 'calendar-blank', text: '自主管理日程，随时暂停接单' },
+  { icon: 'shield-check',   text: '平台保险保障，安全无忧' },
+  { icon: 'headset',        text: '7×24 小时专属客服支持' }
+]
+const REQUIREMENTS = ['年满 18 周岁', '爱宠人士，有养宠经验', '通过平台认证培训', '提供安全、整洁的住所']
 
 Page<Data, WechatMiniprogram.IAnyObject>({
   data: {
-    phase: 'form',
+    phase: 'intro',
+    benefits: BENEFITS,
+    requirements: REQUIREMENTS,
     step: 1,
     totalSteps: TOTAL_STEPS,
     realName: '',
@@ -92,6 +104,8 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   onUnload() { this.stopPolling() },
+
+  onStartApply() { this.setData({ phase: 'form' }) },
 
   checkCanAdvance(): boolean {
     const { step, realName, idPhotoUrl, indoorPhotos, bio, proposedServiceTypes,

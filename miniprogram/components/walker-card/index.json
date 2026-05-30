@@ -1,1 +1,7 @@
-{ "component": true, "usingComponents": {} }
+{
+  "component": true,
+  "usingComponents": {
+    "ll-icon":        "../ll-icon/index",
+    "ll-rating-pill": "../ll-rating-pill/index"
+  }
+}

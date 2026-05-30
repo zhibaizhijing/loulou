@@ -1,0 +1,36 @@
+<view class="ll-page cp-page">
+  <ll-topnav title="我的优惠券"/>
+
+  <view class="cp-subtabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="id"
+      class="cp-subtab {{tab === item.id ? 'is-on' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onTab"
+    >{{item.label}}</view>
+  </view>
+
+  <view class="cp-list">
+    <view wx:if="{{list.length === 0}}" class="cp-empty">
+      <ll-icon name="ticket" size="80" color="#A0A0B0"/>
+      <text>暂无{{tabLabel}}优惠券</text>
+    </view>
+
+    <view wx:for="{{list}}" wx:key="id" class="cp-card {{tab === 'expired' ? 'is-expired' : ''}}">
+      <view class="cp-strip cp-strip--{{item.bg}}">
+        <ll-icon name="{{item.icon}}" size="40" color="#6B6B7A"/>
+        <view class="cp-strip-type">{{item.type}}</view>
+      </view>
+      <view class="cp-dashed"></view>
+      <view class="cp-content">
+        <view class="cp-title-row">
+          <text class="cp-title">{{item.title}}</text>
+          <text wx:if="{{item.tag}}" class="cp-tag">{{item.tag}}</text>
+        </view>
+        <text class="cp-desc">{{item.desc}}</text>
+        <text class="cp-expires">有效期至 {{item.expires}}</text>
+      </view>
+    </view>
+  </view>
+</view>

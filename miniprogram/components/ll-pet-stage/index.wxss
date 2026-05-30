@@ -1,0 +1,30 @@
+.ll-stage {
+  position: relative;
+  border-radius: var(--ll-radius-lg);
+  padding: 28rpx 32rpx 32rpx;
+  height: 368rpx;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.ll-stage--butter   { background: var(--ll-butter); }
+.ll-stage--lavender { background: var(--ll-lavender); }
+.ll-stage--mint     { background: var(--ll-mint); }
+.ll-stage--peach    { background: var(--ll-peach); }
+.ll-stage-title {
+  position: absolute; left: 32rpx; bottom: 88rpx;
+  font-size: 32rpx; font-weight: 700; color: var(--ll-text);
+}
+.ll-stage-sub {
+  position: absolute; left: 32rpx; bottom: 40rpx;
+  font-size: 24rpx; color: rgba(30,30,36,0.62);
+}
+.ll-stage-arrow {
+  position: absolute; right: 28rpx; bottom: 28rpx;
+  width: 64rpx; height: 64rpx; border-radius: 50%;
+  background: rgba(255,255,255,0.55);
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-stage-img {
+  position: absolute; right: -20rpx; top: -8rpx;
+  width: 280rpx; height: 280rpx;
+}
