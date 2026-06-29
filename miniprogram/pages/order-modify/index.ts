@@ -55,21 +55,17 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   async onLoad(q: Record<string, string>) {
-    this.setData({ bookingId: q.id || '' })
-    if (!this.data.bookingId) return
+    const id = q.id || ''
+    this.setData({ bookingId: id, loading: false, pageStatus: 'loaded' })
+    if (!id) return
     try {
-      const b = await getBookingById(this.data.bookingId)
+      const b = await getBookingById(id)
       this.setData({
         service: b.serviceType,
         dateStart: fmtDate(b.date),
         dateEnd: fmtDate((b as any).dropoffEnd || b.date),
-        loading: false,
-        pageStatus: 'loaded',
       })
-    } catch (e) {
-      this.setData({ loading: false, pageStatus: 'error' })
-      showAppError(e)
-    }
+    } catch { /* booking may not exist on fresh launch — keep defaults */ }
   },
 
   onPickSvc(e: WechatMiniprogram.BaseEvent) {

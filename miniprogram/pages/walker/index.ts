@@ -29,7 +29,7 @@ interface Data {
   photos: string[]
   photoIdx: number
   liked: boolean
-  tab: 'info' | 'services'
+  tab: 'info' | 'reviews' | 'services'
   labels: Record<ServiceType, string>
   petTypeLabels: Record<PetType, string>
   sizeBandLabels: Record<SizeBand, string>
@@ -137,7 +137,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   onTab(e: WechatMiniprogram.BaseEvent) {
-    this.setData({ tab: e.currentTarget.dataset.tab as 'info' | 'services' })
+    this.setData({ tab: e.currentTarget.dataset.tab as 'info' | 'reviews' | 'services' })
   },
 
   onLike()  { this.setData({ liked: !this.data.liked }) },

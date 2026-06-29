@@ -58,9 +58,10 @@
       </view>
     </view>
 
-    <!-- Tab nav -->
+    <!-- Tab nav (信息 / 评价 / 服务 — design GuardianProfileScreen.jsx) -->
     <view class="gp-tabs">
-      <view class="gp-tab {{tab === 'info' ? 'is-on' : ''}}" data-tab="info" bindtap="onTab">信息</view>
+      <view class="gp-tab {{tab === 'info' ? 'is-on' : ''}}"     data-tab="info"     bindtap="onTab">信息</view>
+      <view class="gp-tab {{tab === 'reviews' ? 'is-on' : ''}}"  data-tab="reviews"  bindtap="onTab">评价</view>
       <view class="gp-tab {{tab === 'services' ? 'is-on' : ''}}" data-tab="services" bindtap="onTab">服务</view>
     </view>
 
@@ -120,6 +121,10 @@
       </view>
       <view class="gp-divider"></view>
 
+    </view>
+
+    <!-- Reviews tab -->
+    <view wx:if="{{tab === 'reviews'}}" class="gp-tab-body">
       <view class="gp-section">
         <view class="gp-sec-head">评价 · {{walker.reviewCount}}</view>
         <empty-state wx:if="{{reviews.length === 0}}" icon="📝" title="暂无评价"/>

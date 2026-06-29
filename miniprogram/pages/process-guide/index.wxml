@@ -1,5 +1,76 @@
-<ll-process-guide
-  visible="{{visible}}"
-  bind:close="onClose"
-  bind:start="onStart"
-/>
+<view class="pg-page">
+  <!-- Nav (butter strip) -->
+  <view class="pg-nav">
+    <view class="pg-back" bindtap="onClose">
+      <ll-icon name="caret-left" size="28" color="#1E1E24"/>
+      <text>返回</text>
+    </view>
+    <text class="pg-nav-title">流程指引</text>
+    <view class="pg-nav-spacer"></view>
+  </view>
+
+  <scroll-view scroll-y class="pg-scroll" enhanced show-scrollbar="{{false}}">
+    <!-- Hero on butter band -->
+    <view class="pg-hero">
+      <view class="pg-hero-paw">🐾</view>
+      <view class="pg-hero-title">把宝贝放心</view>
+      <view class="pg-hero-title">交给 Lou Lou</view>
+      <view class="pg-hero-sub">从注册到完成订单，每一步我们都为你和宝贝把关。</view>
+      <view class="pg-hero-tags">
+        <view class="pg-hero-tag">
+          <ll-icon name="check-circle" weight="fill" size="22" color="#FEE7A6"/>
+          <text>守护者严格筛选</text>
+        </view>
+        <view class="pg-hero-tag">
+          <ll-icon name="check-circle" weight="fill" size="22" color="#FEE7A6"/>
+          <text>灵活退款</text>
+        </view>
+        <view class="pg-hero-tag">
+          <ll-icon name="check-circle" weight="fill" size="22" color="#FEE7A6"/>
+          <text>全额打赏 0 抽成</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Curve transition from butter to page bg -->
+    <view class="pg-curve"></view>
+
+    <!-- Stacked step cards -->
+    <view class="pg-cards">
+      <view
+        wx:for="{{steps}}"
+        wx:key="title"
+        class="pg-card {{item.open ? 'is-open' : 'is-closed'}}"
+        data-i="{{index}}"
+        bindtap="onTapCard"
+      >
+        <view class="pg-card-row">
+          <view class="pg-card-ico {{item.open ? '' : 'is-dim'}}">
+            <ll-icon name="{{item.icon}}" size="42" color="{{item.open ? '#1E1E24' : '#6B6B7A'}}"/>
+          </view>
+          <view class="pg-card-text">
+            <text class="pg-card-num">{{item.num}}</text>
+            <text class="pg-card-title {{item.open ? '' : 'is-dim'}}">{{item.title}}</text>
+          </view>
+        </view>
+        <view wx:if="{{item.open}}" class="pg-card-body">
+          <text class="pg-card-desc">{{item.desc}}</text>
+          <view class="pg-card-perk">
+            <ll-icon name="check-circle" weight="fill" size="26" color="#2C7A4B"/>
+            <text>{{item.perk}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{revealed < total}}" class="pg-hint">
+      继续下滑或点按卡片展开后续步骤
+      <ll-icon name="caret-down" size="22" color="#A0A0B0"/>
+    </view>
+
+    <!-- CTA -->
+    <view class="pg-cta-wrap">
+      <view class="pg-cta" bindtap="onStart">开始找守护者</view>
+    </view>
+  </scroll-view>
+</view>

@@ -1,6 +1,6 @@
 {
   "navigationStyle": "custom",
   "usingComponents": {
-    "ll-process-guide": "/components/ll-process-guide/index"
+    "ll-icon": "/components/ll-icon/index"
   }
 }
