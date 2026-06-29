@@ -1,8 +1,8 @@
 import { showAppError } from '../../utils/errorHandler'
 
 interface SvcItem { id: string; icon: string; bg: string; hint: string }
-interface RecentItem { id: string; name: string; photo?: string; initial: string }
-interface BannerItem { tag: string; title: string; sub: string; bg: string; emoji: string }
+interface RecentItem { id: string; name: string; photo?: string; initial: string; served?: boolean }
+interface BannerItem { tag: string; title: string; sub: string; bg: string; emoji: string; action?: 'guide' }
 
 interface Data {
   city: string
@@ -32,20 +32,20 @@ const SERVICES: SvcItem[] = [
   { id: '日托',     icon: 'sun',         hint: '白天看护，当天接送',        bg: 'peach' },
   { id: '遛狗',     icon: 'sneaker',     hint: '至少30分钟',               bg: 'mint' },
   { id: '上门喂养', icon: 'hand-waving', hint: '查看、喂食、换水、铲屎等至少30分钟', bg: 'lavender' },
-  { id: '伴宠留宿', icon: 'moon-stars',  hint: '守护者上门陪伴/过夜',       bg: 'lavender-soft' }
+  { id: '伴宠留宿', icon: 'moon-stars',  hint: '守护者上门陪伴/过夜',       bg: 'sky' }
 ]
 
 const BANNERS: BannerItem[] = [
-  { tag: '新人专享',   title: '首单立减 ¥20',       sub: '注册即得专属优惠券', bg: 'butter',   emoji: '🎉' },
-  { tag: '成为守护者', title: '陪伴萌宠 · 赚取收入', sub: '认证通过即可接单',   bg: 'lavender', emoji: '🐾' },
-  { tag: '邀请有礼',   title: '邀好友得 ¥30 券',     sub: '双方均可领取',       bg: 'mint',     emoji: '🎁' }
+  { tag: '新手必看',   title: 'Lou Lou 全流程指引', sub: '从注册到完成订单，一步看懂', bg: 'butter',   emoji: '🐾', action: 'guide' },
+  { tag: '新人专享',   title: '首单立减 ¥20',       sub: '注册即得专属优惠券',         bg: 'peach',    emoji: '🎉' },
+  { tag: '成为守护者', title: '陪伴萌宠 · 赚取收入', sub: '认证通过即可接单',           bg: 'lavender', emoji: '🐾' },
+  { tag: '邀请有礼',   title: '邀好友得 ¥30 券',     sub: '双方均可领取',               bg: 'mint',     emoji: '🎁' }
 ]
 
 const RECENTS: RecentItem[] = [
-  { id: 'r1', name: '林若', initial: '林' },
-  { id: 'r2', name: '陈逸', initial: '陈' },
-  { id: 'r3', name: '桃子', initial: '桃' },
-  { id: 'r4', name: '张明', initial: '张' }
+  { id: 'r1', name: '林若', initial: '林', photo: 'https://i.pravatar.cc/120?img=47', served: true },
+  { id: 'r2', name: '陈逸', initial: '陈', photo: 'https://i.pravatar.cc/120?img=12', served: true },
+  { id: 'r3', name: '桃子', initial: '桃', photo: 'https://i.pravatar.cc/120?img=32' }
 ]
 
 const ADDRESSES = ['朝阳区·望京', '朝阳区·三里屯', '朝阳区·国贸', '海淀区·中关村', '东城区·东直门', '西城区·西单']
@@ -194,7 +194,12 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     wx.navigateTo({ url: `/pages/walker/index?id=${id}` })
   },
 
-  onBanner() { /* no-op */ },
+  onBanner() {
+    if (this.data.currentBanner?.action === 'guide') {
+      wx.navigateTo({ url: '/pages/process-guide/index' })
+    }
+  },
+  onOpenGuide() { wx.navigateTo({ url: '/pages/process-guide/index' }) },
   onBannerDot(e: WechatMiniprogram.BaseEvent) {
     const i = Number(e.currentTarget.dataset.i)
     this.setData({ bannerIdx: i, currentBanner: this.data.banners[i] })

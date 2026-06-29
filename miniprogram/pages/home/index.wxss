@@ -64,6 +64,7 @@
 .hm-svc-tile--mint     { background: var(--ll-mint); }
 .hm-svc-tile--lavender { background: var(--ll-lavender); }
 .hm-svc-tile--lavender-soft { background: #E8E3F2; }
+.hm-svc-tile--sky    { background: #CDE4EE; }
 .hm-svc-label {
   font-size: 23rpx; font-weight: 500; color: var(--ll-text);
   white-space: nowrap;
@@ -142,7 +143,13 @@
   font-size: 22rpx; color: var(--ll-text-2); font-weight: 500;
   max-width: 120rpx;
   overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  margin-top: 8rpx;
 }
+.hm-recent-served {
+  font-size: 19rpx; font-weight: 600; color: #2C7A4B;
+  margin-top: -2rpx; line-height: 1;
+}
+.hm-recent-served-spacer { height: 19rpx; margin-top: -2rpx; }
 
 /* ─── Banner ─── */
 .hm-banner-wrap { padding: 48rpx var(--ll-safe-x) 0; }
@@ -158,6 +165,14 @@
 .hm-banner--lavender { background: var(--ll-lavender); }
 .hm-banner--mint     { background: var(--ll-mint); }
 .hm-banner--peach    { background: var(--ll-peach); }
+.hm-banner-cta {
+  position: absolute; right: 28rpx; bottom: 64rpx;
+  display: inline-flex; align-items: center; gap: 6rpx;
+  background: var(--ll-ink); color: var(--ll-text-on-ink);
+  border-radius: 999rpx;
+  padding: 10rpx 24rpx;
+  font-size: 23rpx; font-weight: 700;
+}
 .hm-banner-tag {
   align-self: flex-start;
   padding: 6rpx 18rpx;

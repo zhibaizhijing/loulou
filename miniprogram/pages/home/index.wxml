@@ -82,11 +82,11 @@
     </view>
   </view>
 
-  <!-- ③ 常用守护者 -->
+  <!-- ③ 收藏的守护者 -->
   <view class="hm-recents">
     <view class="hm-recents-head">
-      <text class="hm-recents-title">常用守护者</text>
-      <text class="hm-recents-sub">最近预约过</text>
+      <text class="hm-recents-title">收藏的守护者</text>
+      <text class="hm-recents-sub">随时再次预约</text>
       <view class="hm-recents-all">
         <text>全部</text>
         <ll-icon name="caret-right" size="20" color="#6B6B7A"/>
@@ -106,6 +106,8 @@
             <text wx:else class="hm-recent-init">{{item.initial}}</text>
           </view>
           <text class="hm-recent-name">{{item.name}}</text>
+          <text wx:if="{{item.served}}" class="hm-recent-served">服务过</text>
+          <view wx:else class="hm-recent-served-spacer"></view>
         </view>
       </view>
     </scroll-view>
@@ -118,6 +120,10 @@
       <view class="hm-banner-body">
         <view class="hm-banner-title">{{currentBanner.title}}</view>
         <view class="hm-banner-sub">{{currentBanner.sub}}</view>
+      </view>
+      <view wx:if="{{currentBanner.action === 'guide'}}" class="hm-banner-cta" catchtap="onOpenGuide">
+        <text>查看指引</text>
+        <ll-icon name="caret-right" size="22" color="#FFFFFF"/>
       </view>
       <view class="hm-banner-emoji">{{currentBanner.emoji}}</view>
       <view class="hm-banner-dots">
