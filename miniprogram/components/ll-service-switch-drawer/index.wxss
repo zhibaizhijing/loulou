@@ -1,0 +1,59 @@
+.ll-ssd-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 88;
+}
+.ll-ssd-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 89;
+  background: var(--ll-surface);
+  border-top-left-radius: 40rpx; border-top-right-radius: 40rpx;
+  max-height: 86%;
+  display: flex; flex-direction: column;
+  box-shadow: 0 -8rpx 24rpx rgba(0,0,0,0.12);
+}
+.ll-ssd-head { padding: 24rpx 32rpx 16rpx; }
+.ll-ssd-grab {
+  width: 76rpx; height: 8rpx; border-radius: 4rpx;
+  background: var(--ll-border);
+  margin: 0 auto 20rpx;
+}
+.ll-ssd-head-row { display: flex; align-items: center; }
+.ll-ssd-title { flex: 1; font-size: 32rpx; font-weight: 700; color: var(--ll-text); }
+.ll-ssd-close {
+  width: 60rpx; height: 60rpx; border-radius: 50%;
+  background: #F0F0F5;
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-ssd-body {
+  flex: 1; overflow-y: auto; padding-bottom: 44rpx;
+}
+.ll-ssd-group { padding: 32rpx 32rpx 12rpx; }
+.ll-ssd-group-title {
+  display: block;
+  font-size: 25rpx; font-weight: 700;
+  margin-bottom: 22rpx;
+  letter-spacing: 0.02em;
+}
+.ll-ssd-group--host  .ll-ssd-group-title { color: var(--ll-grp-host-solid); }
+.ll-ssd-group--owner .ll-ssd-group-title { color: var(--ll-grp-owner-solid); }
+
+.ll-ssd-chips { display: flex; flex-wrap: wrap; gap: 20rpx; }
+.ll-ssd-chip {
+  height: 80rpx; padding: 0 36rpx;
+  border-radius: 999rpx;
+  display: flex; align-items: center; gap: 12rpx;
+  font-size: 28rpx; font-weight: 700;
+}
+.ll-ssd-group--host  .ll-ssd-chip { background: var(--ll-grp-host-bg);  color: var(--ll-grp-host-solid); }
+.ll-ssd-group--host  .ll-ssd-chip.is-on { background: var(--ll-grp-host-solid);  color: var(--ll-text-on-ink); }
+.ll-ssd-group--owner .ll-ssd-chip { background: var(--ll-grp-owner-bg); color: var(--ll-grp-owner-fg-2); }
+.ll-ssd-group--owner .ll-ssd-chip.is-on { background: var(--ll-grp-owner-solid); color: var(--ll-text-on-ink); }
+
+.ll-ssd-policy {
+  margin-top: 16rpx;
+  border-top: 16rpx solid var(--ll-bg);
+  padding: 30rpx 32rpx;
+  display: flex; align-items: center; gap: 16rpx;
+}
+.ll-ssd-policy-label {
+  flex: 1; font-size: 28rpx; font-weight: 600; color: var(--ll-text);
+}
+.ll-ssd-policy-hint { font-size: 24rpx; color: var(--ll-text-3); }

@@ -2,10 +2,14 @@
   "navigationStyle": "custom",
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "mock-banner":      "/components/mock-banner/index",
-    "offline-banner":   "/components/offline-banner/index",
-    "empty-state":      "/components/empty-state/index",
-    "loading-skeleton": "/components/loading-skeleton/index",
-    "ll-icon":          "/components/ll-icon/index"
+    "mock-banner":            "/components/mock-banner/index",
+    "offline-banner":         "/components/offline-banner/index",
+    "empty-state":            "/components/empty-state/index",
+    "loading-skeleton":       "/components/loading-skeleton/index",
+    "ll-icon":                "/components/ll-icon/index",
+    "ll-order-tab-bar":       "/components/ll-order-tab-bar/index",
+    "ll-config-section":      "/components/ll-config-section/index",
+    "ll-guardian-draft-row":  "/components/ll-guardian-draft-row/index",
+    "ll-sent-app-card":       "/components/ll-sent-app-card/index"
   }
 }

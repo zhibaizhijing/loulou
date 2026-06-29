@@ -21,7 +21,9 @@
     "pages/caregiver-calendar/index",
     "pages/caregiver-home/index",
     "pages/caregiver-inbox/index",
-    "pages/caregiver-earnings/index"
+    "pages/caregiver-earnings/index",
+    "pages/order-modify/index",
+    "pages/process-guide/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

@@ -1,5 +1,7 @@
 # Loulou Design-System Spec (Lou Lou · 露露 · v1.0)
 
+> **SUPERSEDED 2026-06-29 by `2026-06-29-loulou-design-system-v2.md`.** v1 tokens + primitives below remain valid and load-bearing; v2 adds new screens (BookingRequest, ChatView, GuardianBookingBar, ServiceSwitchDrawer, PetReminderSheet, OrderModify, ReviewGuardian, ProcessGuide, etc.) + a multi-guardian batch booking model. Read v2 first for current scope.
+
 **Status:** authoritative for **all visuals** going forward. Supersedes ad-hoc styling decisions in `2026-05-19-loulou-p0-mvp-scope.md`. Where the P0 spec defines *behavior* and this spec defines *appearance*, both must be satisfied.
 
 **Source bundle:** `design/lou-lou-design-system/` (`README.md`, `colors_and_type.css`, `ui_kits/wechat-mini-program/`). Treat the JSX prototypes as **visual contracts**, not as code to copy. Recreate pixel-faithfully in TS + WXML + WXSS.

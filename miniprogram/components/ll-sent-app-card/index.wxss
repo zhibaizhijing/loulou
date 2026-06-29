@@ -1,0 +1,87 @@
+.ll-sac {
+  background: var(--ll-surface);
+  border-radius: 32rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.05);
+}
+.ll-sac-main {
+  padding: 28rpx 28rpx 20rpx;
+  display: flex; align-items: center; gap: 24rpx;
+}
+.ll-sac-avatar {
+  width: 100rpx; height: 100rpx; border-radius: 50%;
+  flex: 0 0 auto;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-sac-avatar-img { width: 100%; height: 100%; }
+.ll-sac-avatar-char {
+  font-size: 40rpx; font-weight: 700; color: var(--ll-text);
+}
+.ll-sac-info { flex: 1; min-width: 0; }
+.ll-sac-name-row {
+  display: flex; align-items: center; gap: 16rpx; margin-bottom: 8rpx; flex-wrap: wrap;
+}
+.ll-sac-name { font-size: 30rpx; font-weight: 700; color: var(--ll-text); }
+.ll-sac-line { display: block; font-size: 25rpx; color: var(--ll-text-3); }
+.ll-sac-pet { margin-top: 2rpx; }
+.ll-sac-caret { flex: 0 0 auto; }
+
+.ll-sac-desc {
+  padding: 0 28rpx 20rpx;
+  display: flex; align-items: center; gap: 12rpx;
+}
+.ll-sac-dot {
+  width: 14rpx; height: 14rpx; border-radius: 50%;
+  background: var(--ll-warning);
+  animation: ll-sac-ping 1.2s ease infinite;
+}
+@keyframes ll-sac-ping { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.ll-sac-desc-text {
+  font-size: 24rpx;
+}
+.ll-sac-desc-text--pending     { color: var(--ll-status-pending-fg); }
+.ll-sac-desc-text--accepted    { color: var(--ll-status-accepted-fg); }
+.ll-sac-desc-text--in_progress { color: var(--ll-status-progress-fg); }
+.ll-sac-desc-text--completed   { color: var(--ll-text-3); }
+.ll-sac-desc-text--rejected    { color: var(--ll-text-3); }
+.ll-sac-desc-text--cancelled   { color: var(--ll-text-3); }
+
+.ll-sac-actions {
+  padding: 0 28rpx 28rpx;
+  display: flex; gap: 16rpx;
+}
+.ll-sac-act {
+  flex: 1; height: 72rpx;
+  border-radius: 999rpx;
+  display: flex; align-items: center; justify-content: center; gap: 8rpx;
+  font-size: 26rpx; font-weight: 700;
+  white-space: nowrap;
+}
+.ll-sac-act--icon {
+  flex: 0 0 auto; width: 88rpx;
+  border: 1px solid var(--ll-border);
+  background: transparent;
+  color: var(--ll-text-2);
+}
+.ll-sac-act--outline {
+  border: 3rpx solid var(--ll-ink);
+  background: transparent;
+  color: var(--ll-ink);
+}
+.ll-sac-act--outline-2 {
+  border: 1px solid var(--ll-border);
+  background: transparent;
+  color: var(--ll-text-2);
+  font-weight: 600;
+}
+.ll-sac-act--solid {
+  border: 0;
+  background: var(--ll-ink);
+  color: var(--ll-text-on-ink);
+}
+.ll-sac-act--pay {
+  border: 0;
+  background: var(--ll-grp-owner-solid);
+  color: var(--ll-text-on-ink);
+}

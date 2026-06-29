@@ -1,0 +1,11 @@
+<scroll-view scroll-x="true" enhanced show-scrollbar="{{false}}" class="ll-otb">
+  <view class="ll-otb-row">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="*this"
+      class="ll-otb-tab {{active === item ? 'is-on' : ''}}"
+      data-tab="{{item}}"
+      bindtap="onPick"
+    >{{item}}</view>
+  </view>
+</scroll-view>

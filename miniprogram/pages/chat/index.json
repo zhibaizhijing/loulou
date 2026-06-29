@@ -1,11 +1,16 @@
 {
   "navigationStyle": "custom",
   "usingComponents": {
-    "mock-banner":      "/components/mock-banner/index",
-    "chat-bubble":      "/components/chat-bubble/index",
-    "loading-skeleton": "/components/loading-skeleton/index",
-    "empty-state":      "/components/empty-state/index",
-    "ll-icon":          "/components/ll-icon/index",
-    "ll-topnav":        "/components/ll-topnav/index"
+    "mock-banner":       "/components/mock-banner/index",
+    "loading-skeleton":  "/components/loading-skeleton/index",
+    "empty-state":       "/components/empty-state/index",
+    "ll-icon":           "/components/ll-icon/index",
+    "ll-topnav":         "/components/ll-topnav/index",
+    "ll-status-badge":   "/components/ll-status-badge/index",
+    "ll-shortcut-btn":   "/components/ll-shortcut-btn/index",
+    "ll-msg-bubble":     "/components/ll-msg-bubble/index",
+    "ll-quick-reply":    "/components/ll-quick-reply/index",
+    "ll-tip-sheet":      "/components/ll-tip-sheet/index",
+    "ll-review-sheet":   "/components/ll-review-sheet/index"
   }
 }

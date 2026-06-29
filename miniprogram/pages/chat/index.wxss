@@ -73,31 +73,142 @@
   display: flex; align-items: center; justify-content: center;
 }
 
-/* ─── Chat view (per-booking) ─── */
-.cv-messages {
-  height: calc(100vh - 104rpx - 160rpx);
-  padding: 24rpx 32rpx;
-}
-.cv-composer {
+/* ─── ChatView (v2 spec §2.10) ─── */
+.cv-shell {
   position: fixed;
-  bottom: env(safe-area-inset-bottom);
-  left: 0; right: 0;
-  display: flex; align-items: center; gap: 16rpx;
-  padding: 16rpx 32rpx;
+  inset: 0;
+  display: flex; flex-direction: column;
+  background: var(--ll-bg);
+  z-index: 5;
+  padding-bottom: 156rpx; /* room above custom tab bar */
+}
+.cv-topnav {
+  flex: 0 0 auto;
+  height: 104rpx;
   background: var(--ll-surface);
-  border-top: 1px solid var(--ll-border);
+  border-bottom: 1px solid var(--ll-border);
+  display: flex; align-items: center;
+  padding: 0 28rpx; gap: 24rpx;
 }
-.cv-input {
-  flex: 1; height: 76rpx;
-  padding: 0 32rpx;
-  background: var(--ll-surface-2);
-  border-radius: var(--ll-radius-pill);
-  font-size: 28rpx; color: var(--ll-text);
-}
-.cv-input-hint { color: var(--ll-text-3); }
-.cv-send {
-  width: 76rpx; height: 76rpx; border-radius: 50%;
+.cv-back {
+  width: 68rpx; height: 68rpx; border-radius: 50%;
   background: var(--ll-ink);
   display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
 }
-.cv-send.is-disabled { opacity: 0.5; }
+.cv-who { flex: 1; display: flex; align-items: center; gap: 20rpx; min-width: 0; }
+.cv-who-avatar {
+  width: 64rpx; height: 64rpx; border-radius: 50%;
+  background: var(--ll-lavender);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+.cv-who-img  { width: 100%; height: 100%; }
+.cv-who-char { font-size: 28rpx; font-weight: 700; color: var(--ll-text); }
+.cv-who-text { display: flex; flex-direction: column; line-height: 1.2; }
+.cv-who-name { font-size: 28rpx; font-weight: 700; color: var(--ll-text); }
+.cv-who-role { font-size: 22rpx; color: var(--ll-text-3); }
+
+/* Application card */
+.cv-app-wrap {
+  background: var(--ll-surface);
+  padding: 20rpx 28rpx 0;
+}
+.cv-app {
+  background: var(--ll-bg);
+  border-radius: 24rpx;
+  padding: 20rpx 28rpx;
+  display: flex; align-items: center; gap: 24rpx;
+}
+.cv-app-ico {
+  width: 80rpx; height: 80rpx; border-radius: 20rpx;
+  background: var(--ll-butter);
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+.cv-app-info { flex: 1; min-width: 0; }
+.cv-app-line { display: block; font-size: 26rpx; font-weight: 700; color: var(--ll-text); }
+.cv-app-sub  { font-size: 23rpx; color: var(--ll-text-3); margin-top: 4rpx; }
+
+/* Shortcut row */
+.cv-short {
+  background: var(--ll-surface);
+  padding: 20rpx 28rpx;
+  border-bottom: 1px solid var(--ll-border);
+  display: flex; gap: 16rpx;
+}
+
+/* Messages scroll area */
+.cv-messages {
+  flex: 1;
+  padding: 28rpx 28rpx 16rpx;
+  background: var(--ll-bg);
+  min-height: 0;
+}
+
+/* Quick reply */
+.cv-qr {
+  background: var(--ll-surface);
+  border-top: 1px solid var(--ll-border);
+  padding: 16rpx 28rpx 0;
+}
+
+/* Input bar */
+.cv-input-wrap {
+  background: var(--ll-surface);
+  position: relative;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.cv-input-row {
+  padding: 16rpx 28rpx 56rpx;
+  display: flex; align-items: center; gap: 20rpx;
+}
+.cv-input {
+  flex: 1; height: 80rpx;
+  padding: 0 28rpx;
+  background: var(--ll-bg);
+  border: 1px solid var(--ll-border);
+  border-radius: 999rpx;
+  font-size: 28rpx; color: var(--ll-text);
+}
+.cv-send {
+  width: 80rpx; height: 80rpx; border-radius: 50%;
+  background: var(--ll-border);
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  transition: background var(--ll-dur-fast) var(--ll-ease);
+}
+.cv-send.is-on { background: var(--ll-ink); }
+.cv-plus-btn {
+  width: 80rpx; height: 80rpx; border-radius: 50%;
+  background: var(--ll-surface);
+  border: 3rpx solid var(--ll-border);
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+
+/* Plus popup menu */
+.cv-plus-mask {
+  position: fixed; inset: 0; z-index: 10;
+}
+.cv-plus-menu {
+  position: absolute; bottom: calc(100% + 12rpx); right: 28rpx; z-index: 20;
+  background: var(--ll-surface);
+  border-radius: 28rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 40rpx rgba(0,0,0,0.13);
+  min-width: 280rpx;
+}
+.cv-plus-item {
+  width: 100%; padding: 26rpx 32rpx;
+  display: flex; align-items: center; gap: 24rpx;
+  border-bottom: 1px solid var(--ll-border);
+  font-size: 28rpx; color: var(--ll-text);
+}
+.cv-plus-item:last-child { border-bottom: 0; }
+.cv-plus-tile {
+  width: 64rpx; height: 64rpx; border-radius: 18rpx;
+  background: var(--ll-bg);
+  display: flex; align-items: center; justify-content: center;
+}

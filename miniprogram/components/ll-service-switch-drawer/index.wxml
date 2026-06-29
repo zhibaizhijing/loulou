@@ -1,0 +1,36 @@
+<view wx:if="{{visible}}" class="ll-ssd-mask" bindtap="onClose"></view>
+<view wx:if="{{visible}}" class="ll-ssd-sheet" catchtap="noop">
+  <view class="ll-ssd-head">
+    <view class="ll-ssd-grab"></view>
+    <view class="ll-ssd-head-row">
+      <text class="ll-ssd-title">选择服务</text>
+      <view class="ll-ssd-close" catchtap="onClose">
+        <ll-icon name="x" size="26" color="#1E1E24"/>
+      </view>
+    </view>
+  </view>
+  <view class="ll-ssd-body">
+    <view wx:for="{{rows}}" wx:for-item="row" wx:key="title" class="ll-ssd-group ll-ssd-group--{{row.theme}}">
+      <text class="ll-ssd-group-title">{{row.title}}</text>
+      <view class="ll-ssd-chips">
+        <view
+          wx:for="{{row.chips}}"
+          wx:for-item="chip"
+          wx:key="id"
+          class="ll-ssd-chip {{chip.on ? 'is-on' : ''}}"
+          data-id="{{chip.id}}"
+          bindtap="onPick"
+        >
+          <ll-icon wx:if="{{chip.on}}" name="check" weight="fill" size="24" color="#FFFFFF"/>
+          <text>{{chip.id}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="ll-ssd-policy" bindtap="onPolicy">
+      <ll-icon name="shield-check" size="32" color="#6B6B7A"/>
+      <text class="ll-ssd-policy-label">取消政策</text>
+      <text class="ll-ssd-policy-hint">查看详情</text>
+      <ll-icon name="caret-right" size="24" color="#A0A0B0"/>
+    </view>
+  </view>
+</view>

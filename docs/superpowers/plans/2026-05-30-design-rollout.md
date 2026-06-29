@@ -1,5 +1,7 @@
 # Loulou Design-System Rollout Plan
 
+> **SUPERSEDED 2026-06-29 by `2026-06-29-design-rollout-v2.md`.** v1 stages DS-0 .. DS-C are mostly complete; v2 layers DSv2-0 .. DSv2-E on top for new flows.
+
 **Sister spec:** `docs/superpowers/specs/2026-05-30-loulou-design-system.md` (authoritative for tokens and component contracts).
 **Builds on:** `docs/superpowers/specs/2026-05-19-loulou-p0-mvp-scope.md`, `docs/superpowers/plans/2026-05-19-loulou-p0-launch.md`.
 

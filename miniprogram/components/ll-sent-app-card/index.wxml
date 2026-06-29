@@ -1,0 +1,50 @@
+<view class="ll-sac">
+  <!-- Tap top area = open summary -->
+  <view class="ll-sac-main" bindtap="onOpenSummary">
+    <view class="ll-sac-avatar" style="background: {{app.guardianInitialBg || '#D8CAE8'}};">
+      <image wx:if="{{app.guardianPhoto}}" src="{{app.guardianPhoto}}" mode="aspectFill" class="ll-sac-avatar-img"/>
+      <text wx:else class="ll-sac-avatar-char">{{app.guardianInitial || app.guardianName}}</text>
+    </view>
+    <view class="ll-sac-info">
+      <view class="ll-sac-name-row">
+        <text class="ll-sac-name">{{app.guardianName}}</text>
+        <ll-status-badge status="{{app.status}}"/>
+      </view>
+      <text class="ll-sac-line">
+        {{app.service}} · {{app.dateStart}}<block wx:if="{{app.dateEnd && app.dateEnd !== app.dateStart}}"> – {{app.dateEnd}}</block>
+      </text>
+      <text class="ll-sac-line ll-sac-pet">{{app.pet}}</text>
+    </view>
+    <view wx:if="{{!isInactive}}" class="ll-sac-caret">
+      <ll-icon name="caret-right" size="28" color="#A0A0B0"/>
+    </view>
+  </view>
+
+  <view class="ll-sac-desc">
+    <view wx:if="{{isPending}}" class="ll-sac-dot"></view>
+    <text class="ll-sac-desc-text ll-sac-desc-text--{{app.status}}">{{desc}}</text>
+  </view>
+
+  <view wx:if="{{!isInactive}}" class="ll-sac-actions">
+    <block wx:if="{{isCompleted}}">
+      <view class="ll-sac-act ll-sac-act--icon" catchtap="onOpenChat">
+        <ll-icon name="chat-circle-dots" size="28" color="#6B6B7A"/>
+      </view>
+      <view class="ll-sac-act ll-sac-act--outline" catchtap="onRebook">
+        <ll-icon name="calendar-blank" size="26" color="#22282C"/>
+        <text>再次预约</text>
+      </view>
+      <view class="ll-sac-act ll-sac-act--solid" catchtap="onWriteReview">
+        <ll-icon name="star" size="26" color="#FFFFFF"/>
+        <text>写评论</text>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="ll-sac-act ll-sac-act--outline-2" catchtap="onOpenChat">
+        <ll-icon name="chat-circle-dots" size="26" color="#6B6B7A"/>
+        <text>查看对话</text>
+      </view>
+      <view wx:if="{{isAccepted}}" class="ll-sac-act ll-sac-act--pay" catchtap="onPay">立即付款</view>
+    </block>
+  </view>
+</view>

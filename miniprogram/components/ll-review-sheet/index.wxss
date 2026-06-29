@@ -1,0 +1,34 @@
+.ll-rs-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 90;
+}
+.ll-rs-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 91;
+  background: var(--ll-surface);
+  border-top-left-radius: 40rpx; border-top-right-radius: 40rpx;
+  padding: 28rpx 36rpx 64rpx;
+}
+.ll-rs-grab {
+  width: 76rpx; height: 8rpx; border-radius: 4rpx;
+  background: var(--ll-border); margin: 0 auto 32rpx;
+}
+.ll-rs-title {
+  text-align: center;
+  font-size: 32rpx; font-weight: 700;
+  color: var(--ll-text); margin-bottom: 8rpx;
+}
+.ll-rs-sub {
+  text-align: center;
+  font-size: 25rpx; color: var(--ll-text-3);
+  margin-bottom: 32rpx;
+}
+.ll-rs-stars {
+  display: flex; justify-content: center; gap: 20rpx;
+  margin-bottom: 40rpx;
+}
+.ll-rs-star { padding: 6rpx; }
+.ll-rs-submit {
+  height: 100rpx; border-radius: 999rpx;
+  background: var(--ll-ink); color: var(--ll-text-on-ink);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30rpx; font-weight: 700;
+}

@@ -1,0 +1,27 @@
+<view wx:if="{{visible}}" class="ll-pg">
+  <view class="ll-pg-close" bindtap="onClose">
+    <ll-icon name="x" size="36" color="#1E1E24"/>
+  </view>
+  <view class="ll-pg-body">
+    <view class="ll-pg-illus" style="background: {{steps[idx].bg}};">
+      <ll-icon name="{{steps[idx].icon}}" weight="fill" size="120" color="#22282C"/>
+    </view>
+    <view class="ll-pg-num">{{idx + 1}} / {{steps.length}}</view>
+    <view class="ll-pg-title">{{steps[idx].title}}</view>
+    <view class="ll-pg-desc">{{steps[idx].desc}}</view>
+  </view>
+  <view class="ll-pg-foot">
+    <view class="ll-pg-dots">
+      <view
+        wx:for="{{steps}}"
+        wx:key="title"
+        class="ll-pg-dot {{idx === index ? 'is-on' : ''}}"
+        data-i="{{index}}"
+        bindtap="onDot"
+      ></view>
+    </view>
+    <view class="ll-pg-cta" bindtap="onNext">
+      {{idx < steps.length - 1 ? '下一步' : '开始使用'}}
+    </view>
+  </view>
+</view>

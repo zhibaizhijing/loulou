@@ -1,0 +1,33 @@
+<view class="ll-cs">
+  <view class="ll-cs-head">
+    <text class="ll-cs-title">服务信息</text>
+    <text class="ll-cs-chip">草稿</text>
+  </view>
+
+  <view class="ll-cs-row ll-cs-svc">
+    <text class="ll-cs-row-label">服务类型</text>
+    <view class="ll-cs-chips">
+      <view
+        wx:for="{{serviceOptions}}"
+        wx:key="*this"
+        class="ll-cs-chip-pill {{config.service === item ? 'is-on' : ''}}"
+        data-value="{{item}}"
+        bindtap="onPickSvc"
+      >{{item}}</view>
+    </view>
+  </view>
+
+  <view
+    wx:for="{{fields}}"
+    wx:key="key"
+    class="ll-cs-row {{index === fields.length - 1 ? 'is-last' : ''}}"
+  >
+    <text class="ll-cs-row-label">{{item.label}}</text>
+    <input
+      class="ll-cs-input"
+      value="{{config[item.key]}}"
+      data-field="{{item.key}}"
+      bindinput="onFieldInput"
+    />
+  </view>
+</view>

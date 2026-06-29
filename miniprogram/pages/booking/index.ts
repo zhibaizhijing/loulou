@@ -24,6 +24,8 @@ interface Data {
   paymentStatusLabel: string
   canReview: boolean
   canCancel: boolean
+  canModify: boolean
+  canRebook: boolean
   pageStatus: string
   pageError: string
 }
@@ -55,6 +57,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     svcIcon: 'paw-print', petLabel: '宠物', serviceFee: 0,
     paymentStatusLabel: '',
     canReview: false, canCancel: false,
+    canModify: false, canRebook: false,
     pageStatus: 'loading', pageError: ''
   },
   bookingId: '',
@@ -101,13 +104,20 @@ Page<Data, WechatMiniprogram.IAnyObject>({
         serviceFee: booking.mockPayment.amount,
         paymentStatusLabel: PAY_STATUS_LABEL[payState] || payState,
         canReview: booking.status === 'completed' && existingReviews.reviews.length === 0,
-        canCancel: booking.status === 'requested' || booking.status === 'accepted'
+        canCancel: booking.status === 'requested' || booking.status === 'accepted',
+        canModify: booking.status === 'requested' || booking.status === 'accepted',
+        canRebook: booking.status === 'completed' || booking.status === 'cancelled' || booking.status === 'declined'
       })
     } catch (e) { showAppError(e) }
   },
 
   onOpenChat() { wx.navigateTo({ url: `/pages/chat/index?bookingId=${this.bookingId}` }) },
   onLeaveReview() { wx.navigateTo({ url: `/pages/review/index?bookingId=${this.bookingId}` }) },
+  onModify() { wx.navigateTo({ url: `/pages/order-modify/index?id=${this.bookingId}` }) },
+  onRebook() {
+    const w = this.data.walker
+    if (w) wx.navigateTo({ url: `/pages/booking-new/index?walkerId=${w._id}` })
+  },
   onOpenWalker() {
     const w = this.data.walker
     if (w) wx.navigateTo({ url: `/pages/walker/index?id=${w._id}` })

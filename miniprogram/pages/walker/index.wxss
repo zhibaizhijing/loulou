@@ -179,23 +179,10 @@
 .gp-svc-extra-label { font-size: 25rpx; color: var(--ll-text-2); }
 .gp-svc-extra-price { font-size: 25rpx; font-weight: 700; color: var(--ll-text); }
 
-/* Sticky booking bar */
-.gp-stickybar {
+/* v2 — sticky booking bar wrapper */
+.gp-stickybar-wrap {
   position: fixed;
   bottom: env(safe-area-inset-bottom);
   left: 0; right: 0;
-  display: flex; align-items: center; gap: 24rpx;
-  padding: 20rpx 32rpx;
-  background: var(--ll-surface);
-  box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.07);
   z-index: 50;
 }
-.gp-stickybar-price {
-  display: flex; align-items: baseline; flex-wrap: wrap; gap: 4rpx;
-  flex: 0 0 auto;
-}
-.gp-stickybar-from     { font-size: 22rpx; color: var(--ll-text-3); margin-right: 8rpx; }
-.gp-stickybar-currency { font-size: 24rpx; color: var(--ll-text-2); }
-.gp-stickybar-amount   { font-size: 44rpx; font-weight: 800; color: var(--ll-text); }
-.gp-stickybar-unit     { font-size: 23rpx; color: var(--ll-text-3); margin-left: 4rpx; }
-.gp-stickybar-cta      { flex: 1; }

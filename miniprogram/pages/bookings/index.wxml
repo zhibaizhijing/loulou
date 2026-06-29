@@ -1,57 +1,93 @@
-<view class="ll-page or-page">
-  <mock-banner />
-  <offline-banner />
+<view class="ll-page brs-page">
+  <mock-banner/>
+  <offline-banner/>
 
-  <!-- Header + Tabs -->
-  <view class="or-hdr">
-    <view class="or-title">订单</view>
-    <scroll-view scroll-x="true" enhanced show-scrollbar="{{false}}" class="or-tabs-scroll">
-      <view class="or-tabs">
-        <view
-          wx:for="{{tabs}}"
-          wx:key="*this"
-          class="or-tab {{tab === item ? 'is-on' : ''}}"
-          data-tab="{{item}}"
-          bindtap="onTab"
-        >{{item}}</view>
-      </view>
-    </scroll-view>
+  <!-- (a) Header + order-tab-bar -->
+  <view class="brs-header">
+    <view class="brs-header-row">
+      <text class="brs-title">订单</text>
+    </view>
+    <ll-order-tab-bar active="{{activeTab}}" bind:change="onPickTab"/>
   </view>
 
-  <!-- List -->
-  <loading-skeleton wx:if="{{pageStatus === 'loading'}}" count="4"/>
-  <empty-state wx:elif="{{filtered.length === 0}}" icon="📅" title="暂无订单" subtitle="开始预约第一次照护"/>
+  <!-- (b) Draft section — only on 全部 tab, only when basket has guardians -->
+  <view wx:if="{{hasDraft && activeTab === '全部'}}" class="brs-draft">
+    <ll-config-section config="{{config}}" bind:change="onConfigChange"/>
 
-  <view wx:else class="or-list">
-    <view wx:for="{{filtered}}" wx:key="_id" class="or-card" data-id="{{item._id}}" bindtap="onTap" hover-class="or-card-hover">
-      <view class="or-row1">
-        <view class="or-avatar or-avatar--{{item.bg}}">
-          <image wx:if="{{item.walkerAvatar}}" src="{{item.walkerAvatar}}" mode="aspectFill" class="or-avatar-img"/>
-          <text wx:else class="or-avatar-init">{{item.walkerInitial}}</text>
-        </view>
-        <view class="or-meta">
-          <view class="or-meta-name-row">
-            <text class="or-meta-name">{{item.walkerName}}</text>
-            <view class="or-badge" style="background:{{item.statusBg}};color:{{item.statusFg}};">{{item.statusLabel}}</view>
-          </view>
-          <text class="or-meta-svc">{{item.serviceLabel}} · {{item.dateLabel}}</text>
-          <text class="or-meta-pet">{{item.petLabel}}</text>
-        </view>
-        <ll-icon name="caret-right" size="26" color="#A0A0B0"/>
+    <view class="brs-basket">
+      <view class="brs-basket-head">
+        <text class="brs-basket-head-label">已选守护者 <text class="brs-basket-head-count">({{draftRows.length}} 位)</text></text>
       </view>
-
-      <view class="or-desc" style="color:{{item.descColor}};">
-        <view wx:if="{{item.status === 'requested'}}" class="or-pulse"></view>
-        <text>{{item.statusDesc}}</text>
-      </view>
-
-      <view wx:if="{{item.canAct}}" class="or-actions">
-        <view class="or-btn or-btn--ghost" catchtap="onOpenChat" data-id="{{item._id}}">
-          <ll-icon name="chat-circle-dots" size="24" color="#6B6B7A"/>
-          <text>查看对话</text>
+      <block wx:for="{{draftRows}}" wx:for-item="row" wx:key="guardian.id">
+        <view class="brs-basket-row {{index === draftRows.length - 1 ? 'is-last' : ''}}">
+          <ll-guardian-draft-row
+            guardian="{{row.guardian}}"
+            checked="{{row.checked}}"
+            service="{{config.service}}"
+            price="{{row.price}}"
+            unit="{{row.unit}}"
+            data-id="{{row.guardian.id}}"
+            bind:toggle="onToggleDraft"
+            bind:remove="onRemoveDraft"
+          />
         </view>
-        <view wx:if="{{item.status === 'accepted'}}" class="or-btn or-btn--accept" catchtap="onPay" data-id="{{item._id}}">立即支付</view>
-        <view wx:elif="{{item.status === 'completed'}}" class="or-btn or-btn--review" catchtap="onReview" data-id="{{item._id}}">写评论</view>
+      </block>
+      <view class="brs-basket-more" bindtap="onBrowseMore">
+        <view class="brs-basket-more-ico">
+          <ll-icon name="plus" size="36" color="#A0A0B0"/>
+        </view>
+        <text>继续添加守护者</text>
+      </view>
+    </view>
+
+    <view class="brs-submit {{checkedCount > 0 ? 'is-on' : 'is-off'}}" bindtap="onSubmit">
+      发送申请单<block wx:if="{{checkedCount > 0}}">  给 {{checkedCount}} 位守护者</block>
+    </view>
+  </view>
+
+  <!-- (c) Apps list — batch-grouped active + historical -->
+  <view class="brs-list">
+    <block wx:if="{{!hasAny && pageStatus === 'empty'}}">
+      <view class="brs-empty">暂无{{activeTab === '全部' ? '' : activeTab}}订单</view>
+    </block>
+
+    <view wx:for="{{batches}}" wx:for-item="batch" wx:key="key" class="brs-batch">
+      <view class="brs-batch-sep">
+        <view class="brs-batch-line"></view>
+        <text class="brs-batch-time">{{batch.timeLabel}}</text>
+        <view class="brs-batch-line"></view>
+      </view>
+      <view class="brs-batch-cards">
+        <ll-sent-app-card
+          wx:for="{{batch.apps}}"
+          wx:for-item="app"
+          wx:key="id"
+          app="{{app}}"
+          bind:opensummary="onOpenSummary"
+          bind:openchat="onOpenChat"
+          bind:rebook="onRebook"
+          bind:writereview="onWriteReview"
+        />
+      </view>
+    </view>
+
+    <view wx:if="{{historical.length}}" class="brs-batch">
+      <view class="brs-batch-sep">
+        <view class="brs-batch-line"></view>
+        <text class="brs-batch-time">历史订单</text>
+        <view class="brs-batch-line"></view>
+      </view>
+      <view class="brs-batch-cards">
+        <ll-sent-app-card
+          wx:for="{{historical}}"
+          wx:for-item="app"
+          wx:key="id"
+          app="{{app}}"
+          bind:opensummary="onOpenSummary"
+          bind:openchat="onOpenChat"
+          bind:rebook="onRebook"
+          bind:writereview="onWriteReview"
+        />
       </view>
     </view>
   </view>

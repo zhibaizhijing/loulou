@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "ll-icon": "/components/ll-icon/index"
+  }
+}

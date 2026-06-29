@@ -1,0 +1,23 @@
+<view wx:if="{{visible}}" class="ll-cpm-mask" bindtap="onClose"></view>
+<view wx:if="{{visible}}" class="ll-cpm-card" catchtap="noop">
+  <view class="ll-cpm-head">
+    <text class="ll-cpm-title">取消政策</text>
+    <view class="ll-cpm-close" bindtap="onClose">
+      <ll-icon name="x" size="26" color="#1E1E24"/>
+    </view>
+  </view>
+  <view class="ll-cpm-body">
+    <view class="ll-cpm-tier">
+      <text class="ll-cpm-tier-label">服务前 48 小时</text>
+      <text class="ll-cpm-tier-detail">全额退款，不收取手续费</text>
+    </view>
+    <view class="ll-cpm-tier">
+      <text class="ll-cpm-tier-label">服务前 24–48 小时</text>
+      <text class="ll-cpm-tier-detail">退 50%，剩余作为守护者预订补偿</text>
+    </view>
+    <view class="ll-cpm-tier">
+      <text class="ll-cpm-tier-label">服务开始后</text>
+      <text class="ll-cpm-tier-detail">已发生服务费用不退</text>
+    </view>
+  </view>
+</view>

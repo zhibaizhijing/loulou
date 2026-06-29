@@ -1,0 +1,58 @@
+.ll-pg {
+  position: fixed; inset: 0; z-index: 95;
+  background: var(--ll-bg);
+  display: flex; flex-direction: column;
+}
+.ll-pg-close {
+  position: absolute; top: 60rpx; right: 36rpx; z-index: 96;
+  width: 72rpx; height: 72rpx; border-radius: 50%;
+  background: var(--ll-surface);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.06);
+}
+.ll-pg-body {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 0 60rpx;
+}
+.ll-pg-illus {
+  width: 360rpx; height: 360rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 60rpx;
+}
+.ll-pg-num {
+  font-size: 24rpx; font-weight: 700;
+  color: var(--ll-text-3);
+  margin-bottom: 20rpx;
+  letter-spacing: 0.06em;
+}
+.ll-pg-title {
+  font-size: 44rpx; font-weight: 700; color: var(--ll-text);
+  margin-bottom: 20rpx;
+}
+.ll-pg-desc {
+  font-size: 28rpx; color: var(--ll-text-2);
+  text-align: center; line-height: 1.55;
+}
+.ll-pg-foot {
+  padding: 28rpx 60rpx 80rpx;
+  display: flex; flex-direction: column; align-items: center; gap: 32rpx;
+}
+.ll-pg-dots {
+  display: flex; gap: 14rpx;
+}
+.ll-pg-dot {
+  width: 14rpx; height: 14rpx; border-radius: 50%;
+  background: var(--ll-border);
+  transition: all var(--ll-dur-fast) var(--ll-ease);
+}
+.ll-pg-dot.is-on {
+  width: 40rpx; border-radius: 7rpx;
+  background: var(--ll-ink);
+}
+.ll-pg-cta {
+  width: 100%; height: 100rpx; border-radius: 999rpx;
+  background: var(--ll-ink); color: var(--ll-text-on-ink);
+  font-size: 30rpx; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}

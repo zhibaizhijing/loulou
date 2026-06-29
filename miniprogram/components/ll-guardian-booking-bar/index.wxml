@@ -1,0 +1,23 @@
+<view wx:if="{{svc}}" class="ll-gbb">
+  <view class="ll-gbb-left">
+    <view class="ll-gbb-svc-row">
+      <text class="ll-gbb-svc-name">{{svc.id}}</text>
+      <view class="ll-gbb-edit" bindtap="onOpenDrawer"><text>修改</text></view>
+    </view>
+    <view class="ll-gbb-price-row">
+      <text class="ll-gbb-from">从 </text>
+      <text class="ll-gbb-price">¥{{svc.price}}</text>
+      <text class="ll-gbb-unit">/{{svc.unit}}起</text>
+    </view>
+  </view>
+  <view class="ll-gbb-cta" bindtap="onBook">立即预约</view>
+</view>
+
+<ll-service-switch-drawer
+  visible="{{drawerOpen}}"
+  services="{{services}}"
+  value="{{svcId}}"
+  bind:pick="onPickSvc"
+  bind:close="onCloseDrawer"
+  bind:policy="onPolicy"
+/>

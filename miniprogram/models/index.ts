@@ -129,6 +129,18 @@ export interface Booking {
   completedAt?: number       // set when status → completed (used by auto-release scheduler)
   createdAt: number
   updatedAt: number
+  // v2 design (2026-06-29-loulou-design-system-v2.md §3)
+  orderNo?: string           // 'LL' + last10 ts + 2 random — user-facing
+  batchId?: string           // shared by all orders sent in one booking-flow submission
+  batchTime?: number         // epoch ms when batch was submitted
+  isPrimary?: boolean        // true = the guardian the user explicitly chose
+  nights?: number            // unit count (nights / days / 30-min units depending on serviceType)
+  unitPrice?: number         // unit price snapshot at booking time
+  dropoffStart?: number      // boarding/daycare dropoff window epoch ms
+  dropoffEnd?: number
+  pickupStart?: number
+  pickupEnd?: number
+  reviewed?: boolean         // true after owner submits a review
 }
 
 // P0-C ledger entries. One row per money movement.
@@ -148,13 +160,16 @@ export interface Payout {
 
 export type MessageRole = 'owner' | 'walker'
 
+export type MessageAction = 'summary'   // tappable system card → opens booking summary
+
 export interface Message {
   _id: string
   bookingId: string
   senderId: string
-  senderRole: MessageRole
+  senderRole: MessageRole | 'system'  // 'system' added in v2 for batch / modify / review notices
   text: string
   photoUrl?: string
+  action?: MessageAction
   createdAt: number
 }
 

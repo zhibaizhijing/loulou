@@ -1,0 +1,1 @@
+<view class="ll-sb ll-sb--{{status}}">{{label}}</view>

@@ -29,7 +29,32 @@ page {
   --ll-warning:       #F0B100;
   --ll-danger:        #E5484D;
   --ll-info:          #5B7CFA;
-  --ll-heart:         #E63946;          /* logo only */
+  --ll-heart:         #E63946;          /* logo only — exceptions: tab-bar badge, 申请见面 outline */
+
+  /* v2 — service group palettes (spec 2026-06-29 §4) */
+  --ll-grp-host-solid:   #5B3A8F;
+  --ll-grp-host-bg:      #EDE5F7;
+  --ll-grp-owner-solid:  #2C7A4B;
+  --ll-grp-owner-bg:     #E6F1EC;
+  --ll-grp-owner-fg-2:   #236B40;
+
+  /* v2 — scoped single-use accents */
+  --ll-accent-tab:       #D97757; /* OrderTabBar active underline only */
+  --ll-accent-tip-solid: #D97706;
+  --ll-accent-tip-bg:    #FFFBEB;
+  --ll-accent-tip-fg:    #B45309;
+
+  /* v2 — order status palette (SentAppCard + StatusBadge) */
+  --ll-status-pending-bg:    #FEF3C7;
+  --ll-status-pending-fg:    #B45309;
+  --ll-status-accepted-bg:   #E6F1EC;
+  --ll-status-accepted-fg:   #2C7A4B;
+  --ll-status-progress-bg:   #E3EEF7;
+  --ll-status-progress-fg:   #2F5F87;
+  --ll-status-completed-bg:  #F0F0F5;
+  --ll-status-completed-fg:  #6B6B7A;
+  --ll-status-rejected-bg:   #FFF0F0;
+  --ll-status-rejected-fg:   #CC2200;
 
   /* Radii */
   --ll-radius-lg:     24rpx;            /* 12px */

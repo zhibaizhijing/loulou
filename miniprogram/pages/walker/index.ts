@@ -17,6 +17,8 @@ interface ServicePrice {
   extras: Extra[]
 }
 
+interface BarSvc { id: string; price: number; unit: string; serviceType: ServiceType }
+
 interface Data {
   walker: Walker | null
   reviews: Review[]
@@ -33,6 +35,11 @@ interface Data {
   sizeBandLabels: Record<SizeBand, string>
   pageStatus: string
   pageError: string
+  // v2 sticky booking bar
+  barServices: BarSvc[]
+  initialServiceId: string
+  petReminderOpen: boolean
+  policyOpen: boolean
 }
 
 const UNIT_SHORT: Record<PricingUnit, string> = {
@@ -60,7 +67,9 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     labels: SERVICE_TYPE_LABEL,
     petTypeLabels: PET_TYPE_LABEL,
     sizeBandLabels: SIZE_BAND_LABEL,
-    pageStatus: 'loading', pageError: ''
+    pageStatus: 'loading', pageError: '',
+    barServices: [], initialServiceId: '',
+    petReminderOpen: false, policyOpen: false,
   },
   walkerId: '' as string,
 
@@ -116,7 +125,14 @@ Page<Data, WechatMiniprogram.IAnyObject>({
       const photos = (walker.photos && walker.photos.length) ? walker.photos : (heroPhoto ? [heroPhoto] : [])
       const tagline = walker.bio ? walker.bio.split('\n')[0].slice(0, 28) : '专业守护者，提供贴心照护'
       const areaLabel = walker.areas && walker.areas.length ? `${walker.areas.join('、')}` : ''
-      this.setData({ walker, reviews, servicePrices, heroPhoto, photos, tagline, areaLabel })
+      const barServices: BarSvc[] = servicePrices.map(sp => ({
+        id: SERVICE_TYPE_LABEL[sp.serviceType],
+        price: sp.price,
+        unit: sp.unitShort,
+        serviceType: sp.serviceType,
+      }))
+      const initialServiceId = barServices[0]?.id || ''
+      this.setData({ walker, reviews, servicePrices, heroPhoto, photos, tagline, areaLabel, barServices, initialServiceId })
     } catch (e) { showAppError(e) }
   },
 
@@ -126,6 +142,44 @@ Page<Data, WechatMiniprogram.IAnyObject>({
 
   onLike()  { this.setData({ liked: !this.data.liked }) },
   onShare() { wx.showToast({ title: '分享即将上线', icon: 'none' }) },
-  onBook()  { wx.navigateTo({ url: `/pages/booking-new/index?walkerId=${this.walkerId}` }) },
-  onBack()  { wx.navigateBack({}).catch?.(() => undefined) }
+  onBook()  { this.navigateToBooking() },
+
+  navigateToBooking(svcType?: ServiceType) {
+    const qs = svcType ? `&service=${svcType}` : ''
+    wx.navigateTo({ url: `/pages/booking-new/index?walkerId=${this.walkerId}${qs}` })
+  },
+
+  onBookViaBar(e: WechatMiniprogram.CustomEvent<{ id: string; svc: BarSvc }>) {
+    const svc = e.detail.svc
+    // v2 spec §2.15 — block booking for new users with no pet on file.
+    let hasPet = true
+    try {
+      const dogs = wx.getStorageSync('loulou:my-dogs')
+      hasPet = Array.isArray(dogs) && dogs.length > 0
+    } catch { /* test env */ }
+    if (!hasPet) {
+      this.pendingService = svc?.serviceType
+      this.setData({ petReminderOpen: true })
+      return
+    }
+    this.navigateToBooking(svc?.serviceType)
+  },
+
+  pendingService: undefined as ServiceType | undefined,
+
+  onPetReminderGo() {
+    this.setData({ petReminderOpen: false })
+    const ret = `/pages/walker/index?id=${this.walkerId}`
+    wx.navigateTo({ url: `/pages/pets/index?mode=add&returnTo=${encodeURIComponent(ret)}` })
+  },
+  onPetReminderSkip() {
+    this.setData({ petReminderOpen: false })
+    this.navigateToBooking(this.pendingService)
+    this.pendingService = undefined
+  },
+  onPetReminderDismiss() { this.setData({ petReminderOpen: false }) },
+  onShowPolicy()  { this.setData({ policyOpen: true })  },
+  onClosePolicy() { this.setData({ policyOpen: false }) },
+
+  onBack() { wx.navigateBack({}).catch?.(() => undefined) }
 })

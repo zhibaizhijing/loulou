@@ -1,0 +1,20 @@
+<view class="ll-gdr">
+  <view class="ll-gdr-check {{checked ? 'is-on' : ''}}" catchtap="onToggle">
+    <ll-icon wx:if="{{checked}}" name="check" weight="fill" size="26" color="#FFFFFF"/>
+  </view>
+  <view class="ll-gdr-avatar" style="background: {{guardian.initial.bg || '#D8CAE8'}};">
+    <image wx:if="{{guardian.photo}}" src="{{guardian.photo}}" mode="aspectFill" class="ll-gdr-avatar-img"/>
+    <text wx:else class="ll-gdr-avatar-char">{{guardian.initial.char || guardian.name}}</text>
+  </view>
+  <view class="ll-gdr-info">
+    <view class="ll-gdr-name-row">
+      <text class="ll-gdr-name">{{guardian.name}}</text>
+      <ll-icon name="star" weight="fill" size="22" color="#F0B100"/>
+      <text class="ll-gdr-rating">{{guardian.rating}}</text>
+    </view>
+    <text class="ll-gdr-svc">{{service}}<block wx:if="{{price}}"> · ¥{{price}}/{{unit}}</block></text>
+  </view>
+  <view class="ll-gdr-remove" catchtap="onRemove">
+    <ll-icon name="x" size="24" color="#A0A0B0"/>
+  </view>
+</view>

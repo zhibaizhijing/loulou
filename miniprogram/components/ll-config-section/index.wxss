@@ -1,0 +1,60 @@
+.ll-cs {
+  background: var(--ll-surface);
+  border-radius: 32rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
+}
+.ll-cs-head {
+  padding: 24rpx 28rpx 20rpx;
+  display: flex; align-items: center;
+  border-bottom: 1px solid var(--ll-border);
+}
+.ll-cs-title {
+  flex: 1;
+  font-size: 28rpx; font-weight: 700; color: var(--ll-text);
+}
+.ll-cs-chip {
+  background: var(--ll-butter);
+  color: var(--ll-text);
+  font-size: 22rpx; font-weight: 700;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+}
+.ll-cs-row {
+  padding: 0 28rpx;
+  border-bottom: 1px solid var(--ll-border);
+  display: flex; align-items: center;
+}
+.ll-cs-row.is-last { border-bottom: 0; }
+.ll-cs-row-label {
+  font-size: 25rpx; font-weight: 500; color: var(--ll-text-3);
+  min-width: 124rpx;
+}
+.ll-cs-input {
+  flex: 1; height: 88rpx;
+  font-size: 27rpx; font-weight: 600; color: var(--ll-text);
+  text-align: right; padding-right: 8rpx;
+}
+
+.ll-cs-svc {
+  padding-top: 20rpx; padding-bottom: 20rpx;
+  align-items: flex-start;
+}
+.ll-cs-svc .ll-cs-row-label { padding-top: 12rpx; }
+.ll-cs-chips {
+  flex: 1;
+  display: flex; flex-wrap: wrap; gap: 12rpx; justify-content: flex-end;
+}
+.ll-cs-chip-pill {
+  height: 60rpx; padding: 0 26rpx;
+  border-radius: 999rpx;
+  background: #F5F5FA;
+  color: var(--ll-text-2);
+  font-size: 25rpx; font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-cs-chip-pill.is-on {
+  background: var(--ll-ink);
+  color: var(--ll-text-on-ink);
+  font-weight: 700;
+}

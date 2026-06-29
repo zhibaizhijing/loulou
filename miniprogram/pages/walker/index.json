@@ -6,6 +6,9 @@
     "empty-state":       "/components/empty-state/index",
     "review-item":       "/components/review-item/index",
     "ll-icon":           "/components/ll-icon/index",
-    "ll-cta":            "/components/ll-cta/index"
+    "ll-cta":                   "/components/ll-cta/index",
+    "ll-guardian-booking-bar":  "/components/ll-guardian-booking-bar/index",
+    "ll-pet-reminder-sheet":    "/components/ll-pet-reminder-sheet/index",
+    "ll-cancel-policy-modal":   "/components/ll-cancel-policy-modal/index"
   }
 }

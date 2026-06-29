@@ -1,0 +1,16 @@
+.ll-qr {
+  display: inline-flex; align-items: center; gap: 10rpx;
+  height: 64rpx; padding: 0 32rpx;
+  border-radius: 999rpx;
+  font-size: 25rpx; font-weight: 600;
+}
+.ll-qr--meet {
+  border: 3rpx solid var(--ll-heart);
+  background: transparent;
+  color: var(--ll-heart);
+}
+.ll-qr--tip {
+  border: 3rpx solid var(--ll-accent-tip-solid);
+  background: var(--ll-accent-tip-bg);
+  color: var(--ll-accent-tip-fg);
+}

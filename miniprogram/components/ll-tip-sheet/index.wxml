@@ -1,0 +1,15 @@
+<view wx:if="{{visible}}" class="ll-ts-mask" bindtap="onClose"></view>
+<view wx:if="{{visible}}" class="ll-ts-sheet" catchtap="noop">
+  <view class="ll-ts-grab"></view>
+  <view class="ll-ts-title">打赏守护者</view>
+  <view class="ll-ts-sub">感谢 {{guardianName}} 对 {{petName}} 的悉心照顾</view>
+  <view class="ll-ts-grid">
+    <view
+      wx:for="{{amounts}}"
+      wx:key="*this"
+      class="ll-ts-amt"
+      data-amt="{{item}}"
+      bindtap="onPick"
+    >¥{{item}}</view>
+  </view>
+</view>

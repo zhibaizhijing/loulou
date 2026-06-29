@@ -1,0 +1,30 @@
+<block wx:if="{{from === 'system' && action === 'summary'}}">
+  <view class="ll-mb-sys-card-wrap">
+    <view class="ll-mb-sys-card" bindtap="onSummary">
+      <view class="ll-mb-sys-card-ico"><ll-icon name="pencil-simple" weight="fill" size="28" color="#6B6B7A"/></view>
+      <text class="ll-mb-sys-card-text">{{text}}</text>
+      <ll-icon name="caret-right" size="24" color="#A0A0B0"/>
+    </view>
+  </view>
+</block>
+
+<block wx:elif="{{from === 'system'}}">
+  <view class="ll-mb-sys">{{text}}</view>
+</block>
+
+<block wx:elif="{{from === 'user'}}">
+  <view class="ll-mb-row ll-mb-row--right">
+    <text class="ll-mb-time">{{time}}</text>
+    <view class="ll-mb-bubble ll-mb-bubble--user">{{text}}</view>
+  </view>
+</block>
+
+<block wx:else>
+  <view class="ll-mb-row ll-mb-row--left">
+    <view class="ll-mb-avatar">
+      <image wx:if="{{photo}}" src="{{photo}}" mode="aspectFill" class="ll-mb-avatar-img"/>
+      <text wx:else class="ll-mb-avatar-char">{{initial}}</text>
+    </view>
+    <view class="ll-mb-bubble ll-mb-bubble--guardian">{{text}}</view>
+  </view>
+</block>

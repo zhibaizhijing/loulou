@@ -1,0 +1,4 @@
+<view class="ll-sc-btn {{primary ? 'is-primary' : ''}}" bindtap="onTap">
+  <ll-icon name="{{icon}}" size="30" color="{{primary ? '#FFFFFF' : '#1E1E24'}}"/>
+  <text class="ll-sc-btn-label">{{label}}</text>
+</view>

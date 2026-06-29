@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "ll-icon":         "/components/ll-icon/index",
+    "ll-status-badge": "/components/ll-status-badge/index"
+  }
+}

@@ -1,0 +1,7 @@
+<view wx:if="{{mode === 'tip'}}" class="ll-qr ll-qr--tip" bindtap="onTap">
+  <ll-icon name="hand-coins" weight="fill" size="30" color="#B45309"/>
+  <text>打赏</text>
+</view>
+<view wx:else class="ll-qr ll-qr--meet" bindtap="onTap">
+  <text>申请见面</text>
+</view>

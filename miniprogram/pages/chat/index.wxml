@@ -1,7 +1,7 @@
 <view class="ll-page chat-page">
-  <mock-banner />
+  <mock-banner/>
 
-  <!-- ─── Thread list mode (when no bookingId) ─── -->
+  <!-- ─── Threads list mode (no bookingId) ─── -->
   <block wx:if="{{!bookingId}}">
     <view class="ml-hdr">
       <view class="ml-hdr-title-row">
@@ -46,24 +46,118 @@
     </view>
   </block>
 
-  <!-- ─── Chat view mode (when bookingId present) ─── -->
-  <block wx:else>
-    <ll-topnav title="聊天" bind:back="onBack"/>
-    <scroll-view scroll-y class="cv-messages" scroll-into-view="{{lastScrollId}}">
-      <loading-skeleton wx:if="{{loading}}" count="3" />
-      <chat-bubble
-        wx:for="{{messages}}" wx:key="_id"
-        id="m-{{item._id}}"
-        message="{{item}}"
-        mine="{{item.senderRole === myRole}}"
-      />
-    </scroll-view>
+  <!-- ─── ChatView mode (bookingId present) ─── -->
+  <view wx:if="{{bookingId}}" class="cv-shell">
+    <!-- Top nav -->
+    <view class="cv-topnav">
+      <view class="cv-back" bindtap="onBack">
+        <ll-icon name="caret-left" size="34" color="#FFFFFF"/>
+      </view>
+      <view class="cv-who">
+        <view class="cv-who-avatar">
+          <image wx:if="{{guardianPhoto}}" src="{{guardianPhoto}}" mode="aspectFill" class="cv-who-img"/>
+          <text wx:else class="cv-who-char">{{guardianInitial}}</text>
+        </view>
+        <view class="cv-who-text">
+          <text class="cv-who-name">{{guardianName}}</text>
+          <text class="cv-who-role">守护者</text>
+        </view>
+      </view>
+      <ll-icon name="dots-three" size="44" color="#6B6B7A"/>
+    </view>
 
-    <view class="cv-composer">
-      <input class="cv-input" placeholder="输入消息…" placeholder-class="cv-input-hint" model:value="{{draft}}"/>
-      <view class="cv-send {{sending ? 'is-disabled' : ''}}" bindtap="onSend">
-        <ll-icon name="caret-right" weight="fill" size="36" color="#FFFFFF"/>
+    <!-- Application card -->
+    <view wx:if="{{appCard}}" class="cv-app-wrap">
+      <view class="cv-app">
+        <view class="cv-app-ico">
+          <ll-icon name="clipboard-text" size="40" color="#1E1E24"/>
+        </view>
+        <view class="cv-app-info">
+          <text class="cv-app-line">{{appCard.service}} · {{appCard.dateLabel}}</text>
+          <text class="cv-app-sub">{{appCard.pet}} · {{appCard.area}}</text>
+        </view>
+        <ll-status-badge status="{{appCard.status}}"/>
       </view>
     </view>
-  </block>
+
+    <!-- Shortcut row -->
+    <view class="cv-short">
+      <block wx:if="{{isCompleted}}">
+        <ll-shortcut-btn icon="receipt" label="详情"   bind:tap="onDetails"/>
+        <ll-shortcut-btn icon="star"    label="去评价" primary bind:tap="onReviewBtn"/>
+      </block>
+      <block wx:else>
+        <ll-shortcut-btn icon="pencil-simple" label="修改订单" bind:tap="onModify"/>
+        <ll-shortcut-btn icon="receipt"       label="详情"     bind:tap="onDetails"/>
+        <ll-shortcut-btn icon="wechat-logo"   label="去付款"   primary bind:tap="onPay"/>
+      </block>
+    </view>
+
+    <!-- Messages -->
+    <scroll-view scroll-y class="cv-messages" scroll-into-view="{{lastScrollId}}">
+      <loading-skeleton wx:if="{{loading}}" count="3"/>
+      <view wx:for="{{messages}}" wx:key="_id" id="m-{{item._id}}">
+        <ll-msg-bubble
+          from="{{item.from}}"
+          text="{{item.text}}"
+          time="{{item.time}}"
+          action="{{item.action}}"
+          photo="{{guardianPhoto}}"
+          initial="{{guardianInitial}}"
+          bind:opensummary="onOpenSummary"
+        />
+      </view>
+    </scroll-view>
+
+    <!-- Quick reply -->
+    <view class="cv-qr">
+      <ll-quick-reply wx:if="{{isCompleted}}" mode="tip"  bind:tap="onTip"/>
+      <ll-quick-reply wx:else                  mode="meet" bind:tap="onMeet"/>
+    </view>
+
+    <!-- Input bar -->
+    <view class="cv-input-wrap">
+      <view wx:if="{{plusOpen}}" class="cv-plus-mask" catchtap="onClosePlus"></view>
+      <view wx:if="{{plusOpen}}" class="cv-plus-menu" catchtap="onClosePlus">
+        <view class="cv-plus-item">
+          <view class="cv-plus-tile"><ll-icon name="camera" size="36" color="#1E1E24"/></view>
+          <text>拍照</text>
+        </view>
+        <view class="cv-plus-item">
+          <view class="cv-plus-tile"><ll-icon name="image" size="36" color="#1E1E24"/></view>
+          <text>从相册选择</text>
+        </view>
+      </view>
+      <view class="cv-input-row">
+        <input
+          class="cv-input"
+          value="{{draft}}"
+          placeholder="发送消息…"
+          bindinput="onDraftInput"
+          confirm-type="send"
+          bindconfirm="onSend"
+        />
+        <view class="cv-send {{draft ? 'is-on' : ''}}" bindtap="onSend">
+          <ll-icon name="paper-plane-tilt" size="34" color="#FFFFFF"/>
+        </view>
+        <view class="cv-plus-btn" bindtap="onTogglePlus">
+          <ll-icon name="plus" size="34" color="#1E1E24"/>
+        </view>
+      </view>
+    </view>
+
+    <!-- Sheets -->
+    <ll-tip-sheet
+      visible="{{tipOpen}}"
+      guardianName="{{guardianName}}"
+      petName="豆豆"
+      bind:pick="onTipPick"
+      bind:close="onTipClose"
+    />
+    <ll-review-sheet
+      visible="{{reviewOpen}}"
+      bind:submit="onReviewSubmit"
+      bind:close="onReviewClose"
+    />
+  </view>
 </view>

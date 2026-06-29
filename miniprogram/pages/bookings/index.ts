@@ -1,139 +1,276 @@
-import { listMyBookings } from '../../services/bookingService'
+// v2 — BookingRequestScreen. Spec §2.7.
+//
+// Renders three stacked sections:
+//   (a) page header  : 22/800 "订单" + ll-order-tab-bar
+//   (b) draft section: only when activeTab === '全部' && draftGuardians.length
+//   (c) apps list    : batch-grouped active + historical
+import { listMyBookings, createBookingBatch } from '../../services/bookingService'
 import { getWalkerById } from '../../services/walkerService'
-import { createPageState } from '../../utils/usePageState'
+import {
+  getDraftGuardians, getDraftConfig,
+  updateConfig, removeGuardian, clearDraft,
+  type DraftGuardian, type DraftConfig,
+} from '../../services/draftBasketService'
 import { showAppError } from '../../utils/errorHandler'
-import { formatDateTime } from '../../utils/date'
 import { bus, BUS_EVENTS } from '../../utils/bus'
-import { SERVICE_TYPE_LABEL } from '../../models/index'
-import type { Booking } from '../../models'
+import { SERVICE_TYPE_LABEL, type ServiceType } from '../../models/index'
+import {
+  toV2Status, STATUS_TAB_KEY, isHistorical,
+  type V2Status,
+} from '../../utils/orderStatus'
 
-interface Row extends Booking {
-  walkerName: string
-  walkerAvatar?: string
-  walkerInitial: string
-  bg: 'butter' | 'lavender' | 'mint' | 'peach'
-  serviceLabel: string
-  dateLabel: string
-  petLabel: string
-  statusLabel: string
-  statusBg: string
-  statusFg: string
-  statusDesc: string
-  descColor: string
-  tabKey: '待确认' | '待付款' | '待完成' | '已完成' | '已失效'
-  canAct: boolean
+interface CardRow {
+  id: string
+  status: V2Status
+  guardianName: string
+  guardianPhoto?: string
+  guardianInitial?: string
+  guardianInitialBg?: string
+  service: string
+  dateStart: string
+  dateEnd?: string
+  pet: string
+  batchId: string
+  batchTime: number
+}
+
+interface Batch {
+  key: string
+  time: number
+  timeLabel: string
+  apps: CardRow[]
+}
+
+interface DraftRow {
+  guardian: DraftGuardian
+  checked: boolean
+  price: number
+  unit: string
 }
 
 type TabKey = '全部' | '待确认' | '待付款' | '待完成' | '已完成' | '已失效'
 
 interface Data {
-  tab: TabKey
-  tabs: TabKey[]
-  all: Row[]
-  filtered: Row[]
+  activeTab: TabKey
+  config: DraftConfig
+  draftRows: DraftRow[]
+  hasDraft: boolean
+  checkedCount: number
+  batches: Batch[]
+  historical: CardRow[]
+  hasAny: boolean
   pageStatus: string
-  pageError: string
 }
 
-const PASTELS: Row['bg'][] = ['butter', 'lavender', 'mint', 'peach']
-
-interface StatusMeta {
-  label: string
-  bg: string
-  fg: string
-  desc: string
-  tabKey: Row['tabKey']
+const STATUS_PRIORITY: Record<V2Status, number> = {
+  accepted: 0, pending: 1, in_progress: 2, completed: 9, rejected: 9, cancelled: 9,
 }
 
-const STATUS_META: Record<Booking['status'], StatusMeta> = {
-  requested:   { label: '待确认', bg: '#FEF3C7', fg: '#B45309', desc: '申请已发出，等待守护者接受', tabKey: '待确认' },
-  accepted:    { label: '待付款', bg: '#E6F1EC', fg: '#2C7A4B', desc: '守护者已确认接单，请尽快付款', tabKey: '待付款' },
-  in_progress: { label: '待完成', bg: '#E3EEF7', fg: '#2F5F87', desc: '服务进行中',                tabKey: '待完成' },
-  completed:   { label: '已完成', bg: '#F0F0F5', fg: '#6B6B7A', desc: '服务已完成，感谢信任',    tabKey: '已完成' },
-  declined:    { label: '已拒绝', bg: '#FFF0F0', fg: '#CC2200', desc: '守护者暂时无法接受此申请', tabKey: '已失效' },
-  cancelled:   { label: '已取消', bg: '#F0F0F5', fg: '#6B6B7A', desc: '订单已取消',              tabKey: '已失效' }
+function fmtBatchTime(t: number): string {
+  if (!t) return '已发送'
+  const now = Date.now()
+  const diffMin = Math.floor((now - t) / 60000)
+  if (diffMin < 1) return '刚刚发送'
+  if (diffMin < 60) return `${diffMin}分钟前发送`
+  const diffH = Math.floor(diffMin / 60)
+  if (diffH < 24) return `${diffH}小时前发送`
+  const d = new Date(t)
+  return `${d.getMonth() + 1}月${d.getDate()}日发送`
+}
+
+function fmtDateCN(ts: number): string {
+  if (!ts) return ''
+  const d = new Date(ts)
+  return `${d.getMonth() + 1}月${d.getDate()}日`
 }
 
 Page<Data, WechatMiniprogram.IAnyObject>({
   data: {
-    tab: '全部',
-    tabs: ['全部', '待确认', '待付款', '待完成', '已完成', '已失效'],
-    all: [], filtered: [],
-    pageStatus: 'loading', pageError: ''
+    activeTab: '全部',
+    config: { service: '寄养', pet: '狗·豆豆', dateStart: '', dateEnd: '', area: '朝阳区·望京' },
+    draftRows: [],
+    hasDraft: false,
+    checkedCount: 0,
+    batches: [],
+    historical: [],
+    hasAny: false,
+    pageStatus: 'loading',
   },
+  checkedIds: new Set<string>() as Set<string>,
   unsub: null as null | (() => void),
 
   onLoad() {
     this.unsub = bus.on(BUS_EVENTS.BOOKING_CREATED, () => this.load())
+    this.hydrateDraft()
     this.load()
   },
   onShow() {
-    if (this.data.all.length) this.load()
+    this.hydrateDraft()
+    if (this.data.batches.length || this.data.historical.length) this.load()
     const tb = this.getTabBar?.() as WechatMiniprogram.Component.TrivialInstance | undefined
     if (tb && typeof tb.setData === 'function') {
       tb.setData({ activePath: '/pages/bookings/index' })
     }
+    // Clear orders badge once user sees this page
+    try { wx.removeStorageSync('loulou:badge:orders') } catch { /* noop */ }
   },
   onUnload() { this.unsub?.() },
 
+  hydrateDraft() {
+    const guardians = getDraftGuardians()
+    const config = getDraftConfig()
+    // Auto-check all draft guardians on first hydrate; preserve user's prior choice otherwise.
+    if (this.checkedIds.size === 0 && guardians.length) {
+      guardians.forEach(g => this.checkedIds.add(g.id))
+    }
+    const draftRows: DraftRow[] = guardians.map(g => ({
+      guardian: g,
+      checked: this.checkedIds.has(g.id),
+      price: g.servicePrice || 0,
+      unit: g.serviceUnit || '次',
+    }))
+    this.setData({
+      config,
+      draftRows,
+      hasDraft: draftRows.length > 0,
+      checkedCount: draftRows.filter(r => r.checked).length,
+    })
+  },
+
   async load() {
-    const ps = createPageState(this.setData.bind(this))
     try {
-      const bookings = await ps.run(() => listMyBookings())
-      const rows: Row[] = []
-      for (let i = 0; i < bookings.length; i++) {
-        const b = bookings[i]
-        const walker = await getWalkerById(b.walkerId).catch(() => null)
-        const meta = STATUS_META[b.status]
-        const unit = b.serviceType === 'walking' || b.serviceType === 'house_visit' ? 'min'
-                  : b.serviceType === 'daycare' ? '天' : '晚'
+      const bookings = await listMyBookings()
+      const rows: CardRow[] = []
+      for (const b of bookings) {
+        const w = await getWalkerById(b.walkerId).catch(() => null)
+        const status = toV2Status(b.status)
         rows.push({
-          ...b,
-          walkerName:    walker?.name || '守护者',
-          walkerAvatar:  walker?.avatar,
-          walkerInitial: (walker?.name || '?').charAt(0),
-          bg:            PASTELS[i % PASTELS.length],
-          serviceLabel:  SERVICE_TYPE_LABEL[b.serviceType],
-          dateLabel:     formatDateTime(b.date),
-          petLabel:      `时长 ${b.durationMin} ${unit}`,
-          statusLabel:   meta.label,
-          statusBg:      meta.bg,
-          statusFg:      meta.fg,
-          statusDesc:    meta.desc,
-          descColor:     meta.fg,
-          tabKey:        meta.tabKey,
-          canAct:        b.status !== 'declined' && b.status !== 'cancelled'
+          id: b._id,
+          status,
+          guardianName: w?.name || '守护者',
+          guardianPhoto: w?.avatar,
+          guardianInitial: (w?.name || '?').charAt(0),
+          guardianInitialBg: '#EDE5F7',
+          service: SERVICE_TYPE_LABEL[b.serviceType],
+          dateStart: fmtDateCN(b.date),
+          dateEnd: undefined,
+          pet: `时长 ${b.durationMin}`,
+          batchId: b.batchId || `solo-${b._id}`,
+          batchTime: b.batchTime || b.createdAt,
         })
       }
-      this.setData({ all: rows })
-      this.applyTab()
+      this.applyTab(rows)
     } catch (e) { showAppError(e) }
   },
 
-  applyTab() {
-    const t = this.data.tab
-    const filtered = t === '全部' ? this.data.all : this.data.all.filter(r => r.tabKey === t)
-    this.setData({ filtered, pageStatus: filtered.length === 0 ? 'empty' : 'loaded' })
+  applyTab(allRows?: CardRow[]) {
+    // Re-collect rows from state if not passed
+    if (!allRows) {
+      allRows = [...this.data.batches.flatMap(b => b.apps), ...this.data.historical]
+    }
+    const tab = this.data.activeTab
+    const filtered = tab === '全部'
+      ? allRows
+      : allRows.filter(r => STATUS_TAB_KEY[r.status] === tab)
+
+    const active     = filtered.filter(r => !isHistorical(r.status))
+    const historical = filtered.filter(r =>  isHistorical(r.status))
+
+    // Group active by batchId
+    const map = new Map<string, CardRow[]>()
+    active.forEach(r => {
+      const arr = map.get(r.batchId) || []
+      arr.push(r); map.set(r.batchId, arr)
+    })
+    const batches: Batch[] = []
+    map.forEach((apps, key) => {
+      apps.sort((a, b) => STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status])
+      const time = apps[0]?.batchTime || 0
+      batches.push({ key, time, timeLabel: fmtBatchTime(time), apps })
+    })
+    batches.sort((a, b) => b.time - a.time)
+    historical.sort((a, b) => b.batchTime - a.batchTime)
+
+    const hasAny = batches.length > 0 || historical.length > 0
+    this.setData({
+      batches,
+      historical,
+      hasAny,
+      pageStatus: hasAny ? 'loaded' : 'empty',
+    })
   },
 
-  onTab(e: WechatMiniprogram.BaseEvent) {
-    const t = e.currentTarget.dataset.tab as TabKey
-    this.setData({ tab: t })
+  onPickTab(e: WechatMiniprogram.CustomEvent<{ tab: TabKey }>) {
+    this.setData({ activeTab: e.detail.tab })
     this.applyTab()
   },
 
-  onTap(e: WechatMiniprogram.BaseEvent) {
-    wx.navigateTo({ url: `/pages/booking/index?id=${e.currentTarget.dataset.id}` })
-  },
-  onOpenChat(e: WechatMiniprogram.BaseEvent) {
-    wx.navigateTo({ url: `/pages/chat/index?bookingId=${e.currentTarget.dataset.id}` })
-  },
-  onPay(e: WechatMiniprogram.BaseEvent) {
-    wx.navigateTo({ url: `/pages/booking/index?id=${e.currentTarget.dataset.id}` })
-  },
-  onReview(e: WechatMiniprogram.BaseEvent) {
-    wx.navigateTo({ url: `/pages/review/index?bookingId=${e.currentTarget.dataset.id}` })
+  onConfigChange(e: WechatMiniprogram.CustomEvent<{ field: keyof DraftConfig; value: string }>) {
+    updateConfig(e.detail.field, e.detail.value)
+    this.setData({ config: getDraftConfig() })
   },
 
-  onPullDownRefresh() { this.load().finally(() => wx.stopPullDownRefresh()) }
+  onToggleDraft(e: WechatMiniprogram.BaseEvent) {
+    const id = String(e.currentTarget.dataset.id)
+    if (this.checkedIds.has(id)) this.checkedIds.delete(id)
+    else this.checkedIds.add(id)
+    this.hydrateDraft()
+  },
+
+  onRemoveDraft(e: WechatMiniprogram.BaseEvent) {
+    const id = String(e.currentTarget.dataset.id)
+    removeGuardian(id)
+    this.checkedIds.delete(id)
+    this.hydrateDraft()
+  },
+
+  onBrowseMore() {
+    wx.switchTab({ url: '/pages/home/index' })
+  },
+
+  async onSubmit() {
+    const ids = [...this.checkedIds]
+    if (!ids.length) return
+    const cfg = this.data.config
+    const today = new Date()
+    const serviceMap: Record<string, ServiceType> = {
+      '寄养': 'boarding', '日托': 'daycare', '遛狗': 'walking',
+      '上门喂养': 'house_visit', '伴宠留宿': 'live_in',
+    }
+    const serviceType = serviceMap[String(cfg.service)] || 'boarding'
+    try {
+      const r = await createBookingBatch({
+        walkerId: ids[0],
+        primaryWalkerId: ids[0],
+        additionalWalkerIds: ids.slice(1),
+        dogId: 'mock-dog-1',
+        date: today.getTime(),
+        serviceType,
+        durationMin: 1,
+        notes: '',
+      })
+      clearDraft(ids)
+      ids.forEach(id => this.checkedIds.delete(id))
+      this.hydrateDraft()
+      this.load()
+      wx.showToast({ title: `申请已发送给 ${r.bookingIds.length} 位守护者`, icon: 'success' })
+    } catch (e) { showAppError(e) }
+  },
+
+  onOpenSummary(e: WechatMiniprogram.CustomEvent<{ id: string }>) {
+    wx.navigateTo({ url: `/pages/booking/index?id=${e.detail.id}` })
+  },
+  onOpenChat(e: WechatMiniprogram.CustomEvent<{ id: string }>) {
+    wx.navigateTo({ url: `/pages/chat/index?bookingId=${e.detail.id}` })
+  },
+  onRebook(e: WechatMiniprogram.CustomEvent<{ id: string }>) {
+    const row = [...this.data.batches.flatMap(b => b.apps), ...this.data.historical].find(r => r.id === e.detail.id)
+    if (!row) return
+    wx.navigateTo({ url: `/pages/booking/index?id=${row.id}` })
+  },
+  onWriteReview(e: WechatMiniprogram.CustomEvent<{ id: string }>) {
+    wx.navigateTo({ url: `/pages/review/index?bookingId=${e.detail.id}` })
+  },
+
+  onPullDownRefresh() { this.load().finally(() => wx.stopPullDownRefresh()) },
 })

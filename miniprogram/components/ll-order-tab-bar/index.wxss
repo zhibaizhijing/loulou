@@ -1,0 +1,18 @@
+.ll-otb { background: var(--ll-surface); border-bottom: 1px solid var(--ll-border); }
+.ll-otb-row { display: inline-flex; min-width: 100%; }
+.ll-otb-tab {
+  flex: 0 0 auto;
+  padding: 20rpx 28rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--ll-text-3);
+  white-space: nowrap;
+  border-bottom: 5rpx solid transparent;
+  margin-bottom: -2rpx;
+  transition: color var(--ll-dur-fast) var(--ll-ease);
+}
+.ll-otb-tab.is-on {
+  color: var(--ll-accent-tab);
+  font-weight: 700;
+  border-bottom-color: var(--ll-accent-tab);
+}

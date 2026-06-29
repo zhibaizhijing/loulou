@@ -1,0 +1,11 @@
+<view wx:if="{{visible}}" class="ll-prs-mask" bindtap="onDismiss"></view>
+<view wx:if="{{visible}}" class="ll-prs-sheet" catchtap="noop">
+  <view class="ll-prs-grab"></view>
+  <view class="ll-prs-hero">
+    <ll-icon name="paw-print" weight="fill" size="64" color="#FEE7A6"/>
+  </view>
+  <view class="ll-prs-title">先填写宠物信息</view>
+  <view class="ll-prs-sub">守护者需要了解您的宠物，才能给出靠谱的预约方案</view>
+  <view class="ll-prs-cta-primary" bindtap="onViewPets">去填写</view>
+  <view class="ll-prs-cta-secondary" bindtap="onContinue">先逛逛</view>
+</view>

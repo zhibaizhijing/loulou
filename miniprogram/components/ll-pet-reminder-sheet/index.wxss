@@ -1,0 +1,44 @@
+.ll-prs-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 92;
+}
+.ll-prs-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 93;
+  background: var(--ll-surface);
+  border-top-left-radius: 40rpx; border-top-right-radius: 40rpx;
+  padding: 28rpx 36rpx 64rpx;
+  text-align: center;
+}
+.ll-prs-grab {
+  width: 76rpx; height: 8rpx; border-radius: 4rpx;
+  background: var(--ll-border); margin: 0 auto 24rpx;
+}
+.ll-prs-hero {
+  width: 132rpx; height: 132rpx; border-radius: 50%;
+  background: var(--ll-ink);
+  margin: 0 auto 28rpx;
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-prs-title {
+  font-size: 36rpx; font-weight: 700; color: var(--ll-text);
+  margin-bottom: 12rpx;
+}
+.ll-prs-sub {
+  font-size: 26rpx; color: var(--ll-text-2);
+  margin-bottom: 40rpx;
+  line-height: 1.5;
+}
+.ll-prs-cta-primary {
+  height: 100rpx; border-radius: 999rpx;
+  background: var(--ll-ink); color: var(--ll-text-on-ink);
+  font-size: 30rpx; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16rpx;
+}
+.ll-prs-cta-secondary {
+  height: 100rpx; border-radius: 999rpx;
+  background: transparent;
+  border: 1px solid var(--ll-border);
+  color: var(--ll-text);
+  font-size: 30rpx; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}

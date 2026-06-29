@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "ll-icon":                  "/components/ll-icon/index",
+    "ll-service-switch-drawer": "/components/ll-service-switch-drawer/index"
+  }
+}

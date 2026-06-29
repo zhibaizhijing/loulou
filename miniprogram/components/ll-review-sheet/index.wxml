@@ -1,0 +1,23 @@
+<view wx:if="{{visible}}" class="ll-rs-mask" bindtap="onClose"></view>
+<view wx:if="{{visible}}" class="ll-rs-sheet" catchtap="noop">
+  <view class="ll-rs-grab"></view>
+  <view class="ll-rs-title">评价本次服务</view>
+  <view class="ll-rs-sub">您的评价将帮助其他宠主</view>
+  <view class="ll-rs-stars">
+    <view
+      wx:for="{{starList}}"
+      wx:key="*this"
+      class="ll-rs-star"
+      data-n="{{item}}"
+      bindtap="onStar"
+    >
+      <ll-icon
+        name="star"
+        weight="{{item <= stars ? 'fill' : 'regular'}}"
+        size="60"
+        color="{{item <= stars ? '#F5B301' : '#EEEEF2'}}"
+      />
+    </view>
+  </view>
+  <view class="ll-rs-submit" bindtap="onSubmit">提交评价</view>
+</view>

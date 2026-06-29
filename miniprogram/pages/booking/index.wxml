@@ -120,6 +120,14 @@
           <ll-icon name="chat-circle-dots" size="24" color="#6B6B7A"/>
           <text>打开聊天</text>
         </view>
+        <view wx:if="{{canModify}}" class="bs-cta bs-cta--ghost" bindtap="onModify">
+          <ll-icon name="pencil-simple" size="24" color="#6B6B7A"/>
+          <text>修改订单</text>
+        </view>
+        <view wx:if="{{canRebook}}" class="bs-cta bs-cta--ink" bindtap="onRebook">
+          <ll-icon name="calendar-plus" size="24" color="#FFFFFF"/>
+          <text>再次预约</text>
+        </view>
         <view wx:if="{{canReview}}" class="bs-cta bs-cta--ink" bindtap="onLeaveReview">
           <text>留下评价</text>
         </view>

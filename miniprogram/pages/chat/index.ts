@@ -1,8 +1,13 @@
+// v2 — Messages tab + ChatView. Spec §2.9 + §2.10.
+//   - No bookingId  → threads list (MessagesScreen)
+//   - With bookingId → ChatView (top nav + app card + shortcuts + bubbles + quick-reply + input + sheets)
 import { listMessages, sendMessage, watchNewMessages } from '../../services/chatService'
-import { listMyBookings } from '../../services/bookingService'
+import { listMyBookings, getBookingById } from '../../services/bookingService'
 import { getWalkerById } from '../../services/walkerService'
 import { showAppError } from '../../utils/errorHandler'
 import { isCaregiverMode } from '../../services/caregiverAuth'
+import { SERVICE_TYPE_LABEL } from '../../models/index'
+import { toV2Status, type V2Status } from '../../utils/orderStatus'
 import type { Message, MessageRole, Booking } from '../../models'
 
 interface Thread {
@@ -18,15 +23,40 @@ interface Thread {
   live: boolean
 }
 
+interface AppCard {
+  service: string
+  dateLabel: string
+  pet: string
+  area: string
+  status: V2Status
+}
+
+interface MsgVm {
+  _id: string
+  from: 'system' | 'user' | 'guardian'
+  text: string
+  time: string
+  action: '' | 'summary'
+}
+
 interface Data {
   bookingId: string
   threads: Thread[]
-  messages: Message[]
+  messages: MsgVm[]
   draft: string
   loading: boolean
   sending: boolean
   myRole: MessageRole
   lastScrollId: string
+  // v2 ChatView
+  guardianName: string
+  guardianPhoto: string
+  guardianInitial: string
+  appCard: AppCard | null
+  isCompleted: boolean
+  plusOpen: boolean
+  tipOpen: boolean
+  reviewOpen: boolean
 }
 
 const PASTELS: Thread['bg'][] = ['butter', 'lavender', 'mint', 'peach']
@@ -40,12 +70,41 @@ function fmtTime(ts: number): string {
   return `${Math.floor(diff / 86_400_000)} 天前`
 }
 
+function fmtClock(ts: number): string {
+  if (!ts) return ''
+  const d = new Date(ts)
+  return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+function fmtDate(ts: number): string {
+  const d = new Date(ts)
+  return `${d.getMonth() + 1}月${d.getDate()}日`
+}
+
+function toVm(m: Message, myRole: MessageRole): MsgVm {
+  const from: MsgVm['from'] =
+    m.senderRole === 'system' || (m as any).senderRole === 'system' ? 'system'
+    : m.senderRole === myRole ? 'user'
+    : 'guardian'
+  return {
+    _id: m._id,
+    from,
+    text: m.text,
+    time: fmtClock(m.createdAt),
+    action: (m.action === 'summary' ? 'summary' : '') as ('' | 'summary'),
+  }
+}
+
 Page<Data, WechatMiniprogram.IAnyObject>({
   data: {
     bookingId: '',
     threads: [],
     messages: [], draft: '', loading: true, sending: false,
-    myRole: 'owner', lastScrollId: ''
+    myRole: 'owner', lastScrollId: '',
+    guardianName: '', guardianPhoto: '', guardianInitial: '',
+    appCard: null,
+    isCompleted: false,
+    plusOpen: false, tipOpen: false, reviewOpen: false,
   },
   unwatch: null as null | (() => void),
 
@@ -64,6 +123,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
       tb.setData({ activePath: '/pages/chat/index' })
     }
     if (!this.data.bookingId) await this.loadThreads()
+    try { wx.removeStorageSync('loulou:badge:chat') } catch { /* noop */ }
   },
 
   onUnload() { if (this.unwatch) this.unwatch() },
@@ -71,7 +131,9 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   async loadThreads() {
     try {
       const bookings = await listMyBookings()
-      const active = bookings.filter(b => b.status === 'accepted' || b.status === 'in_progress' || b.status === 'requested')
+      const active = bookings.filter(b =>
+        b.status === 'accepted' || b.status === 'in_progress' || b.status === 'requested'
+      )
       const threads: Thread[] = []
       for (let i = 0; i < active.length; i++) {
         const b: Booking = active[i]
@@ -100,9 +162,31 @@ Page<Data, WechatMiniprogram.IAnyObject>({
 
   async loadChat() {
     try {
-      const initial = await listMessages(this.data.bookingId, 50)
-      const lastId = initial.length ? initial[initial.length - 1]._id : ''
-      this.setData({ messages: initial, loading: false, lastScrollId: lastId ? 'm-' + lastId : '' })
+      const [booking, initial] = await Promise.all([
+        getBookingById(this.data.bookingId).catch(() => null),
+        listMessages(this.data.bookingId, 50).catch(() => [] as Message[]),
+      ])
+      const walker = booking ? await getWalkerById(booking.walkerId).catch(() => null) : null
+      const status: V2Status = booking ? toV2Status(booking.status) : 'pending'
+      const appCard: AppCard | null = booking ? {
+        service: SERVICE_TYPE_LABEL[booking.serviceType],
+        dateLabel: fmtDate(booking.date),
+        pet: '我的宠物',
+        area: '朝阳区·望京',
+        status,
+      } : null
+      const vms = initial.map(m => toVm(m, this.data.myRole))
+      const lastId = vms.length ? vms[vms.length - 1]._id : ''
+      this.setData({
+        messages: vms,
+        appCard,
+        isCompleted: status === 'completed',
+        guardianName: walker?.name || '守护者',
+        guardianPhoto: walker?.avatar || '',
+        guardianInitial: walker?.name?.charAt(0) || '?',
+        loading: false,
+        lastScrollId: lastId ? 'm-' + lastId : '',
+      })
     } catch (e) {
       this.setData({ loading: false })
       showAppError(e)
@@ -110,7 +194,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     this.unwatch = watchNewMessages(this.data.bookingId, (m) => {
       const exists = this.data.messages.some(x => x._id === m._id)
       if (exists) return
-      const next = [...this.data.messages, m]
+      const next = [...this.data.messages, toVm(m, this.data.myRole)]
       this.setData({ messages: next, lastScrollId: 'm-' + m._id })
     })
   },
@@ -120,18 +204,56 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     wx.navigateTo({ url: `/pages/chat/index?bookingId=${bookingId}` })
   },
 
-  async onSend() {
-    const text = this.data.draft.trim()
-    if (!text) return
+  // ── Shortcut row ──────────────────────────────────────────
+  onModify()    { wx.navigateTo({ url: `/pages/booking/index?id=${this.data.bookingId}&action=modify` }) },
+  onDetails()   { wx.navigateTo({ url: `/pages/booking/index?id=${this.data.bookingId}` }) },
+  onPay()       { wx.navigateTo({ url: `/pages/booking/index?id=${this.data.bookingId}&action=pay` }) },
+  onReviewBtn() { this.setData({ reviewOpen: true }) },
+
+  // ── Quick-reply ───────────────────────────────────────────
+  onMeet() { this.setData({ draft: '您好，我们能提前见面熟悉一下吗' }) },
+  onTip()  { this.setData({ tipOpen: true }) },
+
+  // ── Tip / Review sheets ───────────────────────────────────
+  onTipPick(e: WechatMiniprogram.CustomEvent<{ amount: number }>) {
+    const amt = e.detail.amount
+    this.setData({ tipOpen: false })
+    this.sendBubble(`🧧 我给你发了一个 ¥${amt} 的打赏，谢谢你的照顾！`)
+  },
+  onTipClose() { this.setData({ tipOpen: false }) },
+
+  onReviewSubmit(e: WechatMiniprogram.CustomEvent<{ stars: number }>) {
+    const stars = e.detail.stars
+    this.setData({ reviewOpen: false })
+    this.sendBubble(`⭐ 我给本次服务打了 ${stars} 星好评，谢谢你！`)
+  },
+  onReviewClose() { this.setData({ reviewOpen: false }) },
+
+  // ── Input bar ─────────────────────────────────────────────
+  onDraftInput(e: WechatMiniprogram.CustomEvent<{ value: string }>) {
+    this.setData({ draft: e.detail.value })
+  },
+  onSend()      { this.sendBubble(this.data.draft) },
+  onTogglePlus(){ this.setData({ plusOpen: !this.data.plusOpen }) },
+  onClosePlus() { this.setData({ plusOpen: false }) },
+
+  async sendBubble(text: string) {
+    const t = (text || '').trim()
+    if (!t) return
     this.setData({ sending: true, draft: '' })
     try {
-      await sendMessage(this.data.bookingId, text, this.data.myRole)
+      await sendMessage(this.data.bookingId, t, this.data.myRole)
     } catch (e) {
-      this.setData({ draft: text })
+      this.setData({ draft: t })
       showAppError(e)
     } finally {
       this.setData({ sending: false })
     }
+  },
+
+  // ── System message action ─────────────────────────────────
+  onOpenSummary() {
+    wx.navigateTo({ url: `/pages/booking/index?id=${this.data.bookingId}` })
   },
 
   onBack() { wx.navigateBack({}).catch?.(() => undefined) }

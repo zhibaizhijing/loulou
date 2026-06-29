@@ -165,16 +165,21 @@
     </view>
   </view>
 
-  <!-- Sticky booking bar -->
-  <view wx:if="{{pageStatus !== 'loading' && pageStatus !== 'error'}}" class="gp-stickybar">
-    <view class="gp-stickybar-price">
-      <text class="gp-stickybar-from">起价</text>
-      <text class="gp-stickybar-currency">¥</text>
-      <text class="gp-stickybar-amount ll-num">{{walker.pricePerWalk}}</text>
-      <text class="gp-stickybar-unit">/晚起</text>
-    </view>
-    <view class="gp-stickybar-cta">
-      <ll-cta text="立即预约" bind:tap="onBook"/>
-    </view>
+  <!-- Sticky booking bar (v2 spec §2.4) -->
+  <view wx:if="{{pageStatus !== 'loading' && pageStatus !== 'error' && barServices.length}}" class="gp-stickybar-wrap">
+    <ll-guardian-booking-bar
+      services="{{barServices}}"
+      initialService="{{initialServiceId}}"
+      bind:book="onBookViaBar"
+      bind:policy="onShowPolicy"
+    />
   </view>
+
+  <ll-pet-reminder-sheet
+    visible="{{petReminderOpen}}"
+    bind:viewpets="onPetReminderGo"
+    bind:continue="onPetReminderSkip"
+    bind:dismiss="onPetReminderDismiss"
+  />
+  <ll-cancel-policy-modal visible="{{policyOpen}}" bind:close="onClosePolicy"/>
 </view>

@@ -1,0 +1,36 @@
+.ll-gbb {
+  flex: 0 0 auto;
+  background: var(--ll-surface);
+  box-shadow: 0 -2rpx 0 var(--ll-border), 0 -8rpx 32rpx rgba(0,0,0,0.07);
+  display: flex; align-items: flex-end;
+  padding: 28rpx 32rpx 44rpx;
+  gap: 24rpx;
+}
+.ll-gbb-left { flex: 1; min-width: 0; margin-bottom: 26rpx; }
+.ll-gbb-svc-row {
+  display: flex; align-items: center; gap: 16rpx; margin-bottom: 6rpx;
+}
+.ll-gbb-svc-name {
+  font-size: 30rpx; font-weight: 800; color: var(--ll-text);
+}
+.ll-gbb-edit {
+  font-size: 25rpx; font-weight: 600; color: var(--ll-text-2);
+  text-decoration: underline;
+  padding: 0 4rpx;
+}
+.ll-gbb-price-row {
+  display: flex; align-items: baseline; gap: 2rpx;
+  font-variant-numeric: tabular-nums;
+}
+.ll-gbb-from  { font-size: 24rpx; color: var(--ll-text-2); }
+.ll-gbb-price { font-size: 40rpx; font-weight: 800; color: var(--ll-text); }
+.ll-gbb-unit  { font-size: 24rpx; color: var(--ll-text-3); }
+.ll-gbb-cta {
+  height: 92rpx; padding: 0 48rpx;
+  border-radius: 999rpx;
+  background: var(--ll-ink);
+  color: var(--ll-text-on-ink);
+  font-size: 30rpx; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}

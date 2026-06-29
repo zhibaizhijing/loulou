@@ -1,0 +1,43 @@
+.ll-gdr {
+  padding: 24rpx 28rpx;
+  display: flex; align-items: center; gap: 24rpx;
+}
+.ll-gdr-check {
+  width: 48rpx; height: 48rpx; border-radius: 50%;
+  flex: 0 0 auto;
+  background: transparent;
+  box-shadow: inset 0 0 0 3rpx var(--ll-text-3);
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-gdr-check.is-on {
+  background: var(--ll-ink);
+  box-shadow: none;
+}
+.ll-gdr-avatar {
+  width: 96rpx; height: 96rpx; border-radius: 50%;
+  flex: 0 0 auto;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.ll-gdr-avatar-img { width: 100%; height: 100%; }
+.ll-gdr-avatar-char {
+  font-size: 36rpx; font-weight: 700; color: var(--ll-text);
+}
+.ll-gdr-info { flex: 1; min-width: 0; }
+.ll-gdr-name-row {
+  display: flex; align-items: center; gap: 10rpx; margin-bottom: 4rpx;
+}
+.ll-gdr-name { font-size: 28rpx; font-weight: 700; color: var(--ll-text); }
+.ll-gdr-rating {
+  font-size: 23rpx; font-weight: 600; color: var(--ll-text);
+  font-variant-numeric: tabular-nums;
+}
+.ll-gdr-svc {
+  font-size: 24rpx; color: var(--ll-text-3);
+}
+.ll-gdr-remove {
+  width: 56rpx; height: 56rpx; border-radius: 50%;
+  background: #F5F5FA;
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}

@@ -1,0 +1,48 @@
+<view class="ll-page om-page">
+  <ll-topnav title="修改订单" back="{{true}}" bind:back="onBack"/>
+
+  <view class="om-section">
+    <text class="om-label">服务类型</text>
+    <view class="om-chips">
+      <view
+        wx:for="{{serviceOptions}}"
+        wx:key="id"
+        class="om-chip {{service === item.id ? 'is-on' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onPickSvc"
+      >{{item.label}}</view>
+    </view>
+  </view>
+
+  <view class="om-section">
+    <picker mode="date" value="{{dateStart}}" bindchange="onStartDate">
+      <view class="om-row">
+        <text class="om-row-label">开始日期</text>
+        <text class="om-row-value">{{dateStart || '请选择'}}</text>
+        <ll-icon name="caret-right" size="26" color="#A0A0B0"/>
+      </view>
+    </picker>
+    <picker mode="date" value="{{dateEnd}}" start="{{dateStart}}" bindchange="onEndDate">
+      <view class="om-row is-last">
+        <text class="om-row-label">结束日期</text>
+        <text class="om-row-value">{{dateEnd || '请选择'}}</text>
+        <ll-icon name="caret-right" size="26" color="#A0A0B0"/>
+      </view>
+    </picker>
+  </view>
+
+  <view class="om-section om-section--note">
+    <text class="om-label">补充说明</text>
+    <textarea
+      class="om-textarea"
+      placeholder="向守护者说明改动原因…"
+      placeholder-class="om-placeholder"
+      value="{{note}}"
+      bindinput="onNote"
+    />
+  </view>
+
+  <view class="om-footer">
+    <ll-cta text="提交修改" bind:tap="onConfirm"/>
+  </view>
+</view>
