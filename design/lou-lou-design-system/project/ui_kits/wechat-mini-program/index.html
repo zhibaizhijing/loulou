@@ -17,27 +17,77 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 </head>
 <body>
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+      <rect x="475" y="120" width="250" height="560" rx="48" fill="#22282C"></rect>
+      <rect x="495" y="140" width="210" height="520" rx="32" fill="#F8F8FC"></rect>
+      <rect x="563" y="158" width="74" height="22" rx="11" fill="#22282C"></rect>
+      <g transform="translate(600 410)">
+        <circle cx="-44" cy="-30" r="20" fill="#FEE7A6"></circle>
+        <circle cx="44" cy="-30" r="20" fill="#FEE7A6"></circle>
+        <circle cx="-72" cy="22" r="16" fill="#FEE7A6"></circle>
+        <circle cx="72" cy="22" r="16" fill="#FEE7A6"></circle>
+        <ellipse cx="0" cy="36" rx="50" ry="42" fill="#FEE7A6"></ellipse>
+      </g>
+      <text x="600" y="560" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="32" font-weight="700" fill="#22282C" letter-spacing="-0.5">Lou Lou</text>
+      <text x="600" y="600" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="16" fill="#6B6B7A">守护者主页</text>
+    </svg>
+  </template>
   <div id="root"></div>
 
-  <script type="text/babel" src="ios-frame.jsx"></script>
-  <script type="text/babel" src="icons.jsx"></script>
-  <script type="text/babel" src="components.jsx"></script>
-  <script type="text/babel" src="SearchPickers.jsx"></script>
-  <script type="text/babel" src="HomeMarketplaceScreen.jsx"></script>
-  <script type="text/babel" src="SearchResultsScreen.jsx"></script>
-  <script type="text/babel" src="FilterDrawer.jsx"></script>
-  <script type="text/babel" src="MessagesScreen.jsx"></script>
-  <script type="text/babel" src="HomeScreen.jsx"></script>
-  <script type="text/babel" src="DetailScreen.jsx"></script>
-  <script type="text/babel" src="ActivityScreen.jsx"></script>
-  <script type="text/babel" src="BookingsScreen.jsx"></script>
-  <script type="text/babel" src="ProfileScreen.jsx"></script>
-  <script type="text/babel" src="BookingSheet.jsx"></script>
-  <script type="text/babel" src="GuardianProfileScreen.jsx"></script>
-  <script type="text/babel" src="PetsScreen.jsx"></script>
-  <script type="text/babel" src="BookingRequestScreen.jsx"></script>
-  <script type="text/babel" src="BookingFlowScreen.jsx"></script>
-  <script type="text/babel" src="BookingSummaryScreen.jsx"></script>
-  <script type="text/babel" src="app.jsx"></script>
+  <!-- Resource lifting: hidden <img> tags get inlined as data URIs by the
+       bundler; this script copies their srcs into window.__resources so the
+       app's image lookups resolve in both the live page and the standalone. -->
+  <div id="__res_lift" style="display:none" aria-hidden="true">
+    <img id="res-guardian1" src="assets/guardian1.png" alt="">
+    <img id="res-zheHero" src="assets/zhe-hero.png" alt="">
+    <img id="res-guardian2" src="assets/guardian2.png" alt="">
+    <img id="res-guardian3" src="assets/guardian3.png" alt="">
+    <img id="res-guardianPhoto1" src="assets/guardian1.png" alt="">
+    <img id="res-guardianPhoto4" src="assets/guardian2.png" alt="">
+    <img id="res-loulouLogo" src="assets/loulou-logo.png" alt="">
+    <img id="res-mapImg" src="assets/map.png" alt="">
+    <img id="res-dogSmall" src="assets/dog-small.png" alt="">
+    <img id="res-dogMedium" src="assets/dog-medium.png" alt="">
+    <img id="res-dogLarge" src="assets/dog-large.png" alt="">
+    <img id="res-galleryPuppy" src="../../uploads/Sleeping Golden Retriever Puppy.png" alt="">
+    <img id="res-galleryRoom" src="../../uploads/Bright Sunlit Room.png" alt="">
+    <img id="res-galleryLiving" src="../../uploads/Cozy Living Room Decor.png" alt="">
+  </div>
+  <script>
+    (function () {
+      var keys = ['guardian1','guardian2','guardian3','loulouLogo','mapImg',
+        'dogSmall','dogMedium','dogLarge','galleryPuppy','galleryRoom','galleryLiving','zheHero',
+        'guardianPhoto1','guardianPhoto4'];
+      var r = {};
+      keys.forEach(function (k) {
+        var el = document.getElementById('res-' + k);
+        if (el && el.getAttribute('src')) r[k] = el.src;
+      });
+      window.__resources = r;
+    })();
+  </script>
+
+  <script type="text/babel" src="ios-frame.jsx?v=4"></script>
+  <script type="text/babel" src="icons.jsx?v=4"></script>
+  <script type="text/babel" src="components.jsx?v=4"></script>
+  <script type="text/babel" src="SearchPickers.jsx?v=4"></script>
+  <script type="text/babel" src="HomeMarketplaceScreen.jsx?v=4"></script>
+  <script type="text/babel" src="SearchResultsScreen.jsx?v=4"></script>
+  <script type="text/babel" src="FilterDrawer.jsx?v=4"></script>
+  <script type="text/babel" src="MessagesScreen.jsx?v=4"></script>
+  <script type="text/babel" src="HomeScreen.jsx?v=4"></script>
+  <script type="text/babel" src="DetailScreen.jsx?v=4"></script>
+  <script type="text/babel" src="ActivityScreen.jsx?v=4"></script>
+  <script type="text/babel" src="BookingsScreen.jsx?v=4"></script>
+  <script type="text/babel" src="ProfileScreen.jsx?v=4"></script>
+  <script type="text/babel" src="BookingSheet.jsx?v=4"></script>
+  <script type="text/babel" src="GuardianProfileScreen.jsx?v=4"></script>
+  <script type="text/babel" src="PetsScreen.jsx?v=4"></script>
+  <script type="text/babel" src="BookingRequestScreen.jsx?v=4"></script>
+  <script type="text/babel" src="BookingFlowScreen.jsx?v=4"></script>
+  <script type="text/babel" src="BookingSummaryScreen.jsx?v=4"></script>
+  <script type="text/babel" src="ReviewGuardianScreen.jsx?v=4"></script>
+  <script type="text/babel" src="app.jsx?v=4"></script>
 </body>
 </html>

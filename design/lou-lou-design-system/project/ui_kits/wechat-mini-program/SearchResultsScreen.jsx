@@ -12,7 +12,7 @@
 //
 // All popovers are anchored to their chip and dismiss on outside-click.
 
-function SearchResultsScreen({ onBack, query, onPickField, setTopBarLeading }) {
+function SearchResultsScreen({ onBack, query, onPickField, setTopBarLeading, onSelectGuardian }) {
   // Status bar stays native — clear any leading override left from a prior screen.
   React.useEffect(() => {
     setTopBarLeading?.(null);
@@ -164,7 +164,7 @@ function SearchResultsScreen({ onBack, query, onPickField, setTopBarLeading }) {
             <div style={{ fontSize: 12, color: LL.text2, marginTop: 4 }}>试试调整筛选条件或扩大搜索范围</div>
           </div>
         ) : (
-          visible.map(g => <GuardianCard key={g.id} g={g} />)
+          visible.map(g => <GuardianCard key={g.id} g={g} onSelect={onSelectGuardian} />)
         )}
       </div>
 
@@ -220,12 +220,8 @@ function CompactSearchSummary({ q, onPickField }) {
             )}
           </>
         ) : (
-          // Form B — 日期/周几 + 时段, both fields fill full width
-          <>
-            <SummaryChip icon="calendar-blank" value={q.startDate} onClick={() => onPickField?.('startDate')} flex />
-            <SummaryDot />
-            <SummaryChip icon="clock" value={q.dateLine} onClick={() => onPickField?.('periods')} flex />
-          </>
+          // Form B — date / 周几 only (time-period section removed)
+          <SummaryChip icon="calendar-blank" value={q.startDate} onClick={() => onPickField?.('startDate')} flex />
         )}
       </div>
     </div>
@@ -291,16 +287,24 @@ function buildSummaryQuery(query) {
     }
   } else {
     const s = query.schedule || {};
-    const PERIOD_LABELS = { morning: '早上', afternoon: '下午', evening: '傍晚' };
-    const periodStr = (s.periods || []).map(p => PERIOD_LABELS[p]).filter(Boolean).join('、') || '时段未选';
     const WK = ['一','二','三','四','五','六','日'];
     if (s.type === 'once') {
-      out.startDate = s.dates?.start ? fmtFull(s.dates.start) : '选择日期';
-      out.dateLine = periodStr;
+      if (s.pickMode === 'single') {
+        const days = (s.dates?.days || []).slice().sort((a, b) => a - b);
+        out.startDate = days.length
+          ? (days.length <= 2 ? days.map(fmtShort).join('、') : `${fmtShort(days[0])} 等${days.length}天`)
+          : '选择日期';
+      } else if (s.dates?.start) {
+        out.startDate = s.dates.end
+          ? `${fmtShort(s.dates.start)} → ${fmtShort(s.dates.end)}`
+          : fmtFull(s.dates.start);
+      } else {
+        out.startDate = '选择日期';
+      }
     } else {
       const wd = (s.weekdays || []).map(i => WK[i]).join('/');
       out.startDate = wd ? `每周 ${wd}` : '选择周几';
-      out.dateLine = periodStr;
+      if (s.dates?.start && s.dates?.end) out.startDate += ` · ${fmtShort(s.dates.start)}–${fmtShort(s.dates.end)}`;
     }
   }
   return out;
@@ -413,10 +417,12 @@ function Popover({ anchor, offsetLeft, offsetRight, options, value, onPick }) {
 // ─────────────────────────────────────────────────────────────
 // Guardian Card
 // ─────────────────────────────────────────────────────────────
-function GuardianCard({ g }) {
+function GuardianCard({ g, onSelect }) {
   const [favorited, setFavorited] = React.useState(g.favorited);
   return (
-    <div style={{
+    <div
+      onClick={() => onSelect?.(g)}
+      style={{
       background: '#fff', borderRadius: 16, padding: 14,
       boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       display: 'flex', flexDirection: 'column', gap: 12,

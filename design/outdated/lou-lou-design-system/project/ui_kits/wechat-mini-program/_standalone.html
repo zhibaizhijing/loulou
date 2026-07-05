@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou · WeChat Mini Program UI Kit</title>
+<meta name="ext-resource-dependency" content="https://images.unsplash.com/photo-1568822617270-2c1579f8dfe2?w=240&amp;h=240&amp;fit=crop&amp;crop=faces&amp;auto=format&amp;q=70" data-resource-id="photo_1568822617270-2c1579f8dfe2" />
+<meta name="ext-resource-dependency" content="https://images.unsplash.com/photo-1542909192-2f2241a99c9d?w=240&amp;h=240&amp;fit=crop&amp;crop=faces&amp;auto=format&amp;q=70" data-resource-id="photo_1542909192-2f2241a99c9d" />
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #EEEEF2; }
+  @keyframes ll-spin { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { display: none; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <template id="__bundler_thumbnail" data-bg-color="#EEEEF2">
+    <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="800" fill="#EEEEF2"/>
+      <g transform="translate(360, 200)">
+        <rect width="480" height="400" rx="56" fill="#22282C"/>
+        <g transform="translate(240, 200)" fill="#FEE7A6">
+          <circle cx="-70" cy="-40" r="24"/>
+          <circle cx="-24" cy="-70" r="22"/>
+          <circle cx="24" cy="-70" r="22"/>
+          <circle cx="70" cy="-40" r="24"/>
+          <ellipse cx="0" cy="20" rx="60" ry="50"/>
+        </g>
+      </g>
+      <text x="600" y="680" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="56" font-weight="700" fill="#22282C" letter-spacing="-1">Lou Lou</text>
+    </svg>
+  </template>
+  <div id="root"></div>
+
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="icons.jsx"></script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="HomeMarketplaceScreen.jsx"></script>
+  <script type="text/babel" src="SearchResultsScreen.standalone.jsx"></script>
+  <script type="text/babel" src="MessagesScreen.jsx"></script>
+  <script type="text/babel" src="HomeScreen.jsx"></script>
+  <script type="text/babel" src="DetailScreen.jsx"></script>
+  <script type="text/babel" src="ActivityScreen.jsx"></script>
+  <script type="text/babel" src="BookingsScreen.jsx"></script>
+  <script type="text/babel" src="ProfileScreen.jsx"></script>
+  <script type="text/babel" src="BookingSheet.jsx"></script>
+  <script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

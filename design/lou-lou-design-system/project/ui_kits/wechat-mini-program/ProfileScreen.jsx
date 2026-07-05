@@ -98,38 +98,133 @@ function FeedbackTab() {
 }
 
 // ─── Pets tab ────────────────────────────────────────────────
-function PetsTab() {
-  const pets = [
-    { id: 'p1', name: '黄豆', breed: '混血犬', detail: '雌性，4岁10个月，20 kg', bg: LL.butter,   emoji: '🐕' },
-    { id: 'p2', name: 'Debbie', breed: '波斯布偶猫', detail: '雌性，3岁，4 kg',  bg: LL.lavender, emoji: '🐱' },
-  ];
+const PETS_TAB_GREEN    = '#2C7A4B';
+const PETS_TAB_GREEN_BG = '#E6F1EC';
+
+// One pet, rendered as a row: circular avatar + basics, with an
+// expandable 查看完整档案 dropdown and 编辑完整资料 button.
+function PetTabRow({ pet, onEdit, isLast }) {
+  const [open, setOpen] = React.useState(false);
+  const age = (typeof window.calcPetAge === 'function') ? window.calcPetAge(pet.dob) : null;
+  const avatarBg = pet.species === 'cat' ? LL.lavender
+    : pet.species === 'dog' ? LL.butter
+    : pet.species === 'rabbit' ? LL.peach
+    : LL.mint;
+  const meta = [
+    pet.gender === 'female' ? '母' : pet.gender === 'male' ? '公' : null,
+    age,
+    pet.weight ? `${pet.weight}kg` : null,
+  ].filter(Boolean).join(' · ');
+  const hasBadges = pet.spayed || pet.microchipped || (pet.vaccines && pet.vaccines.length > 0);
+
+  return (
+    <div style={{ borderBottom: isLast ? 0 : `1px solid ${LL.border}`, padding: '14px 0' }}>
+      {/* Row header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{
+          width: 54, height: 54, borderRadius: '50%', background: avatarBg, flex: '0 0 auto',
+          overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {pet.photo
+            ? <img src={pet.photo} alt={pet.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <i className="ph-fill ph-paw-print" style={{ fontSize: 24, color: 'rgba(30,30,36,0.42)' }} />}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: LL.text, marginBottom: 2 }}>{pet.name}</div>
+          <div style={{ fontSize: 12.5, color: LL.text2 }}>{pet.breed || '未填写品种'}</div>
+          {meta && <div style={{ fontSize: 12, color: LL.text3, marginTop: 1 }}>{meta}</div>}
+        </div>
+      </div>
+
+      {/* Health badges */}
+      {hasBadges && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+          {pet.spayed && <span style={{ background: PETS_TAB_GREEN_BG, color: PETS_TAB_GREEN, borderRadius: 5, padding: '2px 8px', fontSize: 11.5, fontWeight: 600 }}>已绝育</span>}
+          {pet.microchipped && <span style={{ background: PETS_TAB_GREEN_BG, color: PETS_TAB_GREEN, borderRadius: 5, padding: '2px 8px', fontSize: 11.5, fontWeight: 600 }}>已植芯片</span>}
+          {(pet.vaccines || []).map(v => <span key={v} style={{ background: PETS_TAB_GREEN_BG, color: PETS_TAB_GREEN, borderRadius: 5, padding: '2px 8px', fontSize: 11.5, fontWeight: 600 }}>✓ {v}</span>)}
+        </div>
+      )}
+
+      {/* 查看完整档案 dropdown toggle */}
+      <button onClick={() => setOpen(o => !o)} style={{
+        marginTop: 12, width: '100%', height: 40, borderRadius: 10,
+        background: '#F5F5F9', border: 0, cursor: 'pointer', fontFamily: LL.font,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+        fontSize: 13.5, fontWeight: 600, color: LL.text2,
+      }}>
+        查看完整档案
+        <i className={`ph ph-caret-${open ? 'up' : 'down'}`} style={{ fontSize: 13 }} />
+      </button>
+
+      {/* Expanded full profile */}
+      {open && (
+        <div style={{ padding: '14px 2px 2px' }}>
+          {/* Personality */}
+          {pet.withStrangers && (
+            <>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: LL.text, marginBottom: 8 }}>性格与相处</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 14 }}>
+                {[['与陌生人', pet.withStrangers], ['与其他狗', pet.withDogs], ['与猫咪', pet.withCats], ['与小孩', pet.withKids]].filter(([, v]) => v).map(([label, val]) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, color: LL.text2 }}>
+                    <span>{label}</span>
+                    <span style={{ fontWeight: 600, color: val === '友好' ? PETS_TAB_GREEN : val === '不建议接触' ? '#CC2200' : LL.text }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Habits */}
+          {pet.feedingFreq && (
+            <>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: LL.text, marginBottom: 8 }}>生活习惯</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 14 }}>
+                {[['喂食频率', pet.feedingFreq], ['可独处时间', pet.aloneTime], ['精力', pet.energy]].filter(([, v]) => v).map(([label, val]) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, color: LL.text2 }}>
+                    <span>{label}</span><span style={{ fontWeight: 600, color: LL.text }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Emergency */}
+          {(pet.vetName || pet.emergencyName) && (
+            <>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#B45309', marginBottom: 8 }}>紧急联系</div>
+              {pet.vetName && <div style={{ fontSize: 13, color: LL.text2, marginBottom: 5 }}>🏥 {pet.vetName}{pet.vetPhone && ` · ${pet.vetPhone}`}</div>}
+              {pet.emergencyName && <div style={{ fontSize: 13, color: LL.text2 }}>👤 {pet.emergencyName}{pet.emergencyPhone && ` · ${pet.emergencyPhone}`}</div>}
+            </>
+          )}
+
+          <button onClick={onEdit} style={{
+            marginTop: 4, width: '100%', height: 42, borderRadius: 999,
+            border: `1px solid ${LL.border}`, background: 'transparent',
+            fontSize: 13.5, fontWeight: 600, color: LL.text2, cursor: 'pointer', fontFamily: LL.font,
+          }}>
+            编辑完整资料
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PetsTab({ pets = [], onAddPet, onEditPet }) {
   return (
     <div style={{ padding: '16px 16px 20px' }}>
       <div style={{ fontSize: 17, fontWeight: 700, color: LL.text, marginBottom: 8 }}>我的宠物 ({pets.length})</div>
-      <div style={{ fontSize: 13, color: LL.text2, lineHeight: 1.65, marginBottom: 20 }}>
+      <div style={{ fontSize: 13, color: LL.text2, lineHeight: 1.65, marginBottom: 16 }}>
         帮助守护者了解您的宠物，接受您的申请，提供安全、贴心的照料。
       </div>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {pets.map((p, i) => (
-          <div key={p.id} style={{
-            display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0',
-            borderBottom: i < pets.length - 1 ? `1px solid ${LL.border}` : 0, cursor: 'pointer',
-          }}>
-            <div style={{ width: 52, height: 52, borderRadius: '50%', background: p.bg, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
-              {p.emoji}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 700, color: LL.text, marginBottom: 2 }}>{p.name}</div>
-              <div style={{ fontSize: 12.5, color: LL.text2 }}>{p.breed}</div>
-              <div style={{ fontSize: 12, color: LL.text3, marginTop: 1 }}>{p.detail}</div>
-            </div>
-            <i className="ph ph-caret-right" style={{ fontSize: 15, color: LL.text3 }} />
-          </div>
+          <PetTabRow key={p.id} pet={p} onEdit={() => onEditPet?.(p)} isLast={i === pets.length - 1} />
         ))}
       </div>
-      <button style={{
+      <button onClick={onAddPet} style={{
         marginTop: 16, width: '100%', height: 44, borderRadius: 999,
-        border: `1px solid ${LL.border}`, background: 'transparent',
+        border: `1px dashed ${LL.border}`, background: 'transparent',
         fontSize: 13.5, fontWeight: 600, color: LL.text2, cursor: 'pointer',
         fontFamily: LL.font, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
       }}>
@@ -141,7 +236,7 @@ function PetsTab() {
 }
 
 // ─── Main profile page ───────────────────────────────────────
-function MyProfileMain({ tab, setTab, onNav }) {
+function MyProfileMain({ tab, setTab, onNav, pets, onAddPet, onEditPet }) {
   const TABS = [
     { id: 'about',    label: '关于我'     },
     { id: 'feedback', label: '守护者反馈'  },
@@ -189,7 +284,7 @@ function MyProfileMain({ tab, setTab, onNav }) {
         {TABS.map(t => {
           const on = t.id === tab;
           return (
-            <button key={t.id} onClick={() => t.id === 'pets' ? onNav('pets') : setTab(t.id)} style={{
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
               flex: 1, height: 44, border: 0, background: 'transparent',
               fontSize: 13.5, fontWeight: on ? 700 : 500,
               color: on ? LL.text : LL.text3,
@@ -204,20 +299,22 @@ function MyProfileMain({ tab, setTab, onNav }) {
       <div style={{ background: LL.surface }}>
         {tab === 'about'    && <AboutTab />}
         {tab === 'feedback' && <FeedbackTab />}
-        {tab === 'pets'     && <PetsTab />}
+        {tab === 'pets'     && <PetsTab pets={pets} onAddPet={onAddPet} onEditPet={onEditPet} />}
       </div>
 
-      {/* Gray divider */}
-      <div style={{ height: 8, background: '#F0F0F5' }} />
-
-      {/* Menu items */}
-      <div style={{ background: LL.surface }}>
-        <MenuRow icon="shield-check"  label="成为守护者"   iconBg={LL.ink}   onClick={() => onNav('guardian')}  />
-        <MenuRow icon="ticket"        label="我的优惠券"   badge="2张"        onClick={() => onNav('coupons')}   />
-        <MenuRow icon="share-network" label="我的邀请码"                      onClick={() => onNav('invite')}    />
-        <MenuRow icon="gear"          label="隐私与设置"                      onClick={() => onNav('settings')}  />
-        <MenuRow icon="info"          label="关于 Loulou"  isLast             onClick={() => onNav('about-ll')}  />
-      </div>
+      {/* Account menu — only under 关于我 tab */}
+      {tab === 'about' && (
+        <>
+          <div style={{ height: 8, background: '#F0F0F5' }} />
+          <div style={{ background: LL.surface }}>
+            <MenuRow icon="shield-check"  label="成为守护者"   iconBg={LL.ink}   onClick={() => onNav('guardian')}  />
+            <MenuRow icon="ticket"        label="我的优惠券"   badge="2张"        onClick={() => onNav('coupons')}   />
+            <MenuRow icon="share-network" label="我的邀请码"                      onClick={() => onNav('invite')}    />
+            <MenuRow icon="gear"          label="隐私与设置"                      onClick={() => onNav('settings')}  />
+            <MenuRow icon="info"          label="关于 Loulou"  isLast             onClick={() => onNav('about-ll')}  />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -258,6 +355,18 @@ function BecomeGuardianPage({ onBack }) {
             <span style={{ fontSize: 13.5, color: LL.text2 }}>{item.text}</span>
           </div>
         ))}
+      </div>
+
+      {/* Pricing & commission note */}
+      <div style={{ margin: '12px 16px 0', padding: '12px 14px', borderRadius: 12,
+        background: '#FFFBEB', border: '1px solid #F5E2A8' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
+          <i className="ph-fill ph-info" style={{ fontSize: 15, color: '#B45309' }} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#92400E' }}>价格与平台佣金</span>
+        </div>
+        <div style={{ fontSize: 12, color: '#92400E', lineHeight: 1.6 }}>
+          您可自主设定服务价格，宠主看到并支付的即为该价格。平台将按每笔订单的 15% 收取佣金，从您的收入中扣除，结算金额为订单价格的 85%。详见《用户服务协议》。
+        </div>
       </div>
 
       {/* Requirements */}
@@ -501,7 +610,7 @@ function AboutLoulouPage({ onBack }) {
   const logoUrl = (window.__resources && window.__resources.loulouLogo) || './assets/loulou-logo.png';
 
   const docs = [
-    { id: 'terms',      label: '用户服务协议', body: '欢迎使用 Loulou（露露）宠物服务平台。本协议约定您与平台之间的权利义务关系。\n\n一、服务内容\nLoulou 提供宠物寄养、遛狗、日托等预约撮合服务，平台为信息中介方。\n\n二、用户义务\n您需如实填写宠物信息，保证宠物已接种疫苗，配合守护者完成接送手续。\n\n三、平台职责\n平台负责守护者认证审核，提供支付担保及纠纷协调，但不对守护者的个人行为承担连带责任。\n\n四、争议解决\n本协议适用中华人民共和国法律，争议由平台注册地人民法院管辖。' },
+    { id: 'terms',      label: '用户服务协议', body: '欢迎使用 Loulou（露露）宠物服务平台。本协议约定您与平台之间的权利义务关系。\n\n一、服务内容\nLoulou 提供宠物寄养、遛狗、日托等预约撮合服务，平台为信息中介方。\n\n二、用户义务\n您需如实填写宠物信息，保证宠物已接种疫苗，配合守护者完成接送手续。\n\n三、平台职责\n平台负责守护者认证审核，提供支付担保及纠纷协调，但不对守护者的个人行为承担连带责任。\n\n四、平台佣金\n守护者自主设定服务价格，宠主支付的即为该价格，平台不向宠主额外收取服务费。平台按每笔订单价格的 15% 向守护者收取佣金，于结算时从守护者收入中扣除，守护者实际所得为订单价格的 85%。\n\n五、争议解决\n本协议适用中华人民共和国法律，争议由平台注册地人民法院管辖。' },
     { id: 'privacy',    label: '隐私政策',     body: 'Loulou 重视用户隐私保护。本政策说明我们如何收集、使用和保护您的个人信息。\n\n一、信息收集\n我们收集您注册时填写的姓名、手机号、地址及使用过程中的行为数据。\n\n二、信息使用\n信息用于提供服务、改善产品体验、发送订单通知。\n\n三、信息共享\n我们不向无关第三方出售您的信息，仅在必要时与守护者共享联系方式。\n\n四、数据安全\n平台采用行业标准加密技术保障数据安全，如有泄漏将第一时间通知您。' },
     { id: 'disclaimer', label: '免责声明',     body: '一、服务限制\nLoulou 为撮合平台，对守护者与宠主因服务产生的纠纷不承担直接责任。\n\n二、意外责任\n服务过程中发生宠物意外，平台将协助保险理赔，最终责任认定依据相关法律。\n\n三、不可抗力\n因自然灾害、政府行为等不可抗力导致服务中断，平台不承担赔偿责任。' },
     { id: 'feedback',   label: '意见反馈',     body: null },
@@ -550,15 +659,46 @@ function AboutLoulouPage({ onBack }) {
 function ProfileScreen() {
   const [tab,  setTab]  = React.useState('about');
   const [page, setPage] = React.useState(null);
+  const [pets, setPets] = React.useState(() =>
+    Array.isArray(window.PETS_INIT) ? window.PETS_INIT.map(p => ({ ...p })) : []);
+  const [petForm, setPetForm] = React.useState(null); // null | { pet: petObj | null }
+
+  // Add / edit pet — opens the shared wizard inline (keeps tab shell on back)
+  if (petForm && typeof window.AddEditPetForm === 'function') {
+    const Form = window.AddEditPetForm;
+    return (
+      <div style={{ background: LL.bg, height: '100%' }}>
+        <Form
+          initialPet={petForm.pet}
+          onSave={(p) => {
+            setPets(ps => {
+              if (p.id && ps.some(x => x.id === p.id)) return ps.map(x => x.id === p.id ? p : x);
+              return [...ps, { ...p, id: p.id || `p${Date.now()}` }];
+            });
+            setPetForm(null);
+            setTab('pets');
+          }}
+          onDiscard={() => setPetForm(null)}
+          saveLabel="确认保存"
+        />
+      </div>
+    );
+  }
 
   if (page === 'guardian') return <BecomeGuardianPage onBack={() => setPage(null)} />;
-  if (page === 'pets')     return <PetsScreen          onBack={() => setPage(null)} />;
   if (page === 'coupons')  return <CouponsPage         onBack={() => setPage(null)} />;
   if (page === 'invite')   return <InvitePage          onBack={() => setPage(null)} />;
   if (page === 'settings') return <SettingsPage        onBack={() => setPage(null)} />;
   if (page === 'about-ll') return <AboutLoulouPage     onBack={() => setPage(null)} />;
 
-  return <MyProfileMain tab={tab} setTab={setTab} onNav={setPage} />;
+  return (
+    <MyProfileMain
+      tab={tab} setTab={setTab} onNav={setPage}
+      pets={pets}
+      onAddPet={() => setPetForm({ pet: null })}
+      onEditPet={(p) => setPetForm({ pet: p })}
+    />
+  );
 }
 
 window.ProfileScreen = ProfileScreen;

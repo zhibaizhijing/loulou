@@ -1,0 +1,233 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "app.jsx",
+              "components/Button/**",
+              "components/StatusPill/**",
+              "components/Tag/**",
+              "ios-frame.jsx",
+              "ui_kits/wechat-mini-program/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|variant|size|block|disabled|loading|type|onClick|key|ref|className|style|children)$/]",
+        "message": "<Button> doesn't accept that prop. Declared props: children, variant, size, block, disabled, loading, type, onClick."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:primary|secondary|ghost)$/]",
+        "message": "<Button> variant must be one of 'primary' | 'secondary' | 'ghost'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='size'] > Literal[value!=/^(?:sm|md|lg)$/]",
+        "message": "<Button> size must be one of 'sm' | 'md' | 'lg'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='type'] > Literal[value!=/^(?:button|submit|reset)$/]",
+        "message": "<Button> type must be one of 'button' | 'submit' | 'reset'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='StatusPill'] > JSXAttribute > JSXIdentifier[name!=/^(?:status|children|key|ref|className|style|children)$/]",
+        "message": "<StatusPill> doesn't accept that prop. Declared props: status, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='StatusPill'] > JSXAttribute[name.name='status'] > Literal[value!=/^(?:pending|accepted|progress|completed|rejected)$/]",
+        "message": "<StatusPill> status must be one of 'pending' | 'accepted' | 'progress' | 'completed' | 'rejected'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Tag'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|tone|key|ref|className|style|children)$/]",
+        "message": "<Tag> doesn't accept that prop. Declared props: children, tone."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Tag'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:butter|lavender|mint|peach|neutral)$/]",
+        "message": "<Tag> tone must be one of 'butter' | 'lavender' | 'mint' | 'peach' | 'neutral'."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "Button": {
+        "replaces": []
+      },
+      "StatusPill": {
+        "replaces": []
+      },
+      "Tag": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--font-display",
+      "--font-mono",
+      "--font-sans",
+      "--ll-bg",
+      "--ll-body-line",
+      "--ll-body-size",
+      "--ll-body-weight",
+      "--ll-border",
+      "--ll-butter",
+      "--ll-caption-line",
+      "--ll-caption-size",
+      "--ll-caption-weight",
+      "--ll-danger",
+      "--ll-h1-line",
+      "--ll-h1-size",
+      "--ll-h1-weight",
+      "--ll-h2-line",
+      "--ll-h2-size",
+      "--ll-h2-weight",
+      "--ll-h3-line",
+      "--ll-h3-size",
+      "--ll-h3-weight",
+      "--ll-heart",
+      "--ll-hit-min",
+      "--ll-info",
+      "--ll-ink",
+      "--ll-ink-disabled",
+      "--ll-ink-press",
+      "--ll-lavender",
+      "--ll-mint",
+      "--ll-navbar-h",
+      "--ll-peach",
+      "--ll-radius-lg",
+      "--ll-radius-md",
+      "--ll-radius-none",
+      "--ll-radius-pill",
+      "--ll-radius-sm",
+      "--ll-radius-xs",
+      "--ll-safe-x",
+      "--ll-shadow-card",
+      "--ll-shadow-lift",
+      "--ll-shadow-pop",
+      "--ll-space-1",
+      "--ll-space-10",
+      "--ll-space-12",
+      "--ll-space-2",
+      "--ll-space-3",
+      "--ll-space-4",
+      "--ll-space-5",
+      "--ll-space-6",
+      "--ll-space-8",
+      "--ll-success",
+      "--ll-surface",
+      "--ll-tab-line",
+      "--ll-tab-size",
+      "--ll-tab-weight",
+      "--ll-tabbar-h",
+      "--ll-tag-line",
+      "--ll-tag-size",
+      "--ll-tag-weight",
+      "--ll-text",
+      "--ll-text-2",
+      "--ll-text-3",
+      "--ll-text-on-ink",
+      "--ll-warning"
+    ],
+    "tokenKinds": {
+      "--font-sans": "font",
+      "--font-display": "font",
+      "--font-mono": "font",
+      "--ll-ink": "color",
+      "--ll-ink-press": "color",
+      "--ll-ink-disabled": "color",
+      "--ll-lavender": "color",
+      "--ll-butter": "color",
+      "--ll-mint": "color",
+      "--ll-peach": "color",
+      "--ll-bg": "color",
+      "--ll-surface": "color",
+      "--ll-border": "color",
+      "--ll-text": "font",
+      "--ll-text-2": "font",
+      "--ll-text-3": "font",
+      "--ll-text-on-ink": "font",
+      "--ll-success": "color",
+      "--ll-warning": "color",
+      "--ll-danger": "color",
+      "--ll-info": "color",
+      "--ll-heart": "color",
+      "--ll-radius-lg": "radius",
+      "--ll-radius-md": "radius",
+      "--ll-radius-sm": "radius",
+      "--ll-radius-xs": "radius",
+      "--ll-radius-pill": "radius",
+      "--ll-radius-none": "radius",
+      "--ll-shadow-card": "shadow",
+      "--ll-shadow-pop": "shadow",
+      "--ll-shadow-lift": "shadow",
+      "--ll-space-1": "spacing",
+      "--ll-space-2": "spacing",
+      "--ll-space-3": "spacing",
+      "--ll-space-4": "spacing",
+      "--ll-space-5": "spacing",
+      "--ll-space-6": "spacing",
+      "--ll-space-8": "spacing",
+      "--ll-space-10": "spacing",
+      "--ll-space-12": "spacing",
+      "--ll-navbar-h": "spacing",
+      "--ll-tabbar-h": "spacing",
+      "--ll-hit-min": "spacing",
+      "--ll-safe-x": "spacing",
+      "--ll-h1-size": "spacing",
+      "--ll-h1-line": "spacing",
+      "--ll-h1-weight": "font",
+      "--ll-h2-size": "spacing",
+      "--ll-h2-line": "spacing",
+      "--ll-h2-weight": "font",
+      "--ll-h3-size": "spacing",
+      "--ll-h3-line": "spacing",
+      "--ll-h3-weight": "font",
+      "--ll-body-size": "spacing",
+      "--ll-body-line": "spacing",
+      "--ll-body-weight": "font",
+      "--ll-caption-size": "spacing",
+      "--ll-caption-line": "spacing",
+      "--ll-caption-weight": "font",
+      "--ll-tab-size": "spacing",
+      "--ll-tab-line": "spacing",
+      "--ll-tab-weight": "font",
+      "--ll-tag-size": "spacing",
+      "--ll-tag-line": "spacing",
+      "--ll-tag-weight": "font"
+    },
+    "fontFamilies": []
+  }
+}

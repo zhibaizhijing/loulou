@@ -26,11 +26,22 @@ function App({ setTopBarLeading }) {
 
   // ── Summary screen ────────────────────────────────────────
   const [summaryApp, setSummaryApp] = React.useState(null);
+  // Guardian profile opened from summary/orders (works on any tab)
+  const [profileGuardian, setProfileGuardian] = React.useState(null);
+  // Order modify screen (修改订单)
+  const [modifyApp, setModifyApp] = React.useState(null);
+  // Review screen (评价守护者) — opened from a completed order card's 写评论
+  const [reviewApp, setReviewApp] = React.useState(null);
+  // Process guide overlay (流程指引)
+  const [showGuide, setShowGuide] = React.useState(false);
 
   // ── Pet reminder + pets overlay ───────────────────────────
   const [showPetReminder,  setShowPetReminder]  = React.useState(false);
   const [pendingBooking,   setPendingBooking]   = React.useState(null);
   const [showPetsOverlay,  setShowPetsOverlay]  = React.useState(false);
+  const [petsForBooking,   setPetsForBooking]   = React.useState(false);
+  // New user — no pet profile filled in yet
+  const [userPets,         setUserPets]         = React.useState([]);
 
   // ── Scroll container ref (passed to GuardianProfileScreen for tab scroll memory)
   const scrollRef = React.useRef(null);
@@ -41,7 +52,19 @@ function App({ setTopBarLeading }) {
     service: '寄养', pet: '狗·豆豆',
     dateStart: '5月28日', dateEnd: '5月30日', area: '朝阳区·望京',
   });
-  const [sentApps,  setSentApps]  = React.useState([]);
+  const [sentApps,  setSentApps]  = React.useState([
+    {
+      id: 'app-done-demo',
+      guardian: { id: 'r2', name: '陈逸', photo: './assets/guardian2.png', bg: '#EDE5F7', services: [] },
+      service: '寄养', pet: '狗·豆豆',
+      dateStart: '4月10日', dateEnd: '4月12日', area: '朝阳区·望京',
+      status: 'completed',
+      messages: [
+        { id: 1, from: 'system', text: '服务已完成，感谢您的信任', time: '4月12日' },
+        { id: 2, from: 'guardian', text: '豆豆很乖，期待下次再见～', time: '4月12日' },
+      ],
+    },
+  ]);
   const [ordersBadge, setOrdersBadge] = React.useState(false);
   const [chatBadge,   setChatBadge]   = React.useState(false);
 
@@ -59,8 +82,9 @@ function App({ setTopBarLeading }) {
       if (simulatedRef.current.has(app.id)) return;
       simulatedRef.current.add(app.id);
 
-      // 陈逸 accepts after 3 s; any second guardian rejects after 5 s
-      const accepted = app.guardian.id === 'r2';
+      // Primary guardian (the one you booked) accepts after 3 s; extra
+      // recommended guardians reject after 5 s. 陈逸 (r2) also auto-accepts.
+      const accepted = app.isPrimary === true || app.guardian.id === 'r2';
       const delay    = accepted ? 3000 : 5000;
 
       setTimeout(() => {
@@ -146,6 +170,31 @@ function App({ setTopBarLeading }) {
   const openChat = (appId) => {
     setActiveChatId(appId);
     setChatBadge(false);
+    // Adopt a display-only mock order into live state so its chat is interactive
+    setSentApps(prev => {
+      if (prev.find(a => a.id === appId)) return prev;
+      const mock = (window.BRS_MOCK_APPS || []).find(a => a.id === appId);
+      return mock ? [...prev, mock] : prev;
+    });
+  };
+
+  // ── Record an order modification → auto chat message (either party) ──
+  const recordModify = (appId, who = 'user') => {
+    const shortId = String(appId).replace(/^app-/, '').slice(0, 8) || '000000';
+    setSentApps(prev => prev.map(a => {
+      if (a.id !== appId) return a;
+      const label = who === 'user' ? '您' : (a.guardian?.name || '守护者');
+      return {
+        ...a,
+        messages: [...a.messages, {
+          id: Date.now() + Math.random(), from: 'system', action: 'summary',
+          text: `${label}已修改订单（编号 ${shortId}）`,
+          time: fmtNow(),
+        }],
+      };
+    }));
+    setChatBadge(true);
+    setOrdersBadge(true);
   };
 
   const handleTabChange = (t) => {
@@ -154,6 +203,73 @@ function App({ setTopBarLeading }) {
     if (t === 'orders') setOrdersBadge(false);
     if (t === 'message') setChatBadge(false);
     if (t !== 'home') setHomeView('marketplace');
+  };
+
+  // ── Resolve a search-result guardian into a full profile record ──
+  const resolveGuardian = (g) => {
+    if (!g) return null;
+    if (g.id === 'g6' || (g.name && g.name.indexOf('阿哲') === 0)) return window.ZHE_DATA;
+    if (g.id === 'g4' || (g.name && g.name.indexOf('陈逸') === 0)) return window.CHEN_YI_DATA;
+    // Generic fallback: borrow 陈逸's profile shell, override identity
+    const base = window.CHEN_YI_DATA || {};
+    return {
+      ...base,
+      id: g.id,
+      name: (g.name || '').split(' ')[0] || base.name,
+      initial: g.initial || { char: (g.name || '守')[0], bg: '#E8E3F2' },
+      photo: null, photoKey: null, photos: [],
+    };
+  };
+  const handleSelectGuardian = (g) => setSelectedGuardian(resolveGuardian(g));
+
+  // ── Confirm an order modification → update order + notify guardian ──
+  const handleModifyConfirm = (app, changes) => {
+    const shortId = String(app.id).replace(/^app-/, '').slice(0, 8) || '000000';
+    const dl = (changes.dateEnd && changes.dateEnd !== changes.dateStart)
+      ? `${changes.dateStart} → ${changes.dateEnd}` : changes.dateStart;
+    setSentApps(prev => prev.map(a => {
+      if (a.id !== app.id) return a;
+      const msgs = [
+        ...(a.messages || []),
+        { id: Date.now() + Math.random(), from: 'system', action: 'summary',
+          text: `您修改了订单（编号 ${shortId}）：${changes.service} · ${dl}，等待守护者重新确认`, time: fmtNow() },
+        ...(changes.note ? [{ id: Date.now() + Math.random() + 1, from: 'user', text: changes.note, time: fmtNow() }] : []),
+      ];
+      return { ...a, service: changes.service, dateStart: changes.dateStart, dateEnd: changes.dateEnd, messages: msgs };
+    }));
+    setSummaryApp(s => (s && s.id === app.id)
+      ? { ...s, service: changes.service, dateStart: changes.dateStart, dateEnd: changes.dateEnd } : s);
+    setChatBadge(true);
+    setOrdersBadge(true);
+    setModifyApp(null);
+    showToast('修改已提交，已发送提醒给守护者');
+  };
+
+  // ── Re-book a completed order → open booking flow with that guardian ──
+  const handleRebook = (app) => {
+    const g = resolveGuardian(app.guardian) || app.guardian;
+    setSummaryApp(null);
+    setReviewApp(null);
+    setActiveChatId(null);
+    setBookingGuardian(g);
+    setBookingParams({ service: app.service });
+  };
+
+  // ── Submit a guardian review (from 评价守护者 page) ──
+  const handleSubmitReview = (app, data) => {
+    setSentApps(prev => prev.map(a =>
+      a.id !== app.id ? a : {
+        ...a,
+        reviewed: true,
+        messages: [...(a.messages || []), {
+          id: Date.now() + Math.random(), from: 'system',
+          text: `您给本次服务打了 ${data.stars} 星好评，感谢您的反馈`,
+          time: fmtNow(),
+        }],
+      }
+    ));
+    setReviewApp(null);
+    showToast('评价已提交，感谢您的反馈 🌟');
   };
 
   // ── Tab definitions ───────────────────────────────────────
@@ -172,6 +288,7 @@ function App({ setTopBarLeading }) {
       screen = (
         <GuardianProfileScreen
           guardian={selectedGuardian}
+          initialService={searchQuery?.svcType}
           onBack={() => setSelectedGuardian(null)}
           scrollContainerRef={scrollRef}
         />
@@ -182,6 +299,7 @@ function App({ setTopBarLeading }) {
           query={searchQuery}
           setTopBarLeading={setTopBarLeading}
           onBack={() => setHomeView('marketplace')}
+          onSelectGuardian={handleSelectGuardian}
           onPickField={(f) => showToast(`修改 ${f}`)}
         />
       );
@@ -191,6 +309,7 @@ function App({ setTopBarLeading }) {
           onSearch={(q) => { setSearchQuery(q); setHomeView('results'); }}
           onPickService={() => setSelectedGuardian(window.CHEN_YI_DATA || null)}
           onPickField={(f) => showToast(`选择 ${f}`)}
+          onOpenGuide={() => setShowGuide(true)}
         />
       );
     }
@@ -205,6 +324,8 @@ function App({ setTopBarLeading }) {
         onSend={sendApplications}
         onOpenChat={openChat}
         onOpenSummary={(app) => setSummaryApp(app)}
+        onRebook={handleRebook}
+        onWriteReview={(app) => setReviewApp(app)}
         onBrowseMore={() => { setTab('home'); setHomeView('marketplace'); }}
       />
     );
@@ -230,14 +351,43 @@ function App({ setTopBarLeading }) {
   const scrollPB = 78;
 
   // ── Active chat (full screen, hides tab bar) ──────────────
-  const activeApp = sentApps.find(a => a.id === activeChatId);
+  const activeApp = sentApps.find(a => a.id === activeChatId) || (window.BRS_MOCK_APPS || []).find(a => a.id === activeChatId);
 
   return (
     <div style={{
       position: 'relative', height: '100%', overflow: 'hidden',
       background: LL.bg, fontFamily: LL.font, color: LL.text,
     }}>
-      {summaryApp ? (
+      {modifyApp ? (
+        <OrderModifyScreen
+          app={modifyApp}
+          pets={userPets}
+          onClose={() => setModifyApp(null)}
+          onConfirm={handleModifyConfirm}
+        />
+      ) : reviewApp ? (
+        <ReviewGuardianScreen
+          app={reviewApp}
+          onClose={() => setReviewApp(null)}
+          onSubmit={handleSubmitReview}
+        />
+      ) : showGuide ? (
+        <ProcessGuideScreen
+          onClose={() => setShowGuide(false)}
+          onStart={() => setShowGuide(false)}
+        />
+      ) : profileGuardian ? (
+        /* ── Guardian profile (opened from summary / orders, any tab) ── */
+        <div style={{
+          position: 'absolute', inset: 0, paddingTop: 47, zIndex: 70,
+          display: 'flex', flexDirection: 'column', background: '#fff',
+        }}>
+          <GuardianProfileScreen
+            guardian={profileGuardian}
+            onBack={() => setProfileGuardian(null)}
+          />
+        </div>
+      ) : summaryApp ? (
         /* ── Booking Summary (top priority — can open from chat or orders) ── */
         <div style={{
           position: 'absolute', inset: 0, paddingTop: 47,
@@ -246,7 +396,20 @@ function App({ setTopBarLeading }) {
           <BookingSummaryScreen
             app={summaryApp}
             onBack={() => setSummaryApp(null)}
-            onModify={() => setSummaryApp(null)}
+            onViewGuardian={(g) => {
+              const gg = g || summaryApp.guardian;
+              // Order-attached guardians are thin (name/photo only) — back them
+              // with the full profile record so GuardianProfileScreen renders safely.
+              const full = (gg && gg.bio && gg.home)
+                ? gg
+                : { ...CHEN_YI_DATA,
+                    name:  gg?.name  || CHEN_YI_DATA.name,
+                    photo: gg?.photo || CHEN_YI_DATA.photo,
+                    id:    gg?.id    || CHEN_YI_DATA.id };
+              setProfileGuardian(full);
+            }}
+            onModify={(a) => setModifyApp(a)}
+            onRebook={handleRebook}
           />
         </div>
       ) : activeChatId && activeApp ? (
@@ -260,6 +423,8 @@ function App({ setTopBarLeading }) {
             onBack={() => setActiveChatId(null)}
             onSendMessage={(txt) => sendChatMessage(activeChatId, txt)}
             onOpenSummary={(app) => setSummaryApp(app)}
+            onModify={(a) => setModifyApp(a)}
+            onReview={() => showToast('感谢您的评价 🌟')}
           />
         </div>
       ) : bookingGuardian ? (
@@ -273,6 +438,7 @@ function App({ setTopBarLeading }) {
             initialService={bookingParams?.service}
             initialDateRange={bookingParams?.dateRange}
             initialSchedule={bookingParams?.schedule}
+            myPets={userPets}
             onBack={() => setBookingGuardian(null)}
             onGoToOrders={() => {
               setBookingGuardian(null);
@@ -287,14 +453,18 @@ function App({ setTopBarLeading }) {
               const batchId   = `batch-${Date.now()}`;
               const batchTime = new Date();
 
-              const makeApp = (gd, photo) => ({
+              const makeApp = (gd, isPrimary) => ({
                 id:        `app-${Date.now()}-${gd.id}-${Math.random().toString(36).slice(2,6)}`,
+                orderNo:   'LL' + String(Date.now()).slice(-10) + String(Math.floor(Math.random()*90)+10),
                 guardian:  gd,
+                isPrimary,
                 service:   data.service,
-                pet:       '金毛·豆豆',
+                pet:       data.pet || '我的宠物',
+                phone:     data.phone || '',
+                address:   data.address || null,
                 dateStart: dr?.start ? fmtDate(dr.start) : '待定',
                 dateEnd:   dr?.end   ? fmtDate(dr.end)   : null,
-                area:      '朝阳区·望京',
+                area:      data.address ? `${data.address.area || data.address.poi || ''}${data.address.detail ? ' ' + data.address.detail : ''}` : '朝阳区·望京',
                 status:    'pending',
                 batchId,
                 batchTime,
@@ -302,13 +472,18 @@ function App({ setTopBarLeading }) {
                 price:    data.unitPrice || 0,
                 dropoff:  data.dropoff   || null,
                 pickup:   data.pickup    || null,
+                petBreakdown: data.petBreakdown || null,
+                extrasList:   data.extrasList   || [],
+                overtimeFee:  data.overtimeFee  || 0,
+                overtimeRate: data.overtimeRate || 0,
+                coupon:       data.coupon       || null,
                 messages: [
                   { id: 1, from: 'system', text: `预约请求已发送给 ${gd.name}，等待守护者回复`, time: appFmtNow() },
                   ...(data.message ? [{ id: 2, from: 'user', text: data.message, time: appFmtNow() }] : []),
                 ],
               });
 
-              const mainApp = makeApp(g);
+              const mainApp = makeApp(g, true);
 
               // Build apps for additionally recommended guardians
               const extraApps = (data.additionalGuardians || []).map(rec => {
@@ -318,7 +493,7 @@ function App({ setTopBarLeading }) {
                   rating: rec.rating,
                   services: [{ id: data.service, price: rec.price, unit: rec.unit }],
                 };
-                return makeApp(recGuardian);
+                return makeApp(recGuardian, false);
               });
 
               setSentApps(prev => [...prev, mainApp, ...extraApps]);
@@ -337,15 +512,30 @@ function App({ setTopBarLeading }) {
       ) : showPetsOverlay ? (
         /* ── Pets Screen overlay (opened from pet reminder) ── */
         <div style={{ position:'absolute', inset:0, paddingTop:47, overflowY:'auto', overflowX:'hidden', background:LL.bg, zIndex:40 }}>
-          <PetsScreen onBack={() => setShowPetsOverlay(false)} />
+          <PetsScreen
+            pets={userPets}
+            onPetsChange={setUserPets}
+            initialView={petsForBooking ? 'add' : 'list'}
+            completeLabel="保存并继续预约"
+            onComplete={petsForBooking ? (() => {
+              setShowPetsOverlay(false);
+              setPetsForBooking(false);
+              if (pendingBooking) {
+                setBookingGuardian(pendingBooking.guardian);
+                setBookingParams(pendingBooking.params);
+              }
+            }) : undefined}
+            onBack={() => { setShowPetsOverlay(false); setPetsForBooking(false); }}
+          />
         </div>
-      ) : (tab === 'home' && homeView === 'results') ? (
+      ) : (tab === 'home' && homeView === 'results' && !selectedGuardian) ? (
         /* ── Search Results (own overlay, no tab bar) ── */
         <div style={{ position:'absolute', inset:0, paddingTop:47, overflowY:'auto', overflowX:'hidden', background:LL.bg }}>
           <SearchResultsScreen
             query={searchQuery}
             setTopBarLeading={setTopBarLeading}
             onBack={() => setHomeView('marketplace')}
+            onSelectGuardian={handleSelectGuardian}
             onPickField={(f) => showToast(`修改 ${f}`)}
           />
         </div>
@@ -354,38 +544,31 @@ function App({ setTopBarLeading }) {
         <div style={{ position:'absolute', inset:0, paddingTop:47, display:'flex', flexDirection:'column', background:'#fff' }}>
           <GuardianProfileScreen
             guardian={selectedGuardian}
+            initialService={searchQuery?.svcType}
             onBack={() => setSelectedGuardian(null)}
           />
-          {/* Booking bar */}
-          <div style={{ flex:'0 0 auto', height:64, background:'#fff',
-            boxShadow:'0 -1px 0 #EEEEF2, 0 -4px 16px rgba(0,0,0,0.07)',
-            display:'flex', alignItems:'center', padding:'0 16px', gap:12 }}>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:11, color:LL.text3, marginBottom:1 }}>最低价格</div>
-              <div style={{ display:'flex', alignItems:'baseline', gap:1 }}>
-                <span style={{ fontSize:12, color:LL.text2 }}>从 </span>
-                <span style={{ fontSize:20, fontWeight:800, color:LL.text }}>
-                  ¥{Math.min(...selectedGuardian.services.map(s => s.price))}
-                </span>
-                <span style={{ fontSize:12, color:LL.text3 }}>
-                  /{selectedGuardian.services.reduce((a,s) => s.price <= Math.min(...selectedGuardian.services.map(x => x.price)) ? s.unit : a, '次')}起
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setPendingBooking({ guardian: selectedGuardian, params: { service:searchQuery?.svcType, dateRange:searchQuery?.dateRange, schedule:searchQuery?.schedule } });
+          {/* Booking bar — service + price, 修改 to switch service */}
+          <GuardianBookingBar
+            guardian={selectedGuardian}
+            initialService={searchQuery?.svcType}
+            onBook={(svcId) => {
+              const params = { service: svcId || searchQuery?.svcType, dateRange: searchQuery?.dateRange, schedule: searchQuery?.schedule };
+              setPendingBooking({ guardian: selectedGuardian, params });
+              if (selectedGuardian.isNewUserFlow && userPets.length === 0) {
+                // New user — prompt to fill in a pet profile first
                 setShowPetReminder(true);
-              }}
-              style={{ height:44, padding:'0 22px', borderRadius:999, border:0, background:LL.ink, color:'#fff', fontSize:15, fontWeight:700, fontFamily:LL.font, cursor:'pointer', flex:'0 0 auto' }}>
-              立即预约
-            </button>
-          </div>
-        {/* ── Pet Reminder Sheet ── */}
+              } else {
+                setBookingGuardian(selectedGuardian);
+                setBookingParams(params);
+              }
+            }}
+          />
+        {/* ── Pet Reminder Sheet (new user, no pet profile) ── */}
         {showPetReminder && (
           <PetReminderSheet
             onViewPets={() => {
               setShowPetReminder(false);
+              setPetsForBooking(true);
               setShowPetsOverlay(true);
             }}
             onContinue={() => {
@@ -422,6 +605,129 @@ function App({ setTopBarLeading }) {
         }}>{toast}</div>
       )}
     </div>
+  );
+}
+
+// ─── Guardian booking bar (service + price, 修改 → service switch drawer) ──
+function GuardianBookingBar({ guardian, onBook, initialService }) {
+  const services = guardian.services || [];
+  const init = (initialService && services.some(s => s.id === initialService))
+    ? initialService : services[0]?.id;
+  const [svcId, setSvcId] = React.useState(init);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const svc = services.find(s => s.id === svcId) || services[0];
+  if (!svc) return null;
+
+  return (
+    <>
+      <div style={{
+        flex:'0 0 auto', background:'#fff',
+        boxShadow:'0 -1px 0 #EEEEF2, 0 -4px 16px rgba(0,0,0,0.07)',
+        display:'flex', alignItems:'flex-end', padding:'14px 16px 22px', gap:12,
+      }}>
+        <div style={{ flex:1, minWidth:0, marginBottom:13 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
+            <span style={{ fontSize:15, fontWeight:800, color:LL.text }}>{svc.id}</span>
+            <button onClick={() => setDrawerOpen(true)} style={{
+              background:'transparent', border:0, padding:0, cursor:'pointer', fontFamily:LL.font,
+              fontSize:12.5, fontWeight:600, color:LL.text2,
+              textDecoration:'underline', textUnderlineOffset:'2px',
+            }}>修改</button>
+          </div>
+          <div style={{ display:'flex', alignItems:'baseline', gap:1 }}>
+            <span style={{ fontSize:12, color:LL.text2 }}>从 </span>
+            <span style={{ fontSize:20, fontWeight:800, color:LL.text }}>¥{svc.price}</span>
+            <span style={{ fontSize:12, color:LL.text3 }}>/{svc.unit}起</span>
+          </div>
+        </div>
+        <button onClick={() => onBook(svcId)} style={{
+          height:46, padding:'0 24px', borderRadius:999, border:0, background:LL.ink,
+          color:'#fff', fontSize:15, fontWeight:700, fontFamily:LL.font, cursor:'pointer', flex:'0 0 auto',
+        }}>立即预约</button>
+      </div>
+      {drawerOpen && (
+        <ServiceSwitchDrawer
+          services={services}
+          value={svcId}
+          onPick={(id) => { setSvcId(id); setDrawerOpen(false); }}
+          onClose={() => setDrawerOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+// ─── Service switch drawer (grouped services + collapsed cancel policy) ──
+function ServiceSwitchDrawer({ services, value, onPick, onClose }) {
+  const [policyOpen, setPolicyOpen] = React.useState(false);
+  const GROUPS = [
+    { title:'在守护者家', ids:['寄养','日托'],            theme:{ solid:'#5B3A8F', bg:'#EDE5F7', fg:'#5B3A8F' } },
+    { title:'在宠物主家', ids:['遛狗','上门喂养','伴宠留宿'], theme:{ solid:'#2C7A4B', bg:'#E6F1EC', fg:'#236B40' } },
+  ];
+  const byId = (id) => services.find(s => s.id === id);
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.4)', zIndex:88 }}/>
+      <div style={{
+        position:'absolute', left:0, right:0, bottom:0, zIndex:89, background:'#fff',
+        borderTopLeftRadius:20, borderTopRightRadius:20, maxHeight:'86%',
+        display:'flex', flexDirection:'column',
+        boxShadow:'0 -8px 24px rgba(0,0,0,0.12)', fontFamily:LL.font,
+      }}>
+        {/* Header */}
+        <div style={{ padding:'12px 16px 8px', flex:'0 0 auto' }}>
+          <div style={{ width:38, height:4, borderRadius:2, background:LL.border, margin:'0 auto 10px' }}/>
+          <div style={{ display:'flex', alignItems:'center' }}>
+            <div style={{ fontSize:16, fontWeight:700, color:LL.text }}>选择服务</div>
+            <button onClick={onClose} style={{
+              marginLeft:'auto', width:30, height:30, borderRadius:'50%', border:0,
+              background:'#F0F0F5', cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}><i className="ph ph-x" style={{ fontSize:13, color:LL.text }}/></button>
+          </div>
+        </div>
+        {/* Body — grouped service chips (no price) */}
+        <div style={{ flex:1, overflowY:'auto', paddingBottom:22 }}>
+          {GROUPS.map(g => (
+            <div key={g.title} style={{ padding:'16px 16px 6px' }}>
+              <div style={{ fontSize:12.5, fontWeight:700, color:g.theme.solid, marginBottom:11, letterSpacing:'0.02em' }}>{g.title}</div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
+                {g.ids.map(id => {
+                  const svc = byId(id); if (!svc) return null;
+                  const on = svc.id === value;
+                  return (
+                    <button key={id} onClick={() => onPick(id)} style={{
+                      height:40, padding:'0 18px', borderRadius:999, border:0, cursor:'pointer', fontFamily:LL.font,
+                      background: on ? g.theme.solid : g.theme.bg, color: on ? '#fff' : g.theme.fg,
+                      fontSize:14, fontWeight:700,
+                      display:'flex', alignItems:'center', gap:6,
+                    }}>
+                      {on && <i className="ph-fill ph-check" style={{ fontSize:13 }}/>}
+                      {svc.id}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          {/* Cancel policy — collapsed, taps open the detail drawer */}
+          <button onClick={() => setPolicyOpen(true)} style={{
+            width:'100%', marginTop:8, padding:'15px 16px', background:'transparent', border:0,
+            borderTop:`8px solid ${LL.bg}`, cursor:'pointer', fontFamily:LL.font,
+            display:'flex', alignItems:'center', gap:8, textAlign:'left',
+          }}>
+            <i className="ph ph-shield-check" style={{ fontSize:17, color:LL.text2, flex:'0 0 auto' }}/>
+            <span style={{ flex:1, fontSize:14, fontWeight:600, color:LL.text }}>取消政策</span>
+            <span style={{ fontSize:12, color:LL.text3 }}>查看详情</span>
+            <i className="ph ph-caret-right" style={{ fontSize:13, color:LL.text3 }}/>
+          </button>
+        </div>
+      </div>
+      {policyOpen && typeof CancelPolicyModal === 'function' && (
+        <CancelPolicyModal onClose={() => setPolicyOpen(false)} />
+      )}
+    </>
   );
 }
 

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Stat Tiles</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 28px 24px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .tile { border-radius: 14px; padding: 16px; height: 96px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+  .lbl { font-size: 11.5px; color: var(--ll-text-2); font-weight: 500; }
+  .val { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; color: var(--ll-text); font-variant-numeric: tabular-nums; }
+  .unit { font-size: 15px; font-weight: 600; color: var(--ll-text-2); margin-left: 2px; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="tile" style="background: var(--ll-butter);">
+      <div class="lbl">Today's Walk</div>
+      <div class="val">45<span class="unit">min</span></div>
+    </div>
+    <div class="tile" style="background: var(--ll-lavender);">
+      <div class="lbl">Miles Covered</div>
+      <div class="val">2.5<span class="unit">mi</span></div>
+    </div>
+    <div class="tile" style="background: var(--ll-mint);">
+      <div class="lbl">Calories</div>
+      <div class="val">128<span class="unit">kcal</span></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -154,11 +154,54 @@ function MultiPills({ value = [], onChange, options }) {
   );
 }
 
-// ─── Add / Edit Form ──────────────────────────────────────────
-function AddEditPetForm({ initialPet, onSave, onBack }) {
+// ─── Wizard step definitions ──────────────────────────────────
+const PET_STEPS = [
+  { key:'basic',     title:'基础信息',   icon:'paw-print',   iconBg:'#E7E0F4' },
+  { key:'health',    title:'健康信息',   icon:'first-aid',   iconBg:'#DCEFE5' },
+  { key:'character', title:'性格与相处', icon:'smiley',      iconBg:'#FBEFC9' },
+  { key:'habits',    title:'生活习惯',   icon:'clock',       iconBg:'#FCE3D4' },
+  { key:'extra',     title:'补充信息',   icon:'note-pencil', iconBg:'#F0F0F5' },
+  { key:'emergency', title:'紧急信息',   icon:'warning',     iconBg:'#FEF3C7', emergency:true },
+];
+
+// ─── Discard-confirmation modal ───────────────────────────────
+function DiscardModal({ onCancel, onConfirm }) {
+  return (
+    <div style={{ position:'absolute', inset:0, zIndex:60, display:'flex',
+      alignItems:'center', justifyContent:'center', padding:'0 36px',
+      background:'rgba(0,0,0,0.42)', fontFamily:LL.font }}>
+      <div style={{ width:'100%', maxWidth:300, background:'#fff', borderRadius:18,
+        padding:'24px 22px 18px', textAlign:'center' }}>
+        <div style={{ fontSize:16.5, fontWeight:700, color:LL.text, marginBottom:8 }}>是否放弃此进程？</div>
+        <div style={{ fontSize:13, color:LL.text2, lineHeight:1.6, marginBottom:22 }}>
+          离开后本次填写的内容将不会被保存。
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={onCancel} style={{ flex:1, height:46, borderRadius:999,
+            border:`1.5px solid ${LL.border}`, background:'#fff', color:LL.text,
+            fontSize:15, fontWeight:600, fontFamily:LL.font, cursor:'pointer' }}>取消</button>
+          <button onClick={onConfirm} style={{ flex:1, height:46, borderRadius:999,
+            border:0, background:'#E63946', color:'#fff',
+            fontSize:15, fontWeight:700, fontFamily:LL.font, cursor:'pointer' }}>放弃</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Add / Edit Form (multi-step wizard) ──────────────────────
+function AddEditPetForm({ initialPet, onSave, onDiscard, onAutoSave, saveLabel }) {
   const [pet, setPet] = React.useState(() => initialPet ? { ...initialPet } : emptyPet());
-  const set = (key, val) => setPet(p => ({ ...p, [key]: val }));
+  const [step, setStep] = React.useState(0);
+  const [showDiscard, setShowDiscard] = React.useState(false);
   const photoRef = React.useRef(null);
+  const bodyRef  = React.useRef(null);
+
+  const set = (key, val) => setPet(p => {
+    const np = { ...p, [key]: val };
+    onAutoSave?.(np);   // auto-save on every change
+    return np;
+  });
 
   const handlePhoto = (e) => {
     const file = e.target.files?.[0];
@@ -168,210 +211,285 @@ function AddEditPetForm({ initialPet, onSave, onBack }) {
     r.readAsDataURL(file);
   };
 
+  const total   = PET_STEPS.length;
+  const isFirst = step === 0;
+  const isLast  = step === total - 1;
+  const cur     = PET_STEPS[step];
+
+  const goStep = (n) => {
+    setStep(n);
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+  };
+  const next = () => isLast ? onSave(pet) : goStep(step + 1);
+  const prev = () => goStep(Math.max(0, step - 1));
+
   const vaccines = VACCINES_OPTIONS[pet.species] || VACCINES_OPTIONS.dog;
   const age = calcPetAge(pet.dob);
 
-  return (
-    <div style={{ background:LL.bg, minHeight:'100%', paddingBottom:32, overflowY:'auto' }}>
-      {/* Nav */}
-      <div style={{ position:'sticky', top:0, zIndex:20, height:52, background:'#fff',
-        borderBottom:`1px solid ${LL.border}`, display:'flex', alignItems:'center', padding:'0 14px', gap:10 }}>
-        <button onClick={onBack} style={{ width:34, height:34, borderRadius:'50%', border:0, background:LL.bg, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flex:'0 0 auto' }}>
-          <i className="ph ph-caret-left" style={{ fontSize:17, color:LL.text }} />
+  // ── Step content renderers ──────────────────────────────────
+  const stepBasic = (
+    <div style={{ background:'#fff', padding:'18px 16px 4px' }}>
+      <FField label="宠物照片">
+        <input ref={photoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={handlePhoto} />
+        <button onClick={() => photoRef.current?.click()} style={{
+          width:'100%', aspectRatio:'16/9', borderRadius:12, padding:0, overflow:'hidden',
+          border:`2px dashed ${LL.border}`, background:LL.bg, cursor:'pointer',
+          display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10 }}>
+          {pet.photo
+            ? <img src={pet.photo} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+            : <>
+                <div style={{ width:52, height:52, borderRadius:'50%', background:'#E8E8F0', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <i className="ph ph-camera" style={{ fontSize:24, color:LL.text3 }} />
+                </div>
+                <div style={{ fontSize:13.5, color:LL.text3, fontFamily:LL.font }}>点击上传宠物照片</div>
+              </>
+          }
         </button>
-        <div style={{ flex:1, textAlign:'center', fontSize:15, fontWeight:700, color:LL.text }}>
-          {initialPet?.id ? '编辑宠物' : '添加宠物'}
+      </FField>
+
+      <FField label="宠物类型" required>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+          {[['dog','🐕 狗'],['cat','🐈 猫']].map(([v,label]) => {
+            const on = pet.species === v;
+            return (
+              <button key={v} onClick={() => { set('species', v); set('vaccines', []); }} style={{
+                padding:'13px 16px', borderRadius:12,
+                border:`1.5px solid ${on ? LL.ink : LL.border}`,
+                background: on ? LL.ink : '#fff', color: on ? '#fff' : LL.text,
+                fontSize:15, fontWeight: on ? 700 : 500,
+                cursor:'pointer', fontFamily:LL.font }}>{label}</button>
+            );
+          })}
         </div>
-        <button onClick={() => onSave(pet)} style={{ height:34, padding:'0 16px', borderRadius:999, border:0, background:LL.ink, color:'#fff', fontSize:13.5, fontWeight:600, fontFamily:LL.font, cursor:'pointer' }}>
-          保存
-        </button>
-      </div>
+      </FField>
 
-      {/* ── 基础信息 ── */}
-      <FSectionHead title="基础信息" icon="paw-print" iconBg={LL.lavender} />
-      <div style={{ background:'#fff', padding:'16px 16px 4px' }}>
-        <FField label="宠物照片">
-          <input ref={photoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={handlePhoto} />
-          <button onClick={() => photoRef.current?.click()} style={{
-            width:'100%', aspectRatio:'16/9', borderRadius:12, padding:0, overflow:'hidden',
-            border:`2px dashed ${LL.border}`, background:LL.bg, cursor:'pointer',
-            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10 }}>
-            {pet.photo
-              ? <img src={pet.photo} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-              : <>
-                  <div style={{ width:52, height:52, borderRadius:'50%', background:'#E8E8F0', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                    <i className="ph ph-camera" style={{ fontSize:24, color:LL.text3 }} />
-                  </div>
-                  <div style={{ fontSize:13.5, color:LL.text3, fontFamily:LL.font }}>点击上传宠物照片</div>
-                </>
-            }
-          </button>
-        </FField>
+      <FField label="名字" required>
+        <FInput value={pet.name} onChange={v => set('name', v)} placeholder="给宠物起个名字" />
+      </FField>
 
-        <FField label="宠物类型" required>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-            {[['dog','🐕 狗'],['cat','🐈 猫']].map(([v,label]) => {
-              const on = pet.species === v;
-              return (
-                <button key={v} onClick={() => { set('species', v); set('vaccines', []); }} style={{
-                  padding:'13px 16px', borderRadius:12,
-                  border:`1.5px solid ${on ? LL.ink : LL.border}`,
-                  background: on ? LL.ink : '#fff', color: on ? '#fff' : LL.text,
-                  fontSize:15, fontWeight: on ? 700 : 500,
-                  cursor:'pointer', fontFamily:LL.font }}>{label}</button>
-              );
-            })}
+      <FField label="性别" required>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+          {[['male','男孩 ♂'],['female','女孩 ♀']].map(([v,label]) => {
+            const on = pet.gender === v;
+            return (
+              <button key={v} onClick={() => set('gender', v)} style={{
+                padding:'13px 16px', borderRadius:12,
+                border:`1.5px solid ${on ? LL.ink : LL.border}`,
+                background: on ? LL.ink : '#fff', color: on ? '#fff' : LL.text,
+                fontSize:15, fontWeight: on ? 700 : 500,
+                cursor:'pointer', fontFamily:LL.font }}>{label}</button>
+            );
+          })}
+        </div>
+      </FField>
+
+      <FField label="出生日期">
+        <FInput type="date" value={pet.dob} onChange={v => set('dob', v)} placeholder="选择出生日期" />
+        {age && <div style={{ fontSize:12.5, color:LL.text3, marginTop:7 }}>年龄：{age}</div>}
+      </FField>
+
+      <FField label="体重（公斤）">
+        <FInput type="number" value={pet.weight} onChange={v => set('weight', v)} placeholder="例：5.5" />
+      </FField>
+
+      <FField label="品种">
+        <FInput value={pet.breed} onChange={v => set('breed', v)} placeholder="例：金毛、混血" />
+      </FField>
+    </div>
+  );
+
+  const stepHealth = (
+    <div style={{ background:'#fff', padding:'18px 16px 4px' }}>
+      <FField label="是否已绝育/节育">
+        <RadioPills
+          value={pet.spayed === true ? '是' : pet.spayed === false ? '否' : null}
+          onChange={v => set('spayed', v === '是' ? true : v === '否' ? false : null)}
+          options={['是','否']} />
+      </FField>
+
+      <FField label="是否已植入芯片">
+        <RadioPills
+          value={pet.microchipped === true ? '是' : pet.microchipped === false ? '否' : null}
+          onChange={v => set('microchipped', v === '是' ? true : v === '否' ? false : null)}
+          options={['是','否']} />
+      </FField>
+
+      <FField label="疫苗接种" hint="选择已接种的疫苗">
+        <MultiPills value={pet.vaccines} onChange={v => set('vaccines', v)} options={vaccines} />
+      </FField>
+
+      <FField label="是否有需要定期服用的药物">
+        <RadioPills
+          value={pet.hasMeds === true ? '有' : pet.hasMeds === false ? '无' : null}
+          onChange={v => set('hasMeds', v === '有' ? true : v === '无' ? false : null)}
+          options={['有','无']} />
+        {pet.hasMeds === true && (
+          <div style={{ marginTop:12 }}>
+            <FTextarea value={pet.meds} onChange={v => set('meds', v)} placeholder="药物名称和服用方式" rows={3} />
           </div>
-        </FField>
-
-        <FField label="名字" required>
-          <FInput value={pet.name} onChange={v => set('name', v)} placeholder="给宠物起个名字" />
-        </FField>
-
-        <FField label="性别" required>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-            {[['male','男孩 ♂'],['female','女孩 ♀']].map(([v,label]) => {
-              const on = pet.gender === v;
-              return (
-                <button key={v} onClick={() => set('gender', v)} style={{
-                  padding:'13px 16px', borderRadius:12,
-                  border:`1.5px solid ${on ? LL.ink : LL.border}`,
-                  background: on ? LL.ink : '#fff', color: on ? '#fff' : LL.text,
-                  fontSize:15, fontWeight: on ? 700 : 500,
-                  cursor:'pointer', fontFamily:LL.font }}>{label}</button>
-              );
-            })}
-          </div>
-        </FField>
-
-        <FField label="出生日期">
-          <FInput type="date" value={pet.dob} onChange={v => set('dob', v)} placeholder="选择出生日期" />
-          {age && <div style={{ fontSize:12.5, color:LL.text3, marginTop:7 }}>年龄：{age}</div>}
-        </FField>
-
-        <FField label="体重（公斤）">
-          <FInput type="number" value={pet.weight} onChange={v => set('weight', v)} placeholder="例：5.5" />
-        </FField>
-
-        <FField label="品种">
-          <FInput value={pet.breed} onChange={v => set('breed', v)} placeholder="例：金毛、混血" />
-        </FField>
-      </div>
-
-      {/* ── 健康信息 ── */}
-      <FSectionHead title="健康信息" icon="first-aid" iconBg={LL.mint} />
-      <div style={{ background:'#fff', padding:'16px 16px 4px' }}>
-        <FField label="是否已绝育/节育">
-          <RadioPills
-            value={pet.spayed === true ? '是' : pet.spayed === false ? '否' : null}
-            onChange={v => set('spayed', v === '是' ? true : v === '否' ? false : null)}
-            options={['是','否']} />
-        </FField>
-
-        <FField label="是否已植入芯片">
-          <RadioPills
-            value={pet.microchipped === true ? '是' : pet.microchipped === false ? '否' : null}
-            onChange={v => set('microchipped', v === '是' ? true : v === '否' ? false : null)}
-            options={['是','否']} />
-        </FField>
-
-        <FField label="疫苗接种" hint="选择已接种的疫苗">
-          <MultiPills value={pet.vaccines} onChange={v => set('vaccines', v)} options={vaccines} />
-        </FField>
-
-        <FField label="是否有需要定期服用的药物">
-          <RadioPills
-            value={pet.hasMeds === true ? '有' : pet.hasMeds === false ? '无' : null}
-            onChange={v => set('hasMeds', v === '有' ? true : v === '无' ? false : null)}
-            options={['有','无']} />
-          {pet.hasMeds === true && (
-            <div style={{ marginTop:12 }}>
-              <FTextarea value={pet.meds} onChange={v => set('meds', v)} placeholder="药物名称和服用方式" rows={3} />
-            </div>
-          )}
-        </FField>
-
-        <FField label="过敏或特殊饮食需求">
-          <FTextarea value={pet.allergies} onChange={v => set('allergies', v)}
-            placeholder="如「对鸡肉过敏，只吃x品牌狗粮」" rows={3} />
-        </FField>
-      </div>
-
-      {/* ── 性格与相处 ── */}
-      <FSectionHead title="性格与相处" icon="smiley" iconBg={LL.butter} />
-      <div style={{ background:'#fff', padding:'16px 16px 4px' }}>
-        {[['withStrangers','与陌生人相处'],['withDogs','与其他狗相处'],['withCats','与猫相处'],['withKids','与小孩相处']].map(([key, label]) => (
-          <FField key={key} label={label}>
-            <RadioPills value={pet[key]} onChange={v => set(key, v)} options={['友好','容易紧张','不建议接触']} />
-          </FField>
-        ))}
-      </div>
-
-      {/* ── 生活习惯 ── */}
-      <FSectionHead title="生活习惯" icon="clock" iconBg={LL.peach} />
-      <div style={{ background:'#fff', padding:'16px 16px 4px' }}>
-        <FField label="喂食频率">
-          <RadioPills value={pet.feedingFreq} onChange={v => set('feedingFreq', v)}
-            options={['一天1次','一天2次','一天3次','自助餐','其他']} />
-          {pet.feedingFreq === '其他' && (
-            <div style={{ marginTop:12 }}>
-              <FInput value={pet.feedingOther} onChange={v => set('feedingOther', v)} placeholder="请描述喂食频率" />
-            </div>
-          )}
-        </FField>
-
-        {pet.species === 'dog' && (
-          <FField label="遛狗频率">
-            <RadioPills value={pet.walkFreq} onChange={v => set('walkFreq', v)}
-              options={['一天2次','一天3次','一天4次','其他']} />
-            {pet.walkFreq === '其他' && (
-              <div style={{ marginTop:12 }}>
-                <FInput value={pet.walkOther} onChange={v => set('walkOther', v)} placeholder="请描述遛狗频率" />
-              </div>
-            )}
-          </FField>
         )}
+      </FField>
 
-        <FField label="可独处时间">
-          <RadioPills value={pet.aloneTime} onChange={v => set('aloneTime', v)}
-            options={['1小时内','1-4小时','4-8小时','其他']} />
-          {pet.aloneTime === '其他' && (
+      <FField label="过敏或特殊饮食需求">
+        <FTextarea value={pet.allergies} onChange={v => set('allergies', v)}
+          placeholder="如「对鸡肉过敏，只吃x品牌狗粮」" rows={3} />
+      </FField>
+    </div>
+  );
+
+  const stepCharacter = (
+    <div style={{ background:'#fff', padding:'18px 16px 4px' }}>
+      {[['withStrangers','与陌生人相处'],['withDogs','与其他狗相处'],['withCats','与猫相处'],['withKids','与小孩相处']].map(([key, label]) => (
+        <FField key={key} label={label}>
+          <RadioPills value={pet[key]} onChange={v => set(key, v)} options={['友好','容易紧张','不建议接触']} />
+        </FField>
+      ))}
+    </div>
+  );
+
+  const stepHabits = (
+    <div style={{ background:'#fff', padding:'18px 16px 4px' }}>
+      <FField label="喂食频率">
+        <RadioPills value={pet.feedingFreq} onChange={v => set('feedingFreq', v)}
+          options={['一天1次','一天2次','一天3次','自助餐','其他']} />
+        {pet.feedingFreq === '其他' && (
+          <div style={{ marginTop:12 }}>
+            <FInput value={pet.feedingOther} onChange={v => set('feedingOther', v)} placeholder="请描述喂食频率" />
+          </div>
+        )}
+      </FField>
+
+      {pet.species === 'dog' && (
+        <FField label="遛狗频率">
+          <RadioPills value={pet.walkFreq} onChange={v => set('walkFreq', v)}
+            options={['一天2次','一天3次','一天4次','其他']} />
+          {pet.walkFreq === '其他' && (
             <div style={{ marginTop:12 }}>
-              <FInput value={pet.aloneOther} onChange={v => set('aloneOther', v)} placeholder="请描述可独处时间" />
+              <FInput value={pet.walkOther} onChange={v => set('walkOther', v)} placeholder="请描述遛狗频率" />
             </div>
           )}
         </FField>
+      )}
 
-        <FField label="精力">
-          <RadioPills value={pet.energy} onChange={v => set('energy', v)} options={['高精力','普通精力','低精力']} />
-        </FField>
+      <FField label="可独处时间">
+        <RadioPills value={pet.aloneTime} onChange={v => set('aloneTime', v)}
+          options={['1小时内','1-4小时','4-8小时','其他']} />
+        {pet.aloneTime === '其他' && (
+          <div style={{ marginTop:12 }}>
+            <FInput value={pet.aloneOther} onChange={v => set('aloneOther', v)} placeholder="请描述可独处时间" />
+          </div>
+        )}
+      </FField>
+
+      <FField label="精力">
+        <RadioPills value={pet.energy} onChange={v => set('energy', v)} options={['高精力','普通精力','低精力']} />
+      </FField>
+    </div>
+  );
+
+  const stepExtra = (
+    <div style={{ background:'#fff', padding:'18px 16px 4px' }}>
+      <FField label="其他备注">
+        <FTextarea value={pet.notes} onChange={v => set('notes', v)}
+          placeholder="有什么其他想告诉寄养师的吗？" rows={5} />
+      </FField>
+    </div>
+  );
+
+  const stepEmergency = (
+    <div style={{ background:'#fff', padding:'18px 16px 4px' }}>
+      <div style={{ background:'#FFF9E6', border:'1px solid #FCE9B5', borderRadius:12, padding:'10px 14px',
+        display:'flex', alignItems:'center', gap:8, marginBottom:18 }}>
+        <i className="ph-fill ph-warning" style={{ fontSize:16, color:'#B45309' }} />
+        <span style={{ fontSize:12.5, color:'#92400E', fontWeight:600 }}>紧急情况使用</span>
+      </div>
+      <FField label="常用宠物医院名称">
+        <FInput value={pet.vetName} onChange={v => set('vetName', v)} placeholder="医院名称" />
+      </FField>
+      <FField label="宠物医院电话">
+        <FInput type="tel" value={pet.vetPhone} onChange={v => set('vetPhone', v)} placeholder="电话号码" />
+      </FField>
+      <FField label="紧急联系人姓名（非本人，如家人）">
+        <FInput value={pet.emergencyName} onChange={v => set('emergencyName', v)} placeholder="姓名" />
+      </FField>
+      <FField label="紧急联系人电话">
+        <FInput type="tel" value={pet.emergencyPhone} onChange={v => set('emergencyPhone', v)} placeholder="电话号码" />
+      </FField>
+    </div>
+  );
+
+  const STEP_CONTENT = [stepBasic, stepHealth, stepCharacter, stepHabits, stepExtra, stepEmergency];
+
+  // ── Footer buttons ──────────────────────────────────────────
+  const secBtn = {
+    flex:1, height:50, borderRadius:999, border:`1.5px solid ${LL.border}`,
+    background:'#fff', color:LL.text, fontSize:15, fontWeight:600,
+    fontFamily:LL.font, cursor:'pointer',
+  };
+  const priBtn = {
+    flex:1, height:50, borderRadius:999, border:0,
+    background:LL.ink, color:'#fff', fontSize:15, fontWeight:700,
+    fontFamily:LL.font, cursor:'pointer',
+  };
+
+  return (
+    <div style={{ background:LL.bg, height:'100%', display:'flex', flexDirection:'column' }}>
+      {/* Nav + progress header */}
+      <div style={{ flex:'0 0 auto', background:'#fff', borderBottom:`1px solid ${LL.border}` }}>
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 14px', gap:10 }}>
+          <button onClick={() => setShowDiscard(true)} style={{ width:34, height:34, borderRadius:'50%', border:0, background:LL.bg, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flex:'0 0 auto' }}>
+            <i className="ph ph-caret-left" style={{ fontSize:17, color:LL.text }} />
+          </button>
+          <div style={{ flex:1, textAlign:'center', fontSize:15, fontWeight:700, color:LL.text }}>
+            {initialPet?.id ? '编辑宠物' : '添加宠物'}
+          </div>
+          <div style={{ width:34, flex:'0 0 auto' }} />
+        </div>
+
+        {/* Progress */}
+        <div style={{ padding:'2px 16px 14px' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:cur.iconBg,
+                display:'flex', alignItems:'center', justifyContent:'center', flex:'0 0 auto' }}>
+                <i className={`ph ph-${cur.icon}`} style={{ fontSize:15, color: cur.emergency ? '#B45309' : LL.text2 }} />
+              </div>
+              <span style={{ fontSize:15, fontWeight:700, color:LL.text }}>{cur.title}</span>
+            </div>
+            <span style={{ fontSize:13, fontWeight:600, color:LL.text3, fontVariantNumeric:'tabular-nums' }}>
+              步骤 {step + 1} / {total}
+            </span>
+          </div>
+          {/* Segmented progress bar */}
+          <div style={{ display:'flex', gap:5 }}>
+            {PET_STEPS.map((s, i) => (
+              <div key={s.key} style={{ flex:1, height:4, borderRadius:2,
+                background: i <= step ? LL.ink : '#E5E5EC', transition:'background 200ms' }} />
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* ── 补充信息 ── */}
-      <FSectionHead title="补充信息" icon="note-pencil" iconBg="#F5F5FA" />
-      <div style={{ background:'#fff', padding:'16px 16px 4px' }}>
-        <FField label="其他备注">
-          <FTextarea value={pet.notes} onChange={v => set('notes', v)}
-            placeholder="有什么其他想告诉寄养师的吗？" rows={4} />
-        </FField>
+      {/* Scrollable body */}
+      <div ref={bodyRef} style={{ flex:1, overflowY:'auto', WebkitOverflowScrolling:'touch' }}>
+        {STEP_CONTENT[step]}
+        <div style={{ height:20 }} />
       </div>
 
-      {/* ── 紧急信息 ── */}
-      <FSectionHead title="紧急信息" icon="warning" emergency />
-      <div style={{ background:'#fff', padding:'16px 16px 4px' }}>
-        <FField label="常用宠物医院名称">
-          <FInput value={pet.vetName} onChange={v => set('vetName', v)} placeholder="医院名称" />
-        </FField>
-        <FField label="宠物医院电话">
-          <FInput type="tel" value={pet.vetPhone} onChange={v => set('vetPhone', v)} placeholder="电话号码" />
-        </FField>
-        <FField label="紧急联系人姓名（非本人，如家人）">
-          <FInput value={pet.emergencyName} onChange={v => set('emergencyName', v)} placeholder="姓名" />
-        </FField>
-        <FField label="紧急联系人电话">
-          <FInput type="tel" value={pet.emergencyPhone} onChange={v => set('emergencyPhone', v)} placeholder="电话号码" />
-        </FField>
+      {/* Footer nav buttons */}
+      <div style={{ flex:'0 0 auto', background:'#fff', borderTop:`1px solid ${LL.border}`,
+        padding:'12px 16px', paddingBottom:'max(12px, env(safe-area-inset-bottom))',
+        display:'flex', gap:12 }}>
+        {isFirst
+          ? <button onClick={() => setShowDiscard(true)} style={secBtn}>取消</button>
+          : <button onClick={prev} style={secBtn}>上一步</button>
+        }
+        <button onClick={next} style={priBtn}>{isLast ? (saveLabel || '确认保存') : '下一步'}</button>
       </div>
+
+      {showDiscard && (
+        <DiscardModal onCancel={() => setShowDiscard(false)} onConfirm={onDiscard} />
+      )}
     </div>
   );
 }
@@ -538,16 +656,16 @@ function PetReminderSheet({ onViewPets, onContinue, onDismiss }) {
         <div style={{ width:38, height:4, borderRadius:2, background:LL.border, margin:'0 auto 18px' }} />
         <div style={{ textAlign:'center', marginBottom:22 }}>
           <div style={{ fontSize:36, marginBottom:10 }}>🐾</div>
-          <div style={{ fontSize:17, fontWeight:700, color:LL.text, marginBottom:8 }}>完善宠物资料</div>
+          <div style={{ fontSize:17, fontWeight:700, color:LL.text, marginBottom:8 }}>先填写宠物资料</div>
           <div style={{ fontSize:13.5, color:LL.text2, lineHeight:1.65, padding:'0 8px' }}>
-            帮助守护者了解您的宠物，提升申请通过率并获得更贴心的照护。
+            预约前需要先告诉守护者你的宠物信息，帮助 TA 更放心地接单并提供贴心照护。
           </div>
         </div>
         <button onClick={onViewPets} style={{ width:'100%', height:52, borderRadius:999, border:0, background:LL.ink, color:'#fff', fontSize:15, fontWeight:700, fontFamily:LL.font, cursor:'pointer', marginBottom:12 }}>
-          完善宠物资料
+          填写宠物资料
         </button>
         <button onClick={onContinue} style={{ width:'100%', height:44, borderRadius:999, border:`1.5px solid ${LL.border}`, background:'transparent', fontSize:14, fontWeight:500, color:LL.text2, fontFamily:LL.font, cursor:'pointer' }}>
-          直接预约
+          暂不填写，直接预约
         </button>
       </div>
     </>
@@ -555,27 +673,47 @@ function PetReminderSheet({ onViewPets, onContinue, onDismiss }) {
 }
 
 // ─── Main Screen ──────────────────────────────────────────────
-function PetsScreen({ onBack }) {
-  const [pets, setPets] = React.useState(PETS_INIT);
-  const [view, setView] = React.useState('list'); // 'list' | 'add' | 'edit'
+function PetsScreen({ onBack, pets: petsProp, onPetsChange, onComplete, initialView, completeLabel }) {
+  const controlled = Array.isArray(petsProp);
+  const [petsState, setPetsState] = React.useState(controlled ? petsProp : PETS_INIT);
+  const pets = controlled ? petsProp : petsState;
+  const setPets = (updater) => {
+    const next = typeof updater === 'function' ? updater(pets) : updater;
+    if (controlled) onPetsChange?.(next); else setPetsState(next);
+  };
+  const [view, setView] = React.useState(initialView || 'list'); // 'list' | 'add' | 'edit'
   const [editingPet, setEditingPet] = React.useState(null);
+  const [draft, setDraft] = React.useState(null); // auto-saved working copy
 
   const handleSave = (pet) => {
-    if (pet.id) {
-      setPets(ps => ps.map(p => p.id === pet.id ? pet : p));
+    const isNew = !pet.id;
+    const saved = isNew ? { ...pet, id: `p${Date.now()}` } : pet;
+    if (isNew) {
+      setPets(ps => [...ps, saved]);
     } else {
-      setPets(ps => [...ps, { ...pet, id: `p${Date.now()}` }]);
+      setPets(ps => ps.map(p => p.id === pet.id ? pet : p));
     }
     setView('list');
     setEditingPet(null);
+    setDraft(null);
+    // Onboarding: after adding the first pet, continue the pending flow
+    if (isNew && onComplete) onComplete(saved);
+  };
+
+  const handleDiscard = () => {
+    setView('list');
+    setEditingPet(null);
+    setDraft(null);
   };
 
   if (view === 'add' || view === 'edit') {
     return (
       <AddEditPetForm
-        initialPet={view === 'edit' ? editingPet : null}
+        initialPet={view === 'edit' ? (draft || editingPet) : draft}
         onSave={handleSave}
-        onBack={() => { setView('list'); setEditingPet(null); }}
+        onAutoSave={setDraft}
+        onDiscard={handleDiscard}
+        saveLabel={onComplete ? (completeLabel || '保存并继续预约') : '确认保存'}
       />
     );
   }
@@ -589,18 +727,18 @@ function PetsScreen({ onBack }) {
           <i className="ph ph-caret-left" style={{ fontSize:17, color:LL.text }} />
         </button>
         <div style={{ flex:1, textAlign:'center', fontSize:15, fontWeight:700, color:LL.text }}>我的宠物</div>
-        <button onClick={() => setView('add')} style={{ width:34, height:34, borderRadius:'50%', border:0, background:LL.bg, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flex:'0 0 auto' }}>
+        <button onClick={() => { setDraft(null); setView('add'); }} style={{ width:34, height:34, borderRadius:'50%', border:0, background:LL.bg, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flex:'0 0 auto' }}>
           <i className="ph ph-plus" style={{ fontSize:18, color:LL.text }} />
         </button>
       </div>
 
       <PetsListPage
         pets={pets}
-        onAddPet={() => setView('add')}
-        onEditPet={(pet) => { setEditingPet(pet); setView('edit'); }}
+        onAddPet={() => { setDraft(null); setView('add'); }}
+        onEditPet={(pet) => { setEditingPet(pet); setDraft(null); setView('edit'); }}
       />
     </div>
   );
 }
 
-Object.assign(window, { PetsScreen, PetReminderSheet });
+Object.assign(window, { PetsScreen, PetReminderSheet, AddEditPetForm, PETS_INIT, calcPetAge });

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Type · Bilingual</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 24px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .col { display: flex; flex-direction: column; gap: 10px; }
+  .label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ll-text-3); }
+  .h1 { font-size: 26px; line-height: 32px; font-weight: 700; letter-spacing: -0.01em; }
+  .h3 { font-size: 16px; line-height: 22px; font-weight: 600; color: var(--ll-text); }
+  .body { font-size: 13.5px; line-height: 21px; color: var(--ll-text-2); }
+  .num { font-feature-settings: "tnum"; }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="col">
+      <div class="label">English · SF Pro Text</div>
+      <div class="h1">Pamper Your Pet,<br>Every Day</div>
+      <div class="h3">Today's Walk <span class="num" style="color: var(--ll-text);">45 min</span></div>
+      <div class="body">Book expert grooming services or track your pet's daily activity.</div>
+    </div>
+    <div class="col">
+      <div class="label">中文 · PingFang SC</div>
+      <div class="h1">每天宠爱<br>你的小可爱</div>
+      <div class="h3">今日步行 <span class="num" style="color: var(--ll-text);">45 分钟</span></div>
+      <div class="body">预约专业宠物美容服务,或记录小可爱每天的活动数据。</div>
+    </div>
+  </div>
+</body>
+</html>

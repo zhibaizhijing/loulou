@@ -1,0 +1,50 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Tag & StatusPill" subtitle="Pastel chips · order status" viewport="700x200" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Tag & StatusPill</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; padding: 28px 24px; background: var(--ll-bg); }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .cap { font-size: 11px; color: var(--ll-text-3); font-family: var(--font-sans); width: 80px; flex: 0 0 auto; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    (function () {
+      var NS = window.LouLouDesignSystem_d0e775 || {};
+      var Tag = NS.Tag, StatusPill = NS.StatusPill;
+      var e = React.createElement;
+      var root = ReactDOM.createRoot(document.getElementById('root'));
+      if (!Tag || !StatusPill) { document.getElementById('root').textContent = 'Components not found on namespace'; return; }
+      root.render(
+        e('div', { className: 'stack' },
+          e('div', { className: 'row' },
+            e('span', { className: 'cap' }, 'Tag'),
+            e(Tag, { tone: 'butter' }, '狗'),
+            e(Tag, { tone: 'lavender' }, '猫'),
+            e(Tag, { tone: 'mint' }, '短毛'),
+            e(Tag, { tone: 'peach' }, '已绝育'),
+            e(Tag, { tone: 'neutral' }, '友好')
+          ),
+          e('div', { className: 'row' },
+            e('span', { className: 'cap' }, 'StatusPill'),
+            e(StatusPill, { status: 'pending' }),
+            e(StatusPill, { status: 'accepted' }),
+            e(StatusPill, { status: 'progress' }),
+            e(StatusPill, { status: 'completed' }),
+            e(StatusPill, { status: 'rejected' })
+          )
+        )
+      );
+    })();
+  </script>
+</body>
+</html>

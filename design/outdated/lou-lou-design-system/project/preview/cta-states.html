@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — CTA States</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 28px 24px; }
+  .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: end; }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .btn { height: 44px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600; }
+  .label { font-size: 10.5px; color: var(--ll-text-2); text-align: center; }
+  .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; animation: r 0.8s linear infinite; margin-right: 8px; }
+  @keyframes r { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="cell">
+      <div class="btn" style="background: var(--ll-ink);">Book Service</div>
+      <div class="label">Default</div>
+    </div>
+    <div class="cell">
+      <div class="btn" style="background: var(--ll-ink-press); transform: scale(0.985);">Book Service</div>
+      <div class="label">Pressed</div>
+    </div>
+    <div class="cell">
+      <div class="btn" style="background: var(--ll-ink);"><span class="spin"></span>Loading</div>
+      <div class="label">Loading</div>
+    </div>
+    <div class="cell">
+      <div class="btn" style="background: var(--ll-ink-disabled);">Book Service</div>
+      <div class="label">Disabled</div>
+    </div>
+  </div>
+</body>
+</html>

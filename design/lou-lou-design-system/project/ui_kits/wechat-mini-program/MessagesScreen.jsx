@@ -3,17 +3,21 @@
 const APP_GREEN = '#2C7A4B';
 
 function MessagesScreen({ sentApps = [], onOpenChat }) {
-  // Build guardian threads from accepted applications
+  // Build guardian threads — one per ORDER (so multiple orders with the
+  // same guardian each get their own chat window)
   const guardianThreads = sentApps
-    .filter(a => a.status === 'accepted')
+    .filter(a => ['accepted', 'in_progress', 'completed'].includes(a.status))
     .map(a => {
       const lastMsg = a.messages[a.messages.length - 1];
+      const dateLabel = a.dateEnd && a.dateEnd !== a.dateStart ? `${a.dateStart}–${a.dateEnd}` : a.dateStart;
       return {
         id: a.id,
-        name: `${a.guardian.name}（守护者）`,
+        name: a.guardian.name,
+        orderTag: `${a.service} · ${dateLabel}`,
+        done: a.status === 'completed',
         last: lastMsg ? lastMsg.text : '',
-        time: '刚刚',
-        unread: a.messages.filter(m => m.from === 'guardian').length,
+        time: a.status === 'completed' ? '已完成' : '刚刚',
+        unread: a.status === 'completed' ? 0 : a.messages.filter(m => m.from === 'guardian').length,
         photo: a.guardian.photo,
         isLive: true,
         appId: a.id,
@@ -22,10 +26,10 @@ function MessagesScreen({ sentApps = [], onOpenChat }) {
 
   // Static placeholder threads
   const staticThreads = [
-    { id: 's1', name: '张敏（守护者）', last: '宝贝已经睡了，今天玩得很开心 🐶', time: '昨天',  unread: 0, initial: '张', bg: LL.butter   },
-    { id: 's2', name: '李伟（守护者）', last: '好的，明天上午十点见。',             time: '2天前', unread: 0, initial: '李', bg: LL.lavender },
+    { id: 's1', name: '张敏', last: '宝贝已经睡了，今天玩得很开心 🐶', time: '昨天',  unread: 0, initial: '张', bg: LL.butter   },
+    { id: 's2', name: '李伟', last: '好的，明天上午十点见。',             time: '2天前', unread: 0, initial: '李', bg: LL.lavender },
     { id: 's3', name: 'Loulou 平台',   last: '您的订单已确认，编号 LL-23981',      time: '上周',  unread: 0, initial: '官', bg: LL.ink, white: true },
-    { id: 's4', name: '王芳（守护者）', last: '收到，周五下午见～',                time: '上周',  unread: 0, initial: '王', bg: LL.mint    },
+    { id: 's4', name: '王芳', last: '收到，周五下午见～',                time: '上周',  unread: 0, initial: '王', bg: LL.mint    },
   ];
 
   const threads = [...guardianThreads, ...staticThreads];
@@ -93,6 +97,13 @@ function MessagesScreen({ sentApps = [], onOpenChat }) {
                   </div>
                   <div style={{ fontSize: 11, color: LL.text3, flex: '0 0 auto', marginLeft: 8 }}>{t.time}</div>
                 </div>
+                {t.orderTag && (
+                  <div style={{ display:'inline-flex', alignItems:'center', gap:4, marginBottom:4,
+                    background: t.done ? '#F0F0F5' : '#EAF3EE', borderRadius:6, padding:'1px 7px' }}>
+                    <i className="ph ph-clipboard-text" style={{ fontSize:11, color: t.done ? LL.text3 : APP_GREEN }}/>
+                    <span style={{ fontSize:10.5, fontWeight:600, color: t.done ? LL.text3 : APP_GREEN }}>{t.orderTag}</span>
+                  </div>
+                )}
                 <div style={{ fontSize: 12.5, color: t.unread > 0 ? LL.text2 : LL.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: t.unread > 0 ? 500 : 400 }}>
                   {t.last}
                 </div>
@@ -109,7 +120,7 @@ function MessagesScreen({ sentApps = [], onOpenChat }) {
               )}
 
               {/* Live indicator dot */}
-              {live && (
+              {live && !t.done && (
                 <div style={{
                   position: 'absolute', top: 12, left: 52,
                   width: 12, height: 12, borderRadius: '50%',

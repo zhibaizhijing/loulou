@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Button" subtitle="Primary · Secondary · Ghost · sizes" viewport="700x240" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Button</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; padding: 28px 24px; background: var(--ll-bg); }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .cap { font-size: 11px; color: var(--ll-text-3); font-family: var(--font-sans); width: 64px; flex: 0 0 auto; }
+  @keyframes ll-btn-spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    (function () {
+      var NS = window.LouLouDesignSystem_d0e775 || {};
+      var Button = NS.Button;
+      var e = React.createElement;
+      var root = ReactDOM.createRoot(document.getElementById('root'));
+      if (!Button) { document.getElementById('root').textContent = 'Button not found on namespace'; return; }
+      root.render(
+        e('div', { className: 'stack' },
+          e('div', { className: 'row' },
+            e('span', { className: 'cap' }, 'Variant'),
+            e(Button, { variant: 'primary' }, '预约服务'),
+            e(Button, { variant: 'secondary' }, '查看详情'),
+            e(Button, { variant: 'ghost' }, '取消')
+          ),
+          e('div', { className: 'row' },
+            e('span', { className: 'cap' }, 'Size'),
+            e(Button, { size: 'sm' }, 'Small'),
+            e(Button, { size: 'md' }, 'Medium'),
+            e(Button, { size: 'lg' }, 'Large')
+          ),
+          e('div', { className: 'row' },
+            e('span', { className: 'cap' }, 'State'),
+            e(Button, { loading: true }, '提交中'),
+            e(Button, { disabled: true }, '已预订'),
+            e(Button, { variant: 'secondary', disabled: true }, '不可用')
+          )
+        )
+      );
+    })();
+  </script>
+</body>
+</html>

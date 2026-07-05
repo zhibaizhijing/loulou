@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Icon Style</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<!-- Phosphor Icons · regular + fill -->
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+  body { margin: 0; padding: 28px 24px; }
+  .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 16px 12px; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--ll-text); }
+  .cell i { font-size: 28px; line-height: 1; display: block; }
+  .cell.fill { color: var(--ll-ink); }
+  .lbl { font-size: 10.5px; color: var(--ll-text-2); }
+  .row-label { grid-column: 1 / -1; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ll-text-3); margin-top: 6px; }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="row-label">Phosphor · Regular · inactive tabs / chrome</div>
+
+    <div class="cell"><i class="ph ph-house"></i><div class="lbl">Home</div></div>
+    <div class="cell"><i class="ph ph-paw-print"></i><div class="lbl">Paw</div></div>
+    <div class="cell"><i class="ph ph-calendar-blank"></i><div class="lbl">Bookings</div></div>
+    <div class="cell"><i class="ph ph-phone"></i><div class="lbl">Calls</div></div>
+    <div class="cell"><i class="ph ph-user"></i><div class="lbl">Profile</div></div>
+    <div class="cell"><i class="ph ph-magnifying-glass"></i><div class="lbl">Search</div></div>
+    <div class="cell"><i class="ph ph-bell"></i><div class="lbl">Bell</div></div>
+    <div class="cell"><i class="ph ph-caret-left"></i><div class="lbl">Back</div></div>
+
+    <div class="cell"><i class="ph ph-heart"></i><div class="lbl">Heart</div></div>
+    <div class="cell"><i class="ph ph-clock"></i><div class="lbl">Clock</div></div>
+    <div class="cell"><i class="ph ph-map-pin"></i><div class="lbl">Pin</div></div>
+    <div class="cell"><i class="ph ph-plus"></i><div class="lbl">Plus</div></div>
+    <div class="cell"><i class="ph ph-arrow-up-right"></i><div class="lbl">Open</div></div>
+    <div class="cell"><i class="ph ph-caret-right"></i><div class="lbl">More</div></div>
+    <div class="cell"><i class="ph ph-sliders-horizontal"></i><div class="lbl">Tune</div></div>
+    <div class="cell"><i class="ph ph-x"></i><div class="lbl">Close</div></div>
+
+    <div class="row-label">Phosphor · Fill · active tab state</div>
+
+    <div class="cell fill"><i class="ph-fill ph-house"></i><div class="lbl">Home</div></div>
+    <div class="cell fill"><i class="ph-fill ph-paw-print"></i><div class="lbl">Paw</div></div>
+    <div class="cell fill"><i class="ph-fill ph-calendar-blank"></i><div class="lbl">Bookings</div></div>
+    <div class="cell fill"><i class="ph-fill ph-user"></i><div class="lbl">Profile</div></div>
+    <div class="cell fill"><i class="ph-fill ph-heart"></i><div class="lbl">Heart</div></div>
+    <div class="cell fill"><i class="ph-fill ph-bell"></i><div class="lbl">Bell</div></div>
+    <div class="cell fill"><i class="ph-fill ph-map-pin"></i><div class="lbl">Pin</div></div>
+    <div class="cell fill"><i class="ph-fill ph-clock"></i><div class="lbl">Clock</div></div>
+
+    <div class="row-label">Source · phosphoricons.com · regular weight is the default · color inherits currentColor</div>
+  </div>
+</body>
+</html>

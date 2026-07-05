@@ -87,7 +87,7 @@ Object.assign(window, { fmtShort, fmtFull, daysBetween });
 // ─── CalendarMonth — single month grid (Mon-first) ───────────
 function CalendarMonth({ year, month, start, end }, _) {} // (forward decl placeholder, real below)
 
-function CalendarMonthImpl({ year, month, start, end, onTap, showHeader = true }) {
+function CalendarMonthImpl({ year, month, start, end, onTap, showHeader = true, mode = 'range', selectedDays = [] }) {
   const today = startOfDay(new Date());
   const first = new Date(year, month, 1);
   const dim = new Date(year, month + 1, 0).getDate();
@@ -101,6 +101,11 @@ function CalendarMonthImpl({ year, month, start, end, onTap, showHeader = true }
   const stateFor = (cell) => {
     if (!cell) return 'empty';
     if (dayBefore(cell, today)) return 'past';
+    if (mode === 'multi') {
+      if (selectedDays.some(d => sameDay(d, cell))) return 'single';
+      if (sameDay(cell, today)) return 'today';
+      return 'normal';
+    }
     const isStart = sameDay(cell, start);
     const isEnd   = sameDay(cell, end);
     if (isStart && isEnd) return 'single';
@@ -218,7 +223,7 @@ function CalendarMonthImpl({ year, month, start, end, onTap, showHeader = true }
 }
 
 // ─── RangeCalendar — single month with month nav (compact) ───
-function RangeCalendar({ start, end, onChange }) {
+function RangeCalendar({ start, end, onChange, mode = 'range', selectedDays = [], onToggleDay }) {
   const today = new Date();
   const [offset, setOffset] = React.useState(0);
   const baseY = today.getFullYear(), baseM = today.getMonth();
@@ -228,6 +233,7 @@ function RangeCalendar({ start, end, onChange }) {
   };
 
   const handle = (d) => {
+    if (mode === 'multi') { onToggleDay?.(d); return; }
     if (!start || (start && end)) {
       onChange({ start: d, end: null });
     } else if (dayBefore(d, start) || sameDay(d, start)) {
@@ -258,7 +264,49 @@ function RangeCalendar({ start, end, onChange }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}><i className="ph ph-caret-right" style={{ fontSize: 12 }} /></button>
       </div>
-      <CalendarMonthImpl year={cur.y} month={cur.m} start={start} end={end} onTap={handle} showHeader={false} />
+      <CalendarMonthImpl year={cur.y} month={cur.m} start={start} end={end} onTap={handle} showHeader={false} mode={mode} selectedDays={selectedDays} />
+    </div>
+  );
+}
+
+// ─── ScrollCalendar — vertically-stacked months, scrollable ──
+// Matches the "sliding" calendar used by other services (寄养/日托).
+// Supports range mode (start/end) and multi mode (selectedDays).
+function ScrollCalendar({ start, end, onChange, mode = 'range', selectedDays = [], onToggleDay, monthsCount = 9 }) {
+  const today = new Date();
+  const baseY = today.getFullYear(), baseM = today.getMonth();
+  const months = [];
+  for (let i = 0; i < monthsCount; i++) {
+    months.push({
+      y: baseY + Math.floor((baseM + i) / 12),
+      m: ((baseM + i) % 12 + 12) % 12,
+    });
+  }
+
+  const handle = (d) => {
+    if (mode === 'multi') { onToggleDay?.(d); return; }
+    if (!start || (start && end)) {
+      onChange({ start: d, end: null });
+    } else if (dayBefore(d, start) || sameDay(d, start)) {
+      onChange({ start: d, end: null });
+    } else {
+      onChange({ start, end: d });
+    }
+  };
+
+  return (
+    <div style={{
+      maxHeight: 326, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
+      margin: '0 -2px', padding: '0 2px',
+    }}>
+      {months.map(({ y, m }) => (
+        <div key={`${y}-${m}`} style={{ marginBottom: 8 }}>
+          <CalendarMonthImpl
+            year={y} month={m} start={start} end={end} onTap={handle}
+            showHeader={true} mode={mode} selectedDays={selectedDays}
+          />
+        </div>
+      ))}
     </div>
   );
 }
@@ -402,16 +450,11 @@ function DateRangePickerSheet({ open, value, svcType, onConfirm, onClose }) {
 }
 
 // ─── SchedulePickerSheet — Form B ────────────────────────────
-const PERIODS = [
-  { id: 'morning',   label: '上午', range: '6:00–12:00'  },
-  { id: 'afternoon', label: '下午', range: '12:00–18:00' },
-  { id: 'evening',   label: '晚上', range: '18:00–24:00' },
-];
-
 function defaultSchedule() {
   return {
     type: 'once', // 'once' | 'recurring'
-    dates: { start: null, end: null },
+    pickMode: 'range', // 'range' (连续选择) | 'single' (单日点选) — 单次预约 only
+    dates: { start: null, end: null, days: [] },
     weekdays: [], // 0..6 (Mon..Sun)
     periods: [],  // subset of PERIODS ids
   };
@@ -419,23 +462,28 @@ function defaultSchedule() {
 
 function SchedulePickerSheet({ open, value, svcType, onSearch, onClose, applyLabel }) {
   const [draft, setDraft] = React.useState(value || defaultSchedule());
-  const [duration, setDuration] = React.useState(30); // 30 | 60 min
   React.useEffect(() => {
     if (open) setDraft(value || defaultSchedule());
   }, [open, value]);
 
   if (!open) return null;
 
-  const showDuration = svcType === '遛狗' || svcType === '上门喂养';
+  const showPickMode = svcType === '遛狗' || svcType === '上门喂养';
+  const pickMode = draft.pickMode || 'range';
+  const pickedDays = draft.dates.days || [];
+  const toggleDay = (d) => setDraft(dd => {
+    const cur = dd.dates.days || [];
+    const exists = cur.some(x => sameDay(x, d));
+    return { ...dd, dates: { ...dd.dates, days: exists ? cur.filter(x => !sameDay(x, d)) : [...cur, d] } };
+  });
 
-  const togglePeriod = (id) =>
-    setDraft(d => ({ ...d, periods: d.periods.includes(id) ? d.periods.filter(p => p !== id) : [...d.periods, id] }));
   const toggleWeekday = (i) =>
     setDraft(d => ({ ...d, weekdays: d.weekdays.includes(i) ? d.weekdays.filter(w => w !== i) : [...d.weekdays, i].sort() }));
 
   const canSearch = (() => {
-    if (!draft.periods.length) return false;
-    if (draft.type === 'once') return !!draft.dates.start;
+    if (draft.type === 'once') {
+      return pickMode === 'single' ? pickedDays.length > 0 : !!draft.dates.start;
+    }
     return draft.weekdays.length > 0 && !!draft.dates.start && !!draft.dates.end;
   })();
 
@@ -480,10 +528,40 @@ function SchedulePickerSheet({ open, value, svcType, onSearch, onClose, applyLab
         {/* Section 2 — Dates */}
         <SectionLabel style={{ marginTop: 18 }}>日期</SectionLabel>
         {draft.type === 'once' ? (
-          <RangeCalendar
-            start={draft.dates.start} end={draft.dates.end}
-            onChange={(d) => setDraft({ ...draft, dates: d })}
-          />
+          <>
+            {/* 连续选择 / 单日点选 switch (遛狗 · 上门喂养) */}
+            {showPickMode && (
+              <div style={{
+                display: 'flex', background: 'rgba(34,40,44,0.05)', borderRadius: 12,
+                padding: 4, marginBottom: 14,
+              }}>
+                {[{ id:'range', label:'连选日期' }, { id:'single', label:'点选日期' }].map(opt => {
+                  const on = pickMode === opt.id;
+                  return (
+                    <button key={opt.id} onClick={() => setDraft(d => ({ ...d, pickMode: opt.id }))} style={{
+                      flex: 1, height: 38, borderRadius: 9, border: 0, cursor: 'pointer', fontFamily: LL.font,
+                      background: on ? LL.ink : 'transparent', color: on ? '#fff' : LL.text2,
+                      fontSize: 13.5, fontWeight: on ? 700 : 500,
+                      boxShadow: 'none', transition: 'all 140ms',
+                    }}>{opt.label}</button>
+                  );
+                })}
+              </div>
+            )}
+            {showPickMode && pickMode === 'single' ? (
+              <>
+                <ScrollCalendar mode="multi" selectedDays={pickedDays} onToggleDay={toggleDay} />
+                <div style={{ fontSize: 11.5, color: LL.text2, padding: '4px 2px 0', lineHeight: 1.5 }}>
+                  点选任意一天或多天，已选 <b style={{ color: LL.text }}>{pickedDays.length}</b> 天
+                </div>
+              </>
+            ) : (
+              <ScrollCalendar
+                start={draft.dates.start} end={draft.dates.end}
+                onChange={(d) => setDraft({ ...draft, dates: { ...draft.dates, ...d } })}
+              />
+            )}
+          </>
         ) : (
           <>
             <div style={{
@@ -507,39 +585,12 @@ function SchedulePickerSheet({ open, value, svcType, onSearch, onClose, applyLab
             <div style={{
               fontSize: 11.5, color: LL.text2, padding: '0 2px 4px', lineHeight: 1.5,
             }}>重复周期</div>
-            <RangeCalendar
+            <ScrollCalendar
               start={draft.dates.start} end={draft.dates.end}
               onChange={(d) => setDraft({ ...draft, dates: d })}
             />
           </>
         )}
-
-        {/* Section 3 — Time periods */}
-        <SectionLabel style={{ marginTop: 18 }}>时间段</SectionLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {PERIODS.map(p => {
-            const on = draft.periods.includes(p.id);
-            return (
-              <button key={p.id} onClick={() => togglePeriod(p.id)} style={{
-                width: '100%', height: 44, borderRadius: 999, border: 0,
-                background: on ? LL.ink : 'rgba(34,40,44,0.04)',
-                color: on ? '#fff' : LL.text, fontFamily: LL.font,
-                fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '0 18px',
-                boxShadow: on ? 'none' : `inset 0 0 0 1px ${LL.border}`,
-              }}>
-                <span>{p.label}</span>
-                <span style={{ fontSize: 12, opacity: 0.75, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{p.range}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div style={{
-          fontSize: 11.5, color: LL.text2, padding: '8px 4px 16px', lineHeight: 1.5,
-        }}>守护者将在您选择的时间段内上门服务</div>
-
-        {/* 服务时长 section removed from drawer — now lives in booking form */}
       </div>
     </BottomSheet>
   );
@@ -585,20 +636,23 @@ function summarizeQuery({ svcType, dateRange, schedule }) {
     return `${fmtShort(dateRange.start)} → ${fmtShort(dateRange.end)} · 共 ${n} ${unit}`;
   }
   if (form === 'B') {
-    if (!schedule || !schedule.periods?.length) return null;
-    const periodLabels = schedule.periods
-      .map(id => PERIODS.find(p => p.id === id)?.label)
-      .filter(Boolean).join('、');
+    if (!schedule) return null;
     if (schedule.type === 'once') {
+      if (schedule.pickMode === 'single') {
+        const days = (schedule.dates.days || []).slice().sort((a, b) => a - b);
+        if (!days.length) return null;
+        return days.length <= 2
+          ? days.map(fmtShort).join('、')
+          : `${fmtShort(days[0])} 等${days.length}天`;
+      }
       if (!schedule.dates.start) return null;
-      const dt = schedule.dates.end
+      return schedule.dates.end
         ? `${fmtShort(schedule.dates.start)} → ${fmtShort(schedule.dates.end)}`
         : fmtShort(schedule.dates.start);
-      return `${dt} · ${periodLabels}`;
     }
     if (!schedule.weekdays?.length || !schedule.dates.start || !schedule.dates.end) return null;
     const wd = schedule.weekdays.map(i => WEEK_CN_MON_FIRST[i]).join('/');
-    return `每周${wd} · ${periodLabels}`;
+    return `每周${wd} · ${fmtShort(schedule.dates.start)}–${fmtShort(schedule.dates.end)}`;
   }
   return null;
 }

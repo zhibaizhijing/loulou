@@ -7,11 +7,63 @@ const GGREEN_BG      = '#E6F1EC';
 const PROFILE_PURPLE    = '#5B3A8F';
 const PROFILE_PURPLE_BG = '#D8CAE8';
 
+// ─── Per-species "what's included" copy (shown via base-fee ⓘ) ──
+const CARE_INFO = {
+  dog:     '包括每日至少 2 次户外遛狗、定时喂食饮水、食具清洁、更换尿垫、室内互动陪玩及每日健康状态监测。',
+  cat:     '包括铲屎添砂、陪玩、梳毛、饮水饮食管理、食具清洁及每日健康状态监测。',
+  hamster: '包括喂食饮水、局部清理尿沙/坏粮、食具清洁、检查跑轮和垫料环境及每日健康状态监测。',
+  rabbit:  '包括补草、定时喂粮/擦干蔬菜、食具清洁、清理兔厕所、室内放风陪伴及每日健康状态监测。',
+  bird:    '包括清壳补粮、换水、食具清洁、更换底盘垫纸、室内环境监控及每日健康状态监测。',
+};
+
+// 30-min single-visit "what's included" copy (上门喂养)
+const VISIT_INFO = {
+  dog:     '包括食具清洁、添粮换水、更换尿垫、互动陪玩、环境检查及健康监测。',
+  cat:     '包括食具清洁、添粮换水、铲屎添砂、互动陪玩、环境检查及健康监测。',
+  hamster: '包括食具清洁、添粮换水、局部清理尿沙/坏粮、环境检查及健康监测。',
+  rabbit:  '包括补草、定时喂粮/擦干蔬菜、食具清洁、清理兔厕所、环境检查及健康监测。',
+  bird:    '包括清壳补粮、换水、食具清洁、更换底盘垫纸、环境检查及健康监测。',
+};
+
+// ─── Shared extra-fee row builders (keep wording consistent across tabs) ──
+// pickup + medication + (optionally) delay-fee blocks shared by 寄养/日托
+const ROW_PICKUP    = { label: '守护者接送（1 来回）', price: '¥30', sub: '10 公里以内，超出部分每公里 +¥3' };
+const ROW_VISIT     = { label: '守护者上门', price: '¥20', sub: '10 公里以内，超出部分每公里 +¥3' };
+const ROW_MEDICATE  = { label: '喂药 / 擦药 / 喂营养品', price: '+¥10/次' };
+const ROW_EMERGENCY = (p) => ({ label: '紧急预约附加费', price: p, info: '预约当天和次日服务为紧急预约。' });
+const ROW_LONGTERM  = { label: '长期订单优惠（超过 7 天）', price: '-10%' };
+const ROW_DELAY     = { label: '延时费', price: '当日价×50%', info: '若离园接宠时间晚于入园送宠时间：延时 2–8 小时内加收 50% 的当日服务费；延时 8 小时以上加收 100% 的当日服务费。' };
+const ROW_DELAY_VISIT = { label: '延时费', price: '当日价×50%', info: '若订单结束日结束时间晚于订单开始日上门时间：延时 2–8 小时内加收 50% 的当日服务费；延时 8 小时以上加收 100% 的当日服务费。' };
+
+// 上门喂养 extra fees — identical across all pet types
+const VISIT_EXTRA_ROWS = [
+  { label: '60 分钟加价', price: '+¥15' },
+  { label: '每加 1 只', price: '+¥15' },
+  { label: '节假日加价', price: '+¥10' },
+  ROW_EMERGENCY('+¥8'),
+  ROW_VISIT,
+  ROW_MEDICATE,
+  ROW_DELAY_VISIT,
+];
+
+// 伴宠留宿 extra fees — dog gets 幼犬, the other four are identical minus that row
+const LODGE_DOG_ROWS = [
+  { label: '幼犬', price: '+¥11' },
+  { label: '每加 1 只', price: '+¥48' },
+  { label: '节假日加价', price: '+¥20' },
+  ROW_EMERGENCY('+¥15'),
+  ROW_VISIT,
+  ROW_MEDICATE,
+  ROW_DELAY_VISIT,
+];
+const LODGE_PET_ROWS = LODGE_DOG_ROWS.slice(1);
+
 // ─── Data ────────────────────────────────────────────────────
 const CHEN_YI_DATA = {
   id: 'r2',
   name: '陈逸',
   photo: './assets/guardian2.png',
+  photoKey: 'guardian2',
   tagline: '安心可靠，把你的宠物当自己孩子一样对待',
   area: '朝阳区·望京，北京',
   joinedYears: 2,
@@ -25,6 +77,9 @@ const CHEN_YI_DATA = {
   ownPets: [
     { id: 'op1', name: '豆豆', breed: '金毛', age: '3岁', bg: '#FEE7A6',
       photo: (window.__resources && window.__resources.galleryPuppy) || '../../uploads/Sleeping Golden Retriever Puppy.png' },
+    { id: 'op2', name: '可乐', breed: '柯基', age: '2岁', bg: '#C7E8D8' },
+    { id: 'op3', name: '糯米', breed: '布偶猫', age: '1岁', bg: '#D8CAE8' },
+    { id: 'op4', name: '团子', breed: '英短', age: '4岁', bg: '#C7D8EE' },
   ],
   home: {
     type: '公寓',
@@ -50,77 +105,83 @@ const CHEN_YI_DATA = {
         {
           type: 'dog', label: '狗',
           weights: [
-            { range: '0–7 公斤', price: 88, size: '小型' },
-            { range: '7–18 公斤', price: 98, size: '中型' },
-            { range: '18–45 公斤', price: 108, size: '大型' },
+            { range: '0–10 公斤', price: 88,  size: '小型', tier: '小型犬', info: '包括每日至少 2 次户外遛狗、定时喂食饮水、食具清洁、更换尿垫、室内互动陪玩及每日健康状态监测。' },
+            { range: '10–20 公斤', price: 98, size: '中型', tier: '中型犬', info: '包括每日至少 2 次户外遛狗、定时喂食饮水、食具清洁、更换尿垫、室内互动陪玩及每日健康状态监测。' },
+            { range: '20 公斤+', price: 108,  size: '大型', tier: '大型犬', info: '包括每日至少 2 次户外遛狗、定时喂食饮水、食具清洁、更换尿垫、室内互动陪玩及每日健康状态监测。' },
           ],
           rows: [
-            { label: '单间费用', price: '+¥20', info: '拥有单独的房间，不和其他宠物共处一室', accordion: true },
-            { label: '节假日加价', price: '+¥17', accordion: true },
-            { label: '每加1只', price: '+¥48', accordion: true },
-            { label: '幼犬', price: '+¥11', accordion: true },
-            { label: '紧急预约附加费', price: '+¥15', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期订单（7晚+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
-            { label: '超时费', price: '当日价×50%', info: '超时2–8小时收取50%；8小时以上收取100%' },
+            { label: '幼犬', price: '+¥11' },
+            { label: '每加 1 只', price: '+¥48' },
+            { label: '节假日加价', price: '+¥17' },
+            { label: '长期订单优惠（超过 7 天）', price: '-10%' },
+            { label: '紧急预约附加费', price: '+¥15', info: '预约当天和次日服务为紧急预约。' },
+            { label: '守护者接送（1 来回）', price: '¥30', sub: '10 公里以内，超出部分每公里 +¥3' },
+            { label: '喂药 / 擦药 / 喂营养品', price: '+¥10/次' },
+            { label: '延时费', price: '当日价×50%', info: '若离园接宠时间晚于入园送宠时间：延时 2–8 小时内加收 50% 的当日服务费；延时 8 小时以上加收 100% 的当日服务费。' },
           ],
         },
         {
           type: 'cat', label: '猫',
+          baseInfo: CARE_INFO.cat,
           weights: [
-            { range: '0–7 公斤', price: 78, size: '普通' },
-            { range: '7–18 公斤', price: 88, size: '大型' },
+            { range: '全体型', price: 78, size: '全部' },
           ],
           rows: [
-            { label: '单间费用', price: '+¥20', info: '拥有单独的房间，不和其他宠物共处一室', accordion: true },
-            { label: '节假日加价', price: '+¥15', accordion: true },
-            { label: '每加1只', price: '+¥40', accordion: true },
-            { label: '幼猫', price: '–', accordion: true },
-            { label: '紧急预约附加费', price: '+¥15', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期订单（7晚+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
-            { label: '超时费', price: '当日价×50%', info: '超时2–8小时收取50%；8小时以上收取100%' },
+            { label: '每加 1 只', price: '+¥40' },
+            { label: '节假日加价', price: '+¥15' },
+            ROW_LONGTERM,
+            ROW_EMERGENCY('+¥15'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
+            ROW_DELAY,
           ],
         },
         {
           type: 'rabbit', label: '兔',
+          baseInfo: CARE_INFO.rabbit,
           weights: [
-            { range: '0–3 公斤', price: 65, size: '小型' },
-            { range: '3–7 公斤', price: 75, size: '大型' },
+            { range: '全体型', price: 65, size: '全部' },
           ],
           rows: [
-            { label: '节假日加价', price: '+¥12', accordion: true },
-            { label: '每加1只', price: '+¥28', accordion: true },
-            { label: '紧急预约附加费', price: '+¥12', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期订单（7晚+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
-            { label: '超时费', price: '当日价×50%', info: '超时2–8小时收取50%；8小时以上收取100%' },
+            { label: '每加 1 只', price: '+¥28' },
+            { label: '节假日加价', price: '+¥12' },
+            ROW_LONGTERM,
+            ROW_EMERGENCY('+¥12'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
+            ROW_DELAY,
           ],
         },
         {
           type: 'hamster', label: '鼠',
+          baseInfo: CARE_INFO.hamster,
           weights: [
             { range: '全体型', price: 45, size: '全部' },
           ],
           rows: [
-            { label: '节假日加价', price: '+¥8', accordion: true },
-            { label: '每加1只', price: '+¥20', accordion: true },
-            { label: '紧急预约附加费', price: '+¥8', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期订单（7晚+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
+            { label: '每加 1 只', price: '+¥20' },
+            { label: '节假日加价', price: '+¥8' },
+            ROW_LONGTERM,
+            ROW_EMERGENCY('+¥8'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
+            ROW_DELAY,
           ],
         },
         {
           type: 'bird', label: '鸟',
+          baseInfo: CARE_INFO.bird,
           weights: [
             { range: '全体型', price: 48, size: '全部' },
           ],
           rows: [
-            { label: '节假日加价', price: '+¥10', accordion: true },
-            { label: '每加1只', price: '+¥22', accordion: true },
-            { label: '紧急预约附加费', price: '+¥8', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期订单（7晚+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
+            { label: '每加 1 只', price: '+¥22' },
+            { label: '节假日加价', price: '+¥10' },
+            ROW_LONGTERM,
+            ROW_EMERGENCY('+¥8'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
+            ROW_DELAY,
           ],
         },
       ],
@@ -136,75 +197,73 @@ const CHEN_YI_DATA = {
         {
           type: 'dog', label: '狗',
           weights: [
-            { range: '0–7 公斤', price: 58, size: '小型' },
-            { range: '7–18 公斤', price: 68, size: '中型' },
-            { range: '18–45 公斤', price: 78, size: '大型' },
+            { range: '0–10 公斤', price: 58, size: '小型', tier: '小型犬', info: CARE_INFO.dog },
+            { range: '10–20 公斤', price: 68, size: '中型', tier: '中型犬', info: CARE_INFO.dog },
+            { range: '20 公斤+', price: 78, size: '大型', tier: '大型犬', info: CARE_INFO.dog },
           ],
           rows: [
-            { label: '节假日加价', price: '+¥15', accordion: true },
-            { label: '每加1只', price: '+¥35', accordion: true },
-            { label: '幼犬', price: '+¥10', accordion: true },
-            { label: '紧急预约附加费', price: '+¥10', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期预约（5天+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
-            { label: '超时费', price: '当日价×50%', info: '超时2–8小时收取50%；8小时以上收取100%' },
+            { label: '幼犬', price: '+¥10' },
+            { label: '每加 1 只', price: '+¥35' },
+            { label: '节假日加价', price: '+¥15' },
+            ROW_EMERGENCY('+¥10'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
           ],
         },
         {
           type: 'cat', label: '猫',
+          baseInfo: CARE_INFO.cat,
           weights: [
-            { range: '0–7 公斤', price: 50, size: '普通' },
-            { range: '7–18 公斤', price: 60, size: '大型' },
+            { range: '全体型', price: 50, size: '全部' },
           ],
           rows: [
-            { label: '节假日加价', price: '+¥12', accordion: true },
-            { label: '每加1只', price: '+¥30', accordion: true },
-            { label: '幼猫', price: '–', accordion: true },
-            { label: '紧急预约附加费', price: '+¥10', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期预约（5天+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
-            { label: '超时费', price: '当日价×50%', info: '超时2–8小时收取50%；8小时以上收取100%' },
+            { label: '每加 1 只', price: '+¥30' },
+            { label: '节假日加价', price: '+¥12' },
+            ROW_EMERGENCY('+¥10'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
           ],
         },
         {
           type: 'rabbit', label: '兔',
+          baseInfo: CARE_INFO.rabbit,
           weights: [
-            { range: '0–3 公斤', price: 55, size: '小型' },
-            { range: '3–7 公斤', price: 62, size: '大型' },
+            { range: '全体型', price: 55, size: '全部' },
           ],
           rows: [
-            { label: '节假日加价', price: '+¥10', accordion: true },
-            { label: '每加1只', price: '+¥25', accordion: true },
-            { label: '紧急预约附加费', price: '+¥8', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期预约（5天+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
-            { label: '超时费', price: '当日价×50%', info: '超时2–8小时收取50%；8小时以上收取100%' },
+            { label: '每加 1 只', price: '+¥25' },
+            { label: '节假日加价', price: '+¥10' },
+            ROW_EMERGENCY('+¥8'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
           ],
         },
         {
           type: 'hamster', label: '鼠',
+          baseInfo: CARE_INFO.hamster,
           weights: [
             { range: '全体型', price: 38, size: '全部' },
           ],
           rows: [
-            { label: '节假日加价', price: '+¥6', accordion: true },
-            { label: '每加1只', price: '+¥15', accordion: true },
-            { label: '紧急预约附加费', price: '+¥6', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期预约（5天+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
+            { label: '每加 1 只', price: '+¥15' },
+            { label: '节假日加价', price: '+¥6' },
+            ROW_EMERGENCY('+¥6'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
           ],
         },
         {
           type: 'bird', label: '鸟',
+          baseInfo: CARE_INFO.bird,
           weights: [
             { range: '全体型', price: 40, size: '全部' },
           ],
           rows: [
-            { label: '节假日加价', price: '+¥8', accordion: true },
-            { label: '每加1只', price: '+¥18', accordion: true },
-            { label: '紧急预约附加费', price: '+¥6', info: '预约当天和次日服务为紧急预约', accordion: true },
-            { label: '长期预约（5天+）', price: '-10%' },
-            { section: '守护者接送（1来回）', price: '¥30' },
+            { label: '每加 1 只', price: '+¥18' },
+            { label: '节假日加价', price: '+¥8' },
+            ROW_EMERGENCY('+¥6'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
           ],
         },
       ],
@@ -214,8 +273,24 @@ const CHEN_YI_DATA = {
       petTypes: [
         { type: 'dog', weights: ['0–7', '7–18', '18–45', '45+'] },
       ],
-      extras: [
-        { label: '60分钟遛狗', price: '+18', unit: '次' },
+      extras: [],
+      petPricingTabs: [
+        {
+          type: 'dog', label: '狗',
+          weights: [
+            { range: '0–10 公斤', price: 38, size: '小型', tier: '小型犬', info: '单次遛狗时长 30 分钟。' },
+            { range: '10–20 公斤', price: 45, size: '中型', tier: '中型犬', info: '单次遛狗时长 30 分钟。' },
+            { range: '20 公斤+', price: 52, size: '大型', tier: '大型犬', info: '单次遛狗时长 30 分钟。' },
+          ],
+          rows: [
+            { label: '幼犬', price: '+¥8' },
+            { label: '60 分钟加价', price: '+¥18' },
+            { label: '每加 1 只', price: '+¥20' },
+            { label: '节假日加价', price: '+¥10' },
+            ROW_EMERGENCY('+¥8'),
+            ROW_VISIT,
+          ],
+        },
       ],
     },
     {
@@ -225,6 +300,48 @@ const CHEN_YI_DATA = {
         { type: 'dog', weights: ['0–7', '7–18', '18–45', '45+'] },
       ],
       extras: [],
+      petPricingTabs: [
+        {
+          type: 'dog', label: '狗',
+          baseUnitNote: '单次 30 分钟',
+          weights: [
+            { range: '全体型适用', price: 38, size: '全部', tier: '30 分钟', info: VISIT_INFO.dog },
+          ],
+          rows: VISIT_EXTRA_ROWS,
+        },
+        {
+          type: 'cat', label: '猫',
+          baseUnitNote: '单次 30 分钟',
+          weights: [
+            { range: '全体型适用', price: 32, size: '全部', tier: '30 分钟', info: VISIT_INFO.cat },
+          ],
+          rows: VISIT_EXTRA_ROWS,
+        },
+        {
+          type: 'rabbit', label: '兔',
+          baseUnitNote: '单次 30 分钟',
+          weights: [
+            { range: '全体型适用', price: 30, size: '全部', tier: '30 分钟', info: VISIT_INFO.rabbit },
+          ],
+          rows: VISIT_EXTRA_ROWS,
+        },
+        {
+          type: 'hamster', label: '鼠',
+          baseUnitNote: '单次 30 分钟',
+          weights: [
+            { range: '全体型适用', price: 26, size: '全部', tier: '30 分钟', info: VISIT_INFO.hamster },
+          ],
+          rows: VISIT_EXTRA_ROWS,
+        },
+        {
+          type: 'bird', label: '鸟',
+          baseUnitNote: '单次 30 分钟',
+          weights: [
+            { range: '全体型适用', price: 28, size: '全部', tier: '30 分钟', info: VISIT_INFO.bird },
+          ],
+          rows: VISIT_EXTRA_ROWS,
+        },
+      ],
     },
     {
       id: '伴宠留宿', sub: '在宠物主家', price: 108, unit: '晚',
@@ -232,8 +349,48 @@ const CHEN_YI_DATA = {
         { type: 'cat', weights: ['0–7', '7–18', '18–45'] },
         { type: 'dog', weights: ['0–7', '7–18', '18–45', '45+'] },
       ],
-      extras: [
-        { label: '节假日费率', price: 130, unit: '晚' },
+      extras: [],
+      petPricingTabs: [
+        {
+          type: 'dog', label: '狗',
+          baseInfo: CARE_INFO.dog,
+          weights: [
+            { range: '全体型', price: 108, size: '全部' },
+          ],
+          rows: LODGE_DOG_ROWS,
+        },
+        {
+          type: 'cat', label: '猫',
+          baseInfo: CARE_INFO.cat,
+          weights: [
+            { range: '全体型', price: 98, size: '全部' },
+          ],
+          rows: LODGE_PET_ROWS,
+        },
+        {
+          type: 'rabbit', label: '兔',
+          baseInfo: CARE_INFO.rabbit,
+          weights: [
+            { range: '全体型', price: 88, size: '全部' },
+          ],
+          rows: LODGE_PET_ROWS,
+        },
+        {
+          type: 'hamster', label: '鼠',
+          baseInfo: CARE_INFO.hamster,
+          weights: [
+            { range: '全体型', price: 78, size: '全部' },
+          ],
+          rows: LODGE_PET_ROWS,
+        },
+        {
+          type: 'bird', label: '鸟',
+          baseInfo: CARE_INFO.bird,
+          weights: [
+            { range: '全体型', price: 80, size: '全部' },
+          ],
+          rows: LODGE_PET_ROWS,
+        },
       ],
     },
   ],
@@ -279,6 +436,181 @@ const CHEN_YI_DATA = {
       pets: [
         { type: 'cat', weights: ['0–7', '7–18', '18–45'] },
         { type: 'dog', weights: ['0–7', '7–18', '18–45', '45+'] },
+      ],
+    },
+  ],
+};
+
+// ─── Data: 阿哲 (训练师，遛狗为主) ───────────────────────────
+const ZHE_DATA = {
+  id: 'g6',
+  name: '阿哲',
+  isNewUserFlow: true,
+  initial: { char: '哲', bg: LL.mint },
+  tagline: '持证训练师，让每一次遛狗都成为一堂行为课',
+  area: '朝阳区·望京，北京',
+  joinedYears: 4,
+  rating: 4.8,
+  reviewCount: 189,
+  orderCount: 367,
+  verified: true,
+  trained: true,
+  bio: '我是一名持证宠物训练师，在望京带过上百只"问题狗狗"。\n\n比起单纯遛狗，我更擅长在散步中帮狗狗建立规矩——牵绳礼仪、社交脱敏、拆家与扑人纠正都是我的强项。每次服务都会发训练小结和照片，让你看到它一点点的进步。',
+  skills: ['宠物训练师认证', '宠物急救证书', '行为矫正'],
+  ownPets: [
+    { id: 'op1', name: '可乐', breed: '边境牧羊犬', age: '2岁', bg: '#C7E8D8',
+      photo: (window.__resources && window.__resources.galleryPuppy) || '../../uploads/Sleeping Golden Retriever Puppy.png' },
+  ],
+  home: {
+    type: '公寓',
+    hasYard: false,
+    smoking: false,
+    hasPets: true,
+    hasChildren: false,
+    acceptHeatFemale: false,
+    petOnBed: false,
+    petOnSofa: true,
+    onlyOnePet: false,
+    toiletInterval: '每2–3小时',
+  },
+  services: [
+    {
+      id: '遛狗', sub: '在你的小区周边', price: 45, unit: '次',
+      petTypes: [
+        { type: 'dog', weights: ['0–7', '7–18', '18–45', '45+'] },
+      ],
+      extras: [],
+      petPricingTabs: [
+        {
+          type: 'dog', label: '狗',
+          weights: [
+            { range: '0–10 公斤', price: 45, size: '小型', tier: '小型犬', info: '单次遛狗 30 分钟，含基础牵引与社交引导。' },
+            { range: '10–20 公斤', price: 52, size: '中型', tier: '中型犬', info: '单次遛狗 30 分钟，含基础牵引与社交引导。' },
+            { range: '20 公斤+', price: 60, size: '大型', tier: '大型犬', info: '单次遛狗 30 分钟，含基础牵引与社交引导。' },
+          ],
+          rows: [
+            { label: '幼犬', price: '+¥8' },
+            { label: '60 分钟加价', price: '+¥20' },
+            { label: '行为训练加练（每次）', price: '+¥30', info: '结合遛狗进行基础服从 / 社交训练，由训练师一对一指导。' },
+            { label: '每加 1 只', price: '+¥22' },
+            { label: '节假日加价', price: '+¥12' },
+            ROW_EMERGENCY('+¥8'),
+            ROW_VISIT,
+          ],
+        },
+      ],
+    },
+    {
+      id: '寄养', sub: '在守护者家', price: 138, unit: '晚',
+      petTypes: [
+        { type: 'dog', weights: ['0–7', '7–18', '18–45'] },
+      ],
+      extras: [],
+      petPricingTabs: [
+        {
+          type: 'dog', label: '狗',
+          weights: [
+            { range: '0–10 公斤', price: 138, size: '小型', tier: '小型犬', info: CARE_INFO.dog },
+            { range: '10–20 公斤', price: 158, size: '中型', tier: '中型犬', info: CARE_INFO.dog },
+            { range: '20 公斤+', price: 178, size: '大型', tier: '大型犬', info: CARE_INFO.dog },
+          ],
+          rows: [
+            { label: '幼犬', price: '+¥15' },
+            { label: '每加 1 只', price: '+¥55' },
+            { label: '节假日加价', price: '+¥20' },
+            { label: '行为训练加练（每天）', price: '+¥40', info: '寄养期间每日加入基础服从训练，帮助纠正拆家、扑人等行为。' },
+            ROW_LONGTERM,
+            ROW_EMERGENCY('+¥18'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
+            ROW_DELAY,
+          ],
+        },
+      ],
+    },
+    {
+      id: '日托', sub: '在守护者家', price: 78, unit: '天',
+      petTypes: [
+        { type: 'dog', weights: ['0–7', '7–18', '18–45'] },
+      ],
+      extras: [],
+      petPricingTabs: [
+        {
+          type: 'dog', label: '狗',
+          weights: [
+            { range: '0–10 公斤', price: 78, size: '小型', tier: '小型犬', info: CARE_INFO.dog },
+            { range: '10–20 公斤', price: 88, size: '中型', tier: '中型犬', info: CARE_INFO.dog },
+            { range: '20 公斤+', price: 98, size: '大型', tier: '大型犬', info: CARE_INFO.dog },
+          ],
+          rows: [
+            { label: '幼犬', price: '+¥12' },
+            { label: '每加 1 只', price: '+¥40' },
+            { label: '节假日加价', price: '+¥16' },
+            { label: '行为训练加练（每天）', price: '+¥40' },
+            ROW_EMERGENCY('+¥12'),
+            ROW_PICKUP,
+            ROW_MEDICATE,
+          ],
+        },
+      ],
+    },
+    {
+      id: '上门喂养', sub: '在宠物主家', price: 38, unit: '次',
+      petTypes: [
+        { type: 'dog', weights: ['0–7', '7–18', '18–45', '45+'] },
+      ],
+      extras: [],
+      petPricingTabs: [
+        {
+          type: 'dog', label: '狗',
+          baseUnitNote: '单次 30 分钟',
+          weights: [
+            { range: '全体型适用', price: 38, size: '全部', tier: '30 分钟', info: VISIT_INFO.dog },
+          ],
+          rows: VISIT_EXTRA_ROWS,
+        },
+      ],
+    },
+  ],
+  reviews: [
+    { id: 1, phone: '137****6611', pet: '拉布拉多·2岁', rating: 5, service: '遛狗', date: '2026-05-12',
+      text: '阿哲是训练师，遛狗时顺便纠正了乱扑人的毛病，回来明显乖了，还发了训练小结。' },
+    { id: 2, phone: '159****2048', pet: '边牧·1岁',     rating: 5, service: '遛狗', date: '2026-05-03',
+      text: '边牧精力太旺，阿哲每次遛足30分钟还做服从练习，狗子终于不拆家了！' },
+    { id: 3, phone: '138****7720', pet: '金毛·3岁',     rating: 5, service: '寄养', date: '2026-04-20',
+      text: '寄养期间每天有训练和照片，环境干净，狗狗很喜欢他，强烈推荐。' },
+    { id: 4, phone: '186****3355', pet: '柯基·2岁',     rating: 4, service: '遛狗', date: '2026-04-06',
+      text: '很专业，路线和时间都很准时。偶尔回复稍慢，整体满意。' },
+    { id: 5, phone: '135****9182', pet: '泰迪·4岁',     rating: 5, service: '日托', date: '2026-03-19',
+      text: '日托加了训练，泰迪学会了定点，太省心了。' },
+    { id: 6, phone: '151****4407', pet: '萨摩耶·2岁',   rating: 5, service: '遛狗', date: '2026-03-02',
+      text: '大狗也能稳稳牵住，社交训练很有一套，已经是回头客了。' },
+    { id: 7, phone: '139****8830', pet: '比熊·1岁',     rating: 5, service: '上门喂养', date: '2026-02-15',
+      text: '上门准时，喂食遛弯都到位，还拍了视频，很安心。' },
+    { id: 8, phone: '177****2261', pet: '阿拉斯加·3岁', rating: 5, service: '寄养', date: '2026-01-28',
+      text: '大型犬也接得住，训练师就是不一样，狗子状态特别好。' },
+  ],
+  starDist: { 5: 84, 4: 12, 3: 4 },
+  bookedDates: [
+    '2026-05-25','2026-05-28','2026-05-29','2026-06-01','2026-06-02',
+    '2026-06-08','2026-06-09','2026-06-15','2026-06-16','2026-06-22',
+  ],
+  photos: [
+    (window.__resources && window.__resources.zheHero) || 'assets/zhe-hero.png',
+    (window.__resources && window.__resources.galleryRoom) || '../../uploads/Bright Sunlit Room.png',
+    (window.__resources && window.__resources.galleryLiving) || '../../uploads/Cozy Living Room Decor.png',
+  ],
+  petTypeSections: [
+    {
+      title: '阿哲可以遛狗',
+      pets: [
+        { type: 'dog', weights: ['0–7', '7–18', '18–45', '45+'] },
+      ],
+    },
+    {
+      title: '阿哲可以寄养',
+      pets: [
+        { type: 'dog', weights: ['0–7', '7–18', '18–45'] },
       ],
     },
   ],
@@ -423,14 +755,27 @@ function StickyProfileNav({ name, onBack }) {
 
 // ─── Hero ─────────────────────────────────────────────────────
 function ProfileHero({ g, liked, onLike }) {
-  const photoSrc = (window.__resources && window.__resources.guardian2) || g.photo;
-  const photos   = (g.photos && g.photos.length) ? g.photos : [photoSrc];
+  const resPhoto = (g.photoKey && window.__resources) ? window.__resources[g.photoKey] : null;
+  const photoSrc = resPhoto || g.photo || null;
+  const photos   = (g.photos && g.photos.length) ? g.photos : (photoSrc ? [photoSrc] : []);
+  const initial  = g.initial || null;
 
   return (
     <div style={{ background: LL.surface }}>
       {/* Photo carousel + overlaid action buttons */}
       <div style={{ position: 'relative' }}>
-        <PhotoCarousel photos={photos} />
+        {photos.length > 0 ? (
+          <PhotoCarousel photos={photos} />
+        ) : (
+          <div style={{
+            height: 240, background: initial?.bg || LL.lavender,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ fontSize: 96, fontWeight: 800, color: 'rgba(34,40,44,0.20)', letterSpacing: '-0.02em' }}>
+              {initial?.char || (g.name && g.name[0]) || ''}
+            </span>
+          </div>
+        )}
         {/* Share + Heart — bottom-right of carousel */}
         <div style={{
           position: 'absolute', bottom: 12, right: 12,
@@ -467,12 +812,19 @@ function ProfileHero({ g, liked, onLike }) {
           position: 'absolute', top: -32, left: 16,
           width: 64, height: 64, borderRadius: '50%',
           border: '3px solid #fff', overflow: 'hidden',
-          background: LL.lavender,
+          background: initial?.bg || LL.lavender,
           boxShadow: '0 2px 8px rgba(0,0,0,0.13)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <img src={photoSrc} alt={g.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
-          />
+          {photoSrc ? (
+            <img src={photoSrc} alt={g.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+            />
+          ) : (
+            <span style={{ fontSize: 28, fontWeight: 800, color: LL.text }}>
+              {initial?.char || (g.name && g.name[0]) || ''}
+            </span>
+          )}
         </div>
 
         {/* Spacer to clear the avatar */}
@@ -740,8 +1092,11 @@ function GuardianCalendar({
 }
 
 // ─── Calendar (inside 信息 tab) ───────────────────────────────
-function CalendarBlock({ bookedDates, guardianServices, onViewServices }) {
-  const [selectedSvc, setSelectedSvc] = React.useState(guardianServices?.[0]?.id || '寄养');
+function CalendarBlock({ bookedDates, guardianServices, onViewServices, defaultService }) {
+  const initSvc = (defaultService && guardianServices?.some(s => s.id === defaultService))
+    ? defaultService
+    : (guardianServices?.[0]?.id || '寄养');
+  const [selectedSvc, setSelectedSvc] = React.useState(initSvc);
   const [svcOpen,     setSvcOpen]     = React.useState(false);
 
   const svcOptions = guardianServices?.map(s => s.id) || ['寄养'];
@@ -795,10 +1150,10 @@ function CalendarBlock({ bookedDates, guardianServices, onViewServices }) {
         )}
       </div>
 
-      {/* Shared calendar — view-only, with price display */}
+      {/* Shared calendar — view-only, no per-day price */}
       <GuardianCalendar
         bookedDates={bookedDates}
-        svcPrice={svcData?.price ?? null}
+        svcPrice={null}
         svcUnit={svcData?.unit ?? '晚'}
         viewOnly={true}
       />
@@ -807,14 +1162,15 @@ function CalendarBlock({ bookedDates, guardianServices, onViewServices }) {
 }
 
 // ─── 信息 Tab ─────────────────────────────────────────────────
-function InfoTab({ g, onViewServices, onViewAllReviews }) {
+function InfoTab({ g, onViewServices, onViewAllReviews, defaultService }) {
   const [bioExp,        setBioExp]        = React.useState(false);
   const [homeExp,       setHomeExp]       = React.useState(false);
   const [expandedPetId, setExpandedPetId] = React.useState(null);
   const AVAS = [LL.butter, LL.lavender, LL.mint, LL.peach];
   const BIO_LIMIT = 75;
-  const bioShort   = g.bio.replace(/\n/g, ' ').slice(0, BIO_LIMIT);
-  const bioTooLong = g.bio.replace(/\n/g, '').length > BIO_LIMIT;
+  const bioText    = g.bio || '';
+  const bioShort   = bioText.replace(/\n/g, ' ').slice(0, BIO_LIMIT);
+  const bioTooLong = bioText.replace(/\n/g, '').length > BIO_LIMIT;
 
   const h = g.home;
   const homeItems = [
@@ -852,7 +1208,7 @@ function InfoTab({ g, onViewServices, onViewAllReviews }) {
         fontSize: 13.5, color: LL.text2, lineHeight: 1.75, marginBottom: 6,
         textWrap: 'pretty', whiteSpace: 'pre-wrap',
       }}>
-        {!bioExp && bioTooLong ? bioShort + '…' : g.bio}
+        {!bioExp && bioTooLong ? bioShort + '…' : bioText}
       </div>
       {bioTooLong && (
         <button onClick={() => setBioExp(e => !e)} style={{
@@ -871,54 +1227,30 @@ function InfoTab({ g, onViewServices, onViewAllReviews }) {
       {g.ownPets && g.ownPets.length > 0 && (
         <>
           <Divider />
-          <SecHead title="我的宠物" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+          <SecHead title="Ta的宠物" />
+          <div style={{ display: 'flex', gap: 18, overflowX: 'auto', overflowY: 'hidden',
+            padding: '2px 0 6px', marginBottom: 20, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
             {g.ownPets.map(pet => (
               <button key={pet.id} onClick={() => {}}
-                style={{ display:'flex', alignItems:'center', gap:12,
-                  background:LL.bg, border:0, cursor:'pointer', fontFamily:LL.font,
-                  borderRadius:12, padding:'10px 12px', textAlign:'left', width:'100%' }}>
-                <div style={{ width:52, height:52, borderRadius:'50%', overflow:'hidden',
+                style={{ flex:'0 0 auto', background:'transparent', border:0, padding:0, cursor:'pointer',
+                  fontFamily:LL.font, display:'flex', flexDirection:'column', alignItems:'center', gap:7, width:60 }}>
+                <div style={{ width:60, height:60, borderRadius:'50%', overflow:'hidden',
                   background:pet.bg || LL.butter, flex:'0 0 auto',
+                  display:'flex', alignItems:'center', justifyContent:'center',
                   border:`1.5px solid ${LL.border}` }}>
-                  <img src={pet.photo} alt={pet.name}
-                    style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center' }}
-                    onError={e => { e.target.style.display = 'none'; }} />
+                  {pet.photo
+                    ? <img src={pet.photo} alt={pet.name}
+                        style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center' }}
+                        onError={e => { e.target.style.display = 'none'; }} />
+                    : <span style={{ fontSize:22, fontWeight:700, color:'rgba(34,40,44,0.45)' }}>{pet.name[0]}</span>}
                 </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:14, fontWeight:700, color:LL.text }}>{pet.name}</div>
-                  <div style={{ fontSize:12, color:LL.text2, marginTop:2 }}>{pet.breed} · {pet.age}</div>
-                </div>
-                <i className="ph ph-caret-right" style={{ fontSize:14, color:LL.text3, flex:'0 0 auto' }} />
+                <div style={{ fontSize:12.5, fontWeight:600, color:LL.text, lineHeight:1.2,
+                  maxWidth:60, textAlign:'center', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{pet.name}</div>
               </button>
             ))}
           </div>
         </>
       )}
-
-      <Divider />
-
-      {/* Home */}
-      <SecHead title="我的家" />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 13, marginBottom: 10 }}>
-        {(homeExp ? homeItems : homeItems.slice(0, 5)).map((item, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <HomeIcon name={item.icon} blocked={item.blocked} />
-            <span style={{ fontSize: 13.5, color: item.blocked ? '#ABABAB' : LL.text2, lineHeight: 1.4 }}>
-              {item.text}
-            </span>
-          </div>
-        ))}
-      </div>
-      <button onClick={() => setHomeExp(e => !e)} style={{
-        background: 'transparent', border: 0, padding: 0, marginBottom: 20,
-        fontSize: 13, fontWeight: 600, color: LL.text2,
-        cursor: 'pointer', fontFamily: LL.font,
-        display: 'inline-flex', alignItems: 'center', gap: 3,
-      }}>
-        {homeExp ? '收起' : `查看全部（${homeItems.length - 5} 项）`}
-        <i className={`ph ph-caret-${homeExp ? 'up' : 'down'}`} style={{ fontSize: 11 }} />
-      </button>
 
       <Divider />
 
@@ -1017,6 +1349,7 @@ function InfoTab({ g, onViewServices, onViewAllReviews }) {
         bookedDates={g.bookedDates}
         guardianServices={g.services}
         onViewServices={onViewServices}
+        defaultService={defaultService}
       />
     </div>
   );
@@ -1126,7 +1459,7 @@ const SVC_BG_MAP = {
   '上门喂养': '#D8CAE8', '伴宠留宿': '#E8E3F4',
 };
 const PET_ICON_MAP = { dog: 'dog', cat: 'cat' };
-const PRICING_SVC_TYPES = ['寄养', '日托'];
+const PRICING_SVC_TYPES = ['寄养', '日托', '遛狗', '上门喂养', '伴宠留宿'];
 const PET_BG_MAP    = { dog:'#EDF6EE', cat:'#F0EEF8', rabbit:'#FEF6E4', hamster:'#FFF0EA', bird:'#E8F0FE' };
 const PET_COLOR_MAP = { dog:'#2C7A4B', cat:PROFILE_PURPLE, rabbit:'#B45309', hamster:'#9C4221', bird:'#2F5F87' };
 const PET_ICON_MAP2 = { dog:'dog', cat:'cat', rabbit:'rabbit', bird:'bird', hamster:'mouse-simple' };
@@ -1137,50 +1470,50 @@ function PricingServiceCard({ svc }) {
   const tabs = svc.petPricingTabs || [];
   const [activeType,    setActiveType]    = React.useState(tabs[0]?.type || '');
   const [openTooltip,   setOpenTooltip]   = React.useState(null);
-  const [accordionOpen, setAccordionOpen] = React.useState(false);
 
-  React.useEffect(() => { setAccordionOpen(false); setOpenTooltip(null); }, [activeType]);
+  React.useEffect(() => { setOpenTooltip(null); }, [activeType]);
 
   const tab = tabs.find(t => t.type === activeType) || tabs[0];
   if (!tab) return null;
   const toggleTip = (key) => setOpenTooltip(k => k === key ? null : key);
-
-  const firstSecIdx   = tab.rows.findIndex(r => r.section);
-  const preRows       = firstSecIdx >= 0 ? tab.rows.slice(0, firstSecIdx) : tab.rows;
-  const postRows      = firstSecIdx >= 0 ? tab.rows.slice(firstSecIdx)    : [];
-  const accordionRows = preRows.filter(r => r.accordion);
-  const directRows    = preRows.filter(r => !r.accordion);
+  const rows = tab.rows || [];
 
   const bg    = PET_BG_MAP[tab.type]    || LL.bg;
   const color = PET_COLOR_MAP[tab.type] || LL.text;
   const icon  = PET_ICON_MAP2[tab.type] || 'paw-print';
 
   const renderRow = (row, rowKey, borderTop) => {
+    const label   = row.label || row.section;
     const isNA    = row.price === '–' || row.price === '-';
     const tipOpen = openTooltip === rowKey;
     const pColor  = isNA ? LL.text3 : (row.price.startsWith('-') && !row.price.startsWith('-¥') ? GGREEN : LL.text);
     return (
       <React.Fragment key={rowKey}>
-        <div style={{ padding:'8px 16px', display:'flex', justifyContent:'space-between', alignItems:'center',
+        <div style={{ padding:'9px 16px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10,
           borderTop: borderTop ? `1px solid ${LL.border}` : 'none' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-            <span style={{ fontSize:13.5, color: isNA ? LL.text3 : LL.text2 }}>{row.label}</span>
-            {row.info && (
-              <button onClick={() => toggleTip(rowKey)} style={{ width:15, height:15, borderRadius:'50%',
-                border:`1px solid ${tipOpen ? LL.ink : LL.text3}`,
-                background: tipOpen ? LL.ink : 'transparent',
-                display:'inline-flex', alignItems:'center', justifyContent:'center',
-                cursor:'pointer', padding:0, flex:'0 0 auto' }}>
-                <span style={{ fontSize:8.5, fontWeight:700, color: tipOpen ? '#fff' : LL.text3, lineHeight:1 }}>i</span>
-              </button>
+          <div style={{ minWidth:0 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+              <span style={{ fontSize:13.5, color: isNA ? LL.text3 : LL.text2 }}>{label}</span>
+              {row.info && (
+                <button onClick={() => toggleTip(rowKey)} style={{ width:15, height:15, borderRadius:'50%',
+                  border:`1px solid ${tipOpen ? LL.ink : LL.text3}`,
+                  background: tipOpen ? LL.ink : 'transparent',
+                  display:'inline-flex', alignItems:'center', justifyContent:'center',
+                  cursor:'pointer', padding:0, flex:'0 0 auto' }}>
+                  <span style={{ fontSize:8.5, fontWeight:700, color: tipOpen ? '#fff' : LL.text3, lineHeight:1 }}>i</span>
+                </button>
+              )}
+            </div>
+            {row.sub && (
+              <div style={{ fontSize:11.5, color:LL.text3, marginTop:2, lineHeight:1.4, textWrap:'pretty' }}>{row.sub}</div>
             )}
           </div>
-          <span style={{ fontSize:13.5, fontWeight: isNA ? 400 : 600, color:pColor, fontVariantNumeric:'tabular-nums' }}>
+          <span style={{ fontSize:13.5, fontWeight: isNA ? 400 : 600, color:pColor, fontVariantNumeric:'tabular-nums', flex:'0 0 auto', whiteSpace:'nowrap' }}>
             {row.price}
           </span>
         </div>
         {tipOpen && row.info && (
-          <div style={{ margin:'0 16px 6px', padding:'8px 12px', background:'#F0F0F8', borderRadius:8,
+          <div style={{ margin:'0 16px 8px', padding:'8px 12px', background:'#F0F0F8', borderRadius:8,
             fontSize:12, color:LL.text2, lineHeight:1.55 }}>{row.info}</div>
         )}
       </React.Fragment>
@@ -1224,9 +1557,15 @@ function PricingServiceCard({ svc }) {
         })}
       </div>
 
-      {/* Base fee — horizontal cards with dog silhouette on right */}
+      {/* Base fee — full card is tappable to reveal service detail */}
       <div style={{ padding:'10px 16px 12px', borderTop:`1px solid ${LL.border}` }}>
         <div style={{ fontSize:11.5, fontWeight:600, color:LL.text3, letterSpacing:'0.03em', marginBottom:10 }}>基础费用</div>
+        {tab.baseInfo && openTooltip === 'baseinfo' && (
+          <div style={{ marginBottom:10, padding:'9px 12px', background:'#F0F0F8', borderRadius:8,
+            fontSize:12, color:LL.text2, lineHeight:1.6, textWrap:'pretty' }}>
+            <strong style={{ color:LL.text }}>{tab.label}服务内容　</strong>{tab.baseInfo}
+          </div>
+        )}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
           {tab.weights.map((w, i) => {
             const DOG_IMGS = {
@@ -1234,16 +1573,49 @@ function PricingServiceCard({ svc }) {
               '中型': (window.__resources && window.__resources.dogMedium) || './assets/dog-medium.png',
               '大型': (window.__resources && window.__resources.dogLarge)  || './assets/dog-large.png',
             };
-            const dogImg = tab.type === 'dog' ? DOG_IMGS[w.size] : null;
+            const dogImg  = tab.type === 'dog' ? DOG_IMGS[w.size] : null;
+            const cardKey = w.info ? `base-${i}` : (tab.baseInfo ? 'baseinfo' : null);
+            const clickable = !!cardKey;
+            const tipOpen = clickable && openTooltip === cardKey;
+            const hasDigit = /\d/.test(w.range);
+            const InfoDot = clickable ? (
+              <span style={{ width:14, height:14, borderRadius:'50%',
+                border:`1px solid ${tipOpen ? LL.ink : LL.text3}`,
+                background: tipOpen ? LL.ink : 'transparent',
+                display:'inline-flex', alignItems:'center', justifyContent:'center', flex:'0 0 auto' }}>
+                <span style={{ fontSize:8, fontWeight:700, color: tipOpen ? '#fff' : LL.text3, lineHeight:1 }}>i</span>
+              </span>
+            ) : null;
             return (
-              <div key={i} style={{ background:bg, borderRadius:10, padding:'10px 12px',
-                display:'flex', alignItems:'center', justifyContent:'space-between', gap:6 }}>
+              <div key={i}
+                onClick={clickable ? () => toggleTip(cardKey) : undefined}
+                role={clickable ? 'button' : undefined}
+                style={{ background:bg, borderRadius:10, padding:'10px 12px',
+                  display:'flex', alignItems:'center', justifyContent:'space-between', gap:6,
+                  cursor: clickable ? 'pointer' : 'default',
+                  outline: tipOpen ? `1.5px solid ${LL.ink}` : '1.5px solid transparent',
+                  outlineOffset:'-1px', transition:'outline-color 120ms ease' }}>
                 {/* Left: text */}
-                <div>
-                  <div style={{ fontSize:13.5, fontWeight:700, color:LL.text, fontVariantNumeric:'tabular-nums' }}>
-                    {w.range.replace(' 公斤','').replace('公斤','')}
-                  </div>
-                  <div style={{ fontSize:10.5, color:LL.text3 }}>公斤</div>
+                <div style={{ minWidth:0 }}>
+                  {w.tier ? (
+                    <>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <span style={{ fontSize:13, fontWeight:700, color:LL.text }}>{w.tier}</span>
+                        {InfoDot}
+                      </div>
+                      <div style={{ fontSize:11, color:LL.text3, marginTop:1, fontVariantNumeric:'tabular-nums' }}>{w.range}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <span style={{ fontSize:13.5, fontWeight:700, color:LL.text, fontVariantNumeric:'tabular-nums' }}>
+                          {w.range.replace(' 公斤','').replace('公斤','')}
+                        </span>
+                        {InfoDot}
+                      </div>
+                      {hasDigit && <div style={{ fontSize:10.5, color:LL.text3 }}>公斤</div>}
+                    </>
+                  )}
                   <div style={{ marginTop:4 }}>
                     <span style={{ fontSize:15, fontWeight:800, color:LL.text, fontVariantNumeric:'tabular-nums' }}>¥{w.price}</span>
                     <span style={{ fontSize:10, color:LL.text3 }}>/{svc.unit}</span>
@@ -1260,43 +1632,28 @@ function PricingServiceCard({ svc }) {
             );
           })}
         </div>
+        {/* Per-tier care-detail tooltip (full width below the grid) */}
+        {tab.weights.map((w, i) => {
+          const baseKey = `base-${i}`;
+          if (openTooltip !== baseKey || !w.info) return null;
+          return (
+            <div key={`btip-${i}`} style={{ marginTop:8, padding:'9px 12px', background:'#F0F0F8', borderRadius:8,
+              fontSize:12, color:LL.text2, lineHeight:1.6, textWrap:'pretty' }}>
+              <strong style={{ color:LL.text }}>{w.tier}服务内容　</strong>{w.info}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Extra fees accordion */}
-      {accordionRows.length > 0 && (
+      {/* Extra fees — all items shown directly (no accordion) */}
+      {rows.length > 0 && (
         <div style={{ borderTop:`1px solid ${LL.border}` }}>
-          <button onClick={() => setAccordionOpen(o => !o)} style={{
-            width:'100%', padding:'10px 16px', background:'transparent', border:0,
-            display:'flex', justifyContent:'space-between', alignItems:'center',
-            cursor:'pointer', fontFamily:LL.font }}>
+          <div style={{ padding:'12px 16px 2px' }}>
             <span style={{ fontSize:13.5, fontWeight:600, color:LL.text }}>额外费用</span>
-            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              {!accordionOpen && <span style={{ fontSize:11.5, color:LL.text3 }}>{accordionRows.length} 项</span>}
-              <i className={`ph ph-caret-${accordionOpen ? 'up' : 'down'}`} style={{ fontSize:13, color:LL.text3 }} />
-            </div>
-          </button>
-          {accordionOpen && accordionRows.map((row, i) => renderRow(row, `a-${i}`, i === 0))}
+          </div>
+          {rows.map((row, i) => renderRow(row, `r-${i}`, true))}
         </div>
       )}
-
-      {/* Direct rows (长期订单) */}
-      {directRows.map((row, i) => renderRow(row, `d-${i}`, true))}
-
-      {/* Section rows (守护者接送 + 超时费) */}
-      {postRows.map((row, i) => {
-        if (row.section) {
-          return (
-            <React.Fragment key={i}>
-              <div style={{ height:1, background:LL.border, margin:'0 16px' }} />
-              <div style={{ padding:'10px 16px 8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <span style={{ fontSize:13.5, fontWeight:700, color:LL.text }}>{row.section}</span>
-                <span style={{ fontSize:14, fontWeight:700, color:LL.text }}>{row.price}</span>
-              </div>
-            </React.Fragment>
-          );
-        }
-        return renderRow(row, `p-${i}`, false);
-      })}
       <div style={{ height:12 }} />
     </div>
   );
@@ -1311,8 +1668,7 @@ function ServicesTab({ g }) {
         background: '#F0F7FF', border: '1px solid #D0E6F8',
       }}>
         <div style={{ fontSize: 12.5, color: LL.text2, lineHeight: 1.55 }}>
-          以下价格适用于 <strong style={{ color: LL.text }}>1 只宠物</strong>，
-          含 <strong style={{ color: LL.text }}>15% 平台服务费</strong>。
+          以下价格适用于 <strong style={{ color: LL.text }}>1 只宠物</strong>，为守护者实际收费，无额外平台服务费。
         </div>
       </div>
 
@@ -1358,7 +1714,7 @@ function ServicesTab({ g }) {
 }
 
 // ─── Main ─────────────────────────────────────────────────────
-function GuardianProfileScreen({ guardian = CHEN_YI_DATA, onBack }) {
+function GuardianProfileScreen({ guardian = CHEN_YI_DATA, onBack, initialService }) {
   const [tab, setTab]               = React.useState('info');
   const [liked, setLiked]           = React.useState(false);
   const [allReviews, setAllReviews] = React.useState(false);
@@ -1412,7 +1768,7 @@ function GuardianProfileScreen({ guardian = CHEN_YI_DATA, onBack }) {
           <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
             <ProfileHero g={guardian} liked={liked} onLike={() => setLiked(l => !l)} />
             <TabNav active={tab} onChange={handleTabChange} />
-            {tab === 'info'     && <InfoTab g={guardian} onViewServices={() => handleTabChange('services')} onViewAllReviews={() => setAllReviews(true)} />}
+            {tab === 'info'     && <InfoTab g={guardian} onViewServices={() => handleTabChange('services')} onViewAllReviews={() => setAllReviews(true)} defaultService={initialService} />}
             {tab === 'services' && <ServicesTab g={guardian} />}
           </div>
         </>
@@ -1421,4 +1777,4 @@ function GuardianProfileScreen({ guardian = CHEN_YI_DATA, onBack }) {
   );
 }
 
-Object.assign(window, { GuardianProfileScreen, CHEN_YI_DATA, GuardianCalendar });
+Object.assign(window, { GuardianProfileScreen, CHEN_YI_DATA, ZHE_DATA, GuardianCalendar });

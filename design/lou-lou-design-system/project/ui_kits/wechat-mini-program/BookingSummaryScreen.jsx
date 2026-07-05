@@ -7,6 +7,8 @@ const BS_SVC_ICON = {
   '上门服务':'hand-waving','住家守护':'moon-stars',
 };
 
+const BS_SPECIES_CN = { dog:'狗', cat:'猫', rabbit:'兔', hamster:'鼠', bird:'鸟' };
+
 function bsCancelDate(dateStartStr) {
   const match = (dateStartStr || '').match(/(\d+)月(\d+)日/);
   if (!match) return '服务前一天';
@@ -74,13 +76,35 @@ function BsCancelOrderModal({ onClose, onConfirm, cancelDateStr }) {
 }
 
 // ─── Main ────────────────────────────────────────────────────
-function BookingSummaryScreen({ app, onBack, onModify }) {
+function BookingSummaryScreen({ app, onBack, onModify, onViewGuardian, onRebook }) {
   const [payOpen,         setPayOpen]         = React.useState(false);
   const [paid,            setPaid]            = React.useState(false);
   const [cancelOpen,      setCancelOpen]      = React.useState(false);
   const [cancelled,       setCancelled]       = React.useState(false);
-  const [couponApplied,   setCouponApplied]   = React.useState(false);
+  const [cancelKind,      setCancelKind]      = React.useState(null); // 'request' | 'order'
+  const [coupon,          setCoupon]          = React.useState(app.coupon || null);
+  const [couponOpen,      setCouponOpen]      = React.useState(false);
+  // completed-order actions
+  const [tipAmt,    setTipAmt]    = React.useState(null);  // number | null
+  const [tipExpanded, setTipExpanded] = React.useState(false);
+  const [tipOpen,   setTipOpen]   = React.useState(false);
+  const [tipDraft,  setTipDraft]  = React.useState('');
+  const [tipPayOpen, setTipPayOpen] = React.useState(false);  // 打赏 WeChat payment drawer
+  const [tipPayAmt,  setTipPayAmt]  = React.useState(0);
+  const [collected, setCollected] = React.useState(false);
+  const [reviewed,  setReviewed]  = React.useState(false);
+  // order number copy + customer support
+  const [copied,    setCopied]    = React.useState(false);
+  const [supportOpen, setSupportOpen] = React.useState(false);
+  const orderNo = app.orderNo || ('LL' + String(app.id || '').replace(/\D/g,'').slice(-10).padStart(10,'0'));
+  const copyOrderNo = () => {
+    try { navigator.clipboard && navigator.clipboard.writeText(orderNo); } catch (e) {}
+    setCopied(true); setTimeout(() => setCopied(false), 1600);
+  };
   const cancelDateStr = bsCancelDate(app.dateStart);
+  const gPhoto = (typeof resolveGuardianPhoto === 'function') ? resolveGuardianPhoto(app.guardian) : (app.guardian?.photo || null);
+  const gInitial = app.guardian?.initial;
+  const isCompleted = app.status === 'completed';
 
   const isPending  = app.status === 'pending';
   const isAccepted = app.status === 'accepted';
@@ -88,23 +112,37 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
 
   const nights    = app.nights    || 1;
   const unitPrice = app.price     || 88;
-  const svcTotal  = unitPrice * nights;
   const svcIcon   = BS_SVC_ICON[app.service] || 'paw-print';
   const petName   = (app.pet || '豆豆').split('·').pop().trim();
   const svcUnit   = app.service === '日托' ? '天' : (app.service === '遛狗' || app.service === '上门喂养' || app.service === '上门服务') ? '次' : '晚';
 
-  // Extras derived from dropoff / pickup present
-  const extraItems = [
-    app.dropoff ? { label:'守护者上门接送（送达）', detail:`时间段：${app.dropoff}`, price:30 } : null,
-    app.pickup  ? { label:'守护者上门接送（接回）', detail:`时间段：${app.pickup}`,  price:30 } : null,
-  ].filter(Boolean);
-  const extrasTotal = extraItems.reduce((s,e) => s+e.price, 0);
-  const discount    = couponApplied ? Math.round(svcTotal * 0.1) : 0;
-  const total       = svcTotal + extrasTotal - discount;
+  // Per-species breakdown (falls back to a single line)
+  const petBreakdown = (Array.isArray(app.petBreakdown) && app.petBreakdown.length)
+    ? app.petBreakdown
+    : [{ name: petName, species: 'dog', unit: unitPrice }];
+  const svcTotal  = petBreakdown.reduce((s,p) => s + (p.unit||unitPrice) * nights, 0) || unitPrice * nights;
+
+  // Extra services chosen during booking + overtime fee
+  const extraItems = (app.extrasList || []).map(e => ({ label:e.label, detail:`× ${e.qty||1}`, price:(e.price||0)*(e.qty||1) }));
+  const overtimeFee  = app.overtimeFee  || 0;
+  const overtimeRate = app.overtimeRate || 0;
+  const extrasTotal  = extraItems.reduce((s,e) => s+e.price, 0) + overtimeFee;
+
+  // Coupon — selectable
+  const preDiscount = svcTotal + extrasTotal;
+  const discount    = (typeof bfCouponDiscount === 'function') ? bfCouponDiscount(coupon, preDiscount) : 0;
+  const total       = preDiscount - discount;
 
   const handleConfirmCancel = () => {
     setCancelled(true);
+    setCancelKind('order');
     setCancelOpen(false);
+  };
+
+  // Pre-payment: cancelling a *request* needs no policy modal (nothing paid yet)
+  const handleCancelRequest = () => {
+    setCancelled(true);
+    setCancelKind('request');
   };
 
   return (
@@ -116,7 +154,7 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
           <i className="ph ph-caret-left" style={{ fontSize:16,color:LL.text2 }}/>
           返回
         </button>
-        <div style={{ flex:1,textAlign:'center',fontSize:15,fontWeight:700,color:LL.text }}>预约摘要</div>
+        <div style={{ flex:1,textAlign:'center',fontSize:15,fontWeight:700,color:LL.text }}>订单摘要</div>
         <div style={{ width:48 }}/>
       </div>
 
@@ -124,7 +162,11 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
       {cancelled && (
         <div style={{ flex:'0 0 auto',background:'#FFF0F0',borderBottom:'1px solid #FCA5A5',padding:'10px 16px',display:'flex',alignItems:'center',gap:10 }}>
           <i className="ph ph-x-circle" style={{ fontSize:16,color:'#CC2200',flex:'0 0 auto' }}/>
-          <span style={{ fontSize:13,color:'#CC2200',fontWeight:600 }}>订单已取消，退款将在 3–5 个工作日内处理</span>
+          <span style={{ fontSize:13,color:'#CC2200',fontWeight:600 }}>
+            {cancelKind === 'order'
+              ? '订单已取消，退款将在 3–5 个工作日内处理'
+              : '请求已取消，已通知守护者'}
+          </span>
         </div>
       )}
 
@@ -142,15 +184,34 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
         {/* ── Dark summary card ── */}
         <div style={{ margin:'16px 16px 0',background:LL.ink,borderRadius:'16px 16px 0 0',overflow:'hidden' }}>
           <div style={{ padding:'20px 20px 18px' }}>
-            <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:18 }}>
+            <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:16 }}>
               <div style={{ width:46,height:46,borderRadius:12,background:'rgba(255,255,255,0.12)',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto' }}>
                 <i className={`ph ph-${svcIcon}`} style={{ fontSize:24,color:'#fff' }}/>
               </div>
               <div>
                 <div style={{ fontSize:18,fontWeight:800,color:'#fff' }}>{app.service}</div>
-                <div style={{ fontSize:12.5,color:'rgba(255,255,255,0.55)',marginTop:2 }}>{app.guardian?.name} · 守护者</div>
+                <div style={{ fontSize:12.5,color:'rgba(255,255,255,0.55)',marginTop:2 }}>预约服务</div>
               </div>
             </div>
+
+            {/* Guardian — tap to view profile */}
+            <button onClick={() => onViewGuardian?.(app.guardian)} style={{
+              width:'100%', display:'flex', alignItems:'center', gap:11,
+              background:'rgba(255,255,255,0.09)', border:0, borderRadius:12,
+              padding:'10px 12px', marginBottom:16, cursor:'pointer', fontFamily:LL.font, textAlign:'left',
+            }}>
+              <div style={{ width:38,height:38,borderRadius:'50%',overflow:'hidden',flex:'0 0 auto',background: gInitial?.bg || 'rgba(255,255,255,0.15)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                {gPhoto
+                  ? <img src={gPhoto} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'top center' }}/>
+                  : <span style={{ fontSize:16, fontWeight:800, color: gInitial?.bg ? LL.text : '#fff' }}>{gInitial?.char || app.guardian?.name?.[0]}</span>}
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:14.5,fontWeight:700,color:'#fff' }}>{app.guardian?.name || '守护者'}</div>
+                <div style={{ fontSize:11.5,color:'rgba(255,255,255,0.55)',marginTop:1 }}>守护者 · 查看主页</div>
+              </div>
+              <i className="ph ph-caret-right" style={{ fontSize:14,color:'rgba(255,255,255,0.55)',flex:'0 0 auto' }}/>
+            </button>
+
             {[
               { icon:'map-pin',        text:app.area },
               { icon:'calendar-blank', text:[app.dateStart, app.dateEnd && app.dateEnd !== app.dateStart ? `→ ${app.dateEnd}` : null, nights > 0 ? `· 共${nights}${svcUnit}` : null].filter(Boolean).join(' ') },
@@ -168,14 +229,16 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
 
         {/* ── Fee breakdown ── */}
         <div style={{ margin:'0 16px',background:'#F5F5F9',borderRadius:'0 0 16px 16px',padding:'16px 20px 18px' }}>
-          {/* Main service */}
-          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14 }}>
-            <div>
-              <div style={{ fontSize:14,fontWeight:600,color:LL.text }}>{petName}</div>
-              <div style={{ fontSize:12,color:LL.text3,marginTop:2 }}>¥{unitPrice}/{svcUnit} × {nights}{svcUnit}</div>
+          {/* Per-species service lines */}
+          {petBreakdown.map((p,i) => (
+            <div key={i} style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14 }}>
+              <div>
+                <div style={{ fontSize:14,fontWeight:600,color:LL.text }}>{p.name}（{BS_SPECIES_CN[p.species]||'宠物'}）</div>
+                <div style={{ fontSize:12,color:LL.text3,marginTop:2 }}>¥{p.unit||unitPrice}/{svcUnit} × {nights}{svcUnit}</div>
+              </div>
+              <span style={{ fontSize:14,fontWeight:600,color:LL.text }}>¥{(p.unit||unitPrice)*nights}</span>
             </div>
-            <span style={{ fontSize:14,fontWeight:600,color:LL.text }}>¥{svcTotal}</span>
-          </div>
+          ))}
 
           {/* Extra services */}
           {extraItems.map((ex,i) => (
@@ -188,25 +251,29 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
             </div>
           ))}
 
-          {/* Coupon */}
-          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14 }}>
-            <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-              <i className="ph ph-ticket" style={{ fontSize:14,color:couponApplied?'#E63946':LL.text3 }}/>
-              <span style={{ fontSize:14,color:couponApplied?'#E63946':LL.text3 }}>
-                {couponApplied ? '新用户9折优惠' : '优惠券'}
-              </span>
-            </div>
-            {couponApplied ? (
-              <div style={{ display:'flex',alignItems:'center',gap:8 }}>
-                <span style={{ fontSize:14,fontWeight:700,color:'#E63946' }}>-¥{discount}</span>
-                <button onClick={() => setCouponApplied(false)} style={{ fontSize:12,color:LL.text3,background:'transparent',border:0,cursor:'pointer',fontFamily:LL.font }}>移除</button>
+          {/* Overtime fee (pickup later than dropoff) */}
+          {overtimeFee > 0 && (
+            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14 }}>
+              <div>
+                <div style={{ fontSize:14,color:LL.text2 }}>延时费</div>
+                <div style={{ fontSize:12,color:LL.text3,marginTop:2 }}>接回晚于送达 · 当日价×{Math.round(overtimeRate*100)}%</div>
               </div>
-            ) : (
-              <button onClick={() => setCouponApplied(true)} style={{ display:'flex',alignItems:'center',gap:2,fontSize:13,color:LL.ink,fontWeight:600,background:'transparent',border:0,cursor:'pointer',fontFamily:LL.font,padding:0,marginRight:0 }}>
-                选择<i className="ph ph-caret-right" style={{ fontSize:11 }}/>
-              </button>
-            )}
-          </div>
+              <span style={{ fontSize:14,fontWeight:600,color:LL.text }}>+¥{overtimeFee}</span>
+            </div>
+          )}
+
+          {/* Coupon — selectable */}
+          <button onClick={() => setCouponOpen(true)} style={{ width:'100%',background:'transparent',border:0,padding:0,display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14,cursor:'pointer',fontFamily:LL.font }}>
+            <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+              <i className="ph ph-ticket" style={{ fontSize:14,color:coupon?'#E63946':LL.text3 }}/>
+              <span style={{ fontSize:14,color:coupon?'#E63946':LL.text3 }}>{coupon ? coupon.name : '优惠券'}</span>
+            </div>
+            <div style={{ display:'flex',alignItems:'center',gap:4 }}>
+              {discount > 0 && <span style={{ fontSize:14,fontWeight:700,color:'#E63946' }}>-¥{discount}</span>}
+              <span style={{ fontSize:13,color:LL.ink,fontWeight:600 }}>{coupon ? '更换' : '选择'}</span>
+              <i className="ph ph-caret-right" style={{ fontSize:11,color:LL.ink }}/>
+            </div>
+          </button>
 
           <div style={{ height:1,background:LL.border,marginBottom:14 }}/>
           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
@@ -215,53 +282,195 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
           </div>
         </div>
 
+        {/* ── 打赏（已完成订单） ── */}
+        {isCompleted && (
+          <div style={{ margin:'12px 16px 0', background:'#fff', borderRadius:14, padding:'14px 16px', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+            {tipAmt == null ? (
+              !tipExpanded ? (
+                <button onClick={() => setTipExpanded(true)} style={{
+                  width:'100%', background:'transparent', border:0, padding:0, cursor:'pointer',
+                  fontFamily:LL.font, display:'flex', alignItems:'center', gap:12, textAlign:'left',
+                }}>
+                  <div style={{ width:40,height:40,borderRadius:10,background:'#FFF3CD',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto' }}>
+                    <i className="ph-fill ph-hand-coins" style={{ fontSize:20, color:'#B45309' }}/>
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:14, fontWeight:700, color:LL.text }}>打赏 {app.guardian?.name || '守护者'}</div>
+                    <div style={{ fontSize:11.5, color:LL.text3, marginTop:1 }}>满意就打个赏·金额 100% 归守护者</div>
+                  </div>
+                  <i className="ph ph-caret-right" style={{ fontSize:15, color:LL.text3, flex:'0 0 auto' }}/>
+                </button>
+              ) : (
+                <>
+                  <div style={{ display:'flex', alignItems:'center', marginBottom:3 }}>
+                    <div style={{ fontSize:14, fontWeight:700, color:LL.text, flex:1 }}>打赏 {app.guardian?.name || '守护者'}</div>
+                    <button onClick={() => { setTipExpanded(false); setTipDraft(''); }} style={{ background:'transparent', border:0, padding:0, cursor:'pointer', color:LL.text3, fontFamily:LL.font, fontSize:12, display:'inline-flex', alignItems:'center', gap:2 }}>收起 <i className="ph ph-caret-up" style={{ fontSize:11 }}/></button>
+                  </div>
+                  <div style={{ fontSize:11.5, color:LL.text3, marginBottom:12 }}>选择或自行输入金额 · 100% 归守护者所有</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:10 }}>
+                    {[8,18,66].map(a => {
+                      const on = String(a) === tipDraft;
+                      return (
+                        <button key={a} onClick={() => setTipDraft(String(a))} style={{
+                          height:46, borderRadius:10, border:`1.5px solid ${on?LL.ink:LL.border}`,
+                          background: on?LL.ink:'#fff', color:on?'#fff':LL.text, cursor:'pointer',
+                          fontFamily:LL.font, fontSize:15, fontWeight:800,
+                        }}>¥{a}</button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', height:46, border:`1.5px solid ${(parseInt(tipDraft,10)>0 && ![8,18,66].includes(parseInt(tipDraft,10)))?LL.ink:LL.border}`, borderRadius:10, padding:'0 12px', gap:6, marginBottom:12, transition:'border-color 140ms' }}>
+                    <span style={{ fontSize:16, fontWeight:800, color:LL.text }}>¥</span>
+                    <input type="number" min="1" step="1" inputMode="numeric"
+                      value={[8,18,66].includes(parseInt(tipDraft,10)) ? '' : tipDraft}
+                      onChange={e => setTipDraft(e.target.value.replace(/[^0-9]/g,''))}
+                      placeholder="自行输入金额（整数）"
+                      style={{ flex:1, border:0, outline:'none', background:'transparent', fontSize:15, fontWeight:700, color:LL.text, fontFamily:LL.font }}/>
+                  </div>
+                  <button disabled={!(parseInt(tipDraft,10) > 0)} onClick={() => { const a = parseInt(tipDraft,10); if (a>0){ setTipPayAmt(a); setTipPayOpen(true); } }} style={{
+                    width:'100%', height:48, borderRadius:999, border:0,
+                    background: parseInt(tipDraft,10) > 0 ? LL.ink : 'rgba(34,40,44,0.22)', color:'#fff',
+                    fontSize:14.5, fontWeight:700, fontFamily:LL.font,
+                    cursor: parseInt(tipDraft,10) > 0 ? 'pointer':'not-allowed', transition:'background 160ms',
+                  }}>确认打赏{parseInt(tipDraft,10) > 0 ? ` ¥${parseInt(tipDraft,10)}` : ''}</button>
+                </>
+              )
+            ) : (
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <div style={{ width:40,height:40,borderRadius:10,background:'#FFF3CD',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto' }}>
+                  <i className="ph-fill ph-hand-coins" style={{ fontSize:20, color:'#B45309' }}/>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:LL.text }}>已打赏 ¥{tipAmt}</div>
+                  <div style={{ fontSize:11.5, color:LL.text3, marginTop:1 }}>打赏金额 100% 归守护者所有</div>
+                </div>
+                <button onClick={() => { setTipDraft(''); setTipOpen(true); }} style={{ height:32, padding:'0 12px', borderRadius:999, border:`1.5px solid ${LL.ink}`, background:'transparent', color:LL.ink, fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:LL.font, flex:'0 0 auto' }}>追加打赏</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── 订单号 + 联系客服（所有订单） ── */}
+        <div style={{ margin:'12px 16px 0', background:'#fff', borderRadius:14, boxShadow:'0 2px 8px rgba(0,0,0,0.04)', overflow:'hidden' }}>
+          <div style={{ padding:'13px 16px', display:'flex', alignItems:'center', gap:10, borderBottom:`1px solid ${LL.border}` }}>
+            <span style={{ fontSize:13, color:LL.text3, flex:'0 0 auto' }}>订单号</span>
+            <span style={{ flex:1, fontSize:13, fontWeight:600, color:LL.text, fontVariantNumeric:'tabular-nums', textAlign:'right', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{orderNo}</span>
+            <button onClick={copyOrderNo} style={{ flex:'0 0 auto', display:'inline-flex', alignItems:'center', gap:3, height:28, padding:'0 10px', borderRadius:999, border:`1px solid ${LL.border}`, background:'transparent', color: copied?'#2C7A4B':LL.text2, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:LL.font }}>
+              <i className={`ph ${copied?'ph-check':'ph-copy'}`} style={{ fontSize:13 }}/>{copied?'已复制':'复制'}
+            </button>
+          </div>
+          <button onClick={() => setSupportOpen(true)} style={{ width:'100%', padding:'13px 16px', background:'transparent', border:0, display:'flex', alignItems:'center', gap:10, cursor:'pointer', fontFamily:LL.font, textAlign:'left' }}>
+            <i className="ph ph-headset" style={{ fontSize:17, color:LL.text2, flex:'0 0 auto' }}/>
+            <span style={{ flex:1, fontSize:13.5, fontWeight:600, color:LL.text }}>联系客服</span>
+            <span style={{ fontSize:12, color:LL.text3 }}>7×24 小时</span>
+            <i className="ph ph-caret-right" style={{ fontSize:13, color:LL.text3 }}/>
+          </button>
+        </div>
+
+        {/* ── 取消订单 / 修改订单 — small buttons, hugging order content ── */}
+        {!isCompleted && !cancelled && !paid && (
+          <div style={{ margin:'10px 16px 0',display:'flex',justifyContent:'flex-end',gap:8 }}>
+            <button onClick={handleCancelRequest} style={{
+              height:32,padding:'0 14px',borderRadius:999,background:'transparent',
+              border:`1px solid ${LL.border}`,color:LL.text2,
+              fontSize:12.5,fontWeight:600,fontFamily:LL.font,cursor:'pointer',whiteSpace:'nowrap',
+            }}>取消订单</button>
+            <button onClick={() => onModify?.(app)} style={{
+              height:32,padding:'0 14px',borderRadius:999,background:'transparent',
+              border:`1px solid ${LL.border}`,color:LL.text,
+              fontSize:12.5,fontWeight:700,fontFamily:LL.font,cursor:'pointer',whiteSpace:'nowrap',
+              display:'flex',alignItems:'center',justifyContent:'center',gap:4,
+            }}>
+              <i className="ph ph-pencil-simple" style={{ fontSize:14 }}/>
+              修改订单
+            </button>
+          </div>
+        )}
+
         {/* ── Safety note ── */}
         <div style={{ margin:'10px 16px 0',padding:'10px 14px',background:'#FFFBEB',borderRadius:8 }}>
           <span style={{ fontSize:12,color:'#92400E',lineHeight:1.55 }}>请通过平台完成预约和付款，切勿私下现金交易。</span>
         </div>
 
-        {/* ── 取消订单 ── */}
-        {!cancelled && !paid && (
-          <div style={{ margin:'8px 16px 0',display:'flex',justifyContent:'flex-end' }}>
-            <button onClick={() => setCancelOpen(true)} style={{
-              background:'transparent',border:`1px solid ${LL.border}`,
-              height:32,padding:'0 14px',borderRadius:999,
-              fontSize:12,fontWeight:500,color:LL.text3,
-              cursor:'pointer',fontFamily:LL.font,
-            }}>取消订单</button>
-          </div>
-        )}
-
         <div style={{ height:24 }}/>
       </div>
 
       {/* ── Bottom Buttons ── */}
-      <div style={{ flex:'0 0 auto',background:'#fff',borderTop:`1px solid ${LL.border}`,padding:'12px 16px 12px',display:'flex',gap:12,flexDirection:'column' }}>
-        {!cancelled && (
-          <div style={{ display:'flex',gap:12 }}>
-            <button onClick={onModify} style={{ flex:1,height:50,borderRadius:999,background:'transparent',border:`1.5px solid ${LL.border}`,color:LL.text,fontSize:15,fontWeight:600,fontFamily:LL.font,cursor:'pointer' }}>修改请求</button>
-            <button disabled={!canBook} onClick={() => canBook && setPayOpen(true)} style={{ flex:1,height:50,borderRadius:999,border:0,background:canBook?LL.ink:'rgba(34,40,44,0.22)',color:'#fff',fontSize:15,fontWeight:700,fontFamily:LL.font,cursor:canBook?'pointer':'not-allowed',transition:'background 200ms' }}>
-              {paid ? '已预订 ✓' : '立即预订'}
+      <div style={{ flex:'0 0 auto',background:'#fff',borderTop:`1px solid ${LL.border}`,padding:'12px 16px 12px',display:'flex',gap:10,flexDirection:'column' }}>
+        {isCompleted && (
+          <>
+            <button onClick={() => onRebook?.(app)} style={{
+              width:'100%', height:50, borderRadius:999, border:0, background:LL.ink, color:'#fff',
+              fontSize:14.5, fontWeight:700, fontFamily:LL.font, cursor:'pointer', whiteSpace:'nowrap',
+              display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+            }}>
+              <i className="ph ph-calendar-plus" style={{ fontSize:17 }}/>
+              再次预约
             </button>
-          </div>
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={() => setCollected(c => !c)} style={{
+                flex:1, height:48, borderRadius:999,
+                border:`1.5px solid ${LL.border}`, background:'transparent',
+                color: collected ? LL.text3 : LL.text, fontSize:14, fontWeight:700, fontFamily:LL.font, cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', gap:5,
+              }}>
+                <i className={`${collected ? 'ph-fill' : 'ph'} ph-heart`} style={{ fontSize:16, color: collected ? '#E63946' : LL.text2 }}/>
+                {collected ? '已收藏' : '收藏'}
+              </button>
+              <button onClick={() => setReviewed(true)} style={{
+                flex:1, height:48, borderRadius:999, border:`1.5px solid ${LL.border}`, background:'transparent',
+                color:LL.text, fontSize:14, fontWeight:700, fontFamily:LL.font, cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', gap:5,
+              }}>
+                <i className="ph ph-star" style={{ fontSize:16, color:LL.text2 }}/>
+                {reviewed ? '追加评价' : '评价'}
+              </button>
+            </div>
+          </>
         )}
-        <button onClick={() => setCancelOpen(true)} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:5,background:'transparent',border:0,cursor:'pointer',padding:0,fontFamily:LL.font }}>
-          <i className="ph ph-calendar-blank" style={{ fontSize:12,color:LL.text3 }}/>
-          <span style={{ fontSize:11.5,color:LL.text3,textDecoration:'underline' }}>{cancelDateStr} 12:00前可免费取消</span>
-        </button>
+
+        {!isCompleted && !cancelled && !paid && (
+          /* 立即付款 only */
+          <button disabled={!canBook} onClick={() => canBook && setPayOpen(true)} style={{
+            width:'100%',height:52,borderRadius:999,border:0,
+            background:canBook?LL.ink:'rgba(34,40,44,0.22)',color:'#fff',
+            fontSize:15,fontWeight:700,fontFamily:LL.font,
+            cursor:canBook?'pointer':'not-allowed',transition:'background 200ms',
+          }}>立即付款</button>
+        )}
+
+        {!cancelled && paid && (
+          <>
+            <button disabled style={{
+              width:'100%',height:52,borderRadius:999,border:0,
+              background:'rgba(34,40,44,0.22)',color:'#fff',
+              fontSize:15,fontWeight:700,fontFamily:LL.font,cursor:'not-allowed',
+            }}>已预订 ✓</button>
+            {/* Post-payment cancellation DOES show the policy */}
+            <button onClick={() => setCancelOpen(true)} style={{
+              width:'100%',height:46,borderRadius:999,background:'transparent',
+              border:`1.5px solid ${LL.border}`,color:LL.text2,
+              fontSize:14,fontWeight:600,fontFamily:LL.font,cursor:'pointer',
+            }}>取消订单</button>
+            <button onClick={() => setCancelOpen(true)} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:5,background:'transparent',border:0,cursor:'pointer',padding:0,fontFamily:LL.font }}>
+              <i className="ph ph-calendar-blank" style={{ fontSize:12,color:LL.text3 }}/>
+              <span style={{ fontSize:11.5,color:LL.text3,textDecoration:'underline' }}>{cancelDateStr} 12:00前可免费取消</span>
+            </button>
+          </>
+        )}
       </div>
 
-      {/* ── WeChat Pay Drawer ── */}
+      {/* ── Payment confirmation drawer (温馨提示 + 微信支付) ── */}
       {payOpen && (
         <>
           <div onClick={() => setPayOpen(false)} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.45)',zIndex:85 }}/>
-          <div style={{ position:'absolute',left:0,right:0,bottom:0,zIndex:86,background:'#fff',borderTopLeftRadius:20,borderTopRightRadius:20,padding:'0 0 32px',boxShadow:'0 -8px 28px rgba(0,0,0,0.15)',fontFamily:LL.font }}>
+          <div style={{ position:'absolute',left:0,right:0,bottom:0,zIndex:86,background:'#fff',borderTopLeftRadius:20,borderTopRightRadius:20,padding:'0 0 28px',boxShadow:'0 -8px 28px rgba(0,0,0,0.15)',fontFamily:LL.font }}>
             <div style={{ width:38,height:4,borderRadius:2,background:LL.border,margin:'12px auto 14px' }}/>
-            <div style={{ textAlign:'center',fontSize:15,fontWeight:700,color:LL.text,marginBottom:8 }}>确认支付</div>
-            <div style={{ textAlign:'center',marginBottom:22 }}>
+            <div style={{ textAlign:'center',fontSize:15,fontWeight:700,color:LL.text,marginBottom:8 }}>确认付款</div>
+            <div style={{ textAlign:'center',marginBottom:18 }}>
               <span style={{ fontSize:36,fontWeight:800,color:LL.text,letterSpacing:'-0.02em' }}>¥{total}</span>
             </div>
-            <div style={{ margin:'0 16px 20px',padding:'14px 16px',background:'#F5F5F9',borderRadius:12,display:'flex',alignItems:'center',gap:14 }}>
+            <div style={{ margin:'0 16px 14px',padding:'14px 16px',background:'#F5F5F9',borderRadius:12,display:'flex',alignItems:'center',gap:14 }}>
               <div style={{ width:42,height:42,borderRadius:10,background:'#07C160',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto' }}>
                 <i className="ph-fill ph-chat-circle-dots" style={{ fontSize:22,color:'#fff' }}/>
               </div>
@@ -270,12 +479,23 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
                 <i className="ph-bold ph-check" style={{ fontSize:11,color:'#fff' }}/>
               </div>
             </div>
-            <div style={{ padding:'0 16px 8px' }}>
-              <button onClick={() => { setPaid(true); setPayOpen(false); }} style={{ width:'100%',height:52,borderRadius:999,border:0,background:'#07C160',color:'#fff',fontSize:15,fontWeight:700,fontFamily:LL.font,cursor:'pointer',letterSpacing:'0.04em' }}>确认支付 ¥{total}</button>
-              <button onClick={() => { setPayOpen(false); setCancelOpen(true); }} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:5,width:'100%',marginTop:10,background:'transparent',border:0,cursor:'pointer',padding:0,fontFamily:LL.font }}>
-                <i className="ph ph-calendar-blank" style={{ fontSize:12,color:LL.text3 }}/>
-                <span style={{ fontSize:11.5,color:LL.text3,textDecoration:'underline' }}>{cancelDateStr} 12:00前可免费取消</span>
-              </button>
+
+            {/* 温馨提示 */}
+            <div style={{ margin:'0 16px 18px',padding:'12px 14px',background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:12 }}>
+              <div style={{ display:'flex',alignItems:'center',gap:6,marginBottom:6 }}>
+                <i className="ph-fill ph-info" style={{ fontSize:15,color:'#B45309' }}/>
+                <span style={{ fontSize:13,fontWeight:700,color:'#92400E' }}>温馨提示</span>
+              </div>
+              <div style={{ fontSize:12.5,color:'#92400E',lineHeight:1.7,textWrap:'pretty' }}>
+                您支付后需等待守护者确认，订单经确认后正式生效。订单生效后的取消操作将遵循平台的
+                <button onClick={() => setCancelOpen(true)} style={{ background:'transparent',border:0,padding:0,margin:'0 1px',cursor:'pointer',fontFamily:LL.font,fontSize:12.5,fontWeight:700,color:'#B45309',textDecoration:'underline' }}>取消政策</button>
+                执行。若守护者在 24 小时内未确认，款项将原路退回。
+              </div>
+            </div>
+
+            <div style={{ padding:'0 16px',display:'flex',flexDirection:'column',gap:10 }}>
+              <button onClick={() => { setPaid(true); setPayOpen(false); }} style={{ width:'100%',height:52,borderRadius:999,border:0,background:'#07C160',color:'#fff',fontSize:15,fontWeight:700,fontFamily:LL.font,cursor:'pointer',letterSpacing:'0.04em' }}>确认并付款</button>
+              <button onClick={() => setPayOpen(false)} style={{ width:'100%',height:46,borderRadius:999,border:`1.5px solid ${LL.border}`,background:'transparent',color:LL.text2,fontSize:14,fontWeight:600,fontFamily:LL.font,cursor:'pointer' }}>我再想想</button>
             </div>
           </div>
         </>
@@ -289,8 +509,349 @@ function BookingSummaryScreen({ app, onBack, onModify }) {
           cancelDateStr={cancelDateStr}
         />
       )}
+
+      {/* ── Coupon picker ── */}
+      {typeof BFCouponPicker === 'function' && (
+        <BFCouponPicker open={couponOpen} coupons={window.BF_COUPONS || []}
+          subtotal={preDiscount} selectedId={coupon?.id || null}
+          onPick={(id) => { setCoupon(id ? (window.BF_COUPONS||[]).find(c=>c.id===id) : null); setCouponOpen(false); }}
+          onClose={() => setCouponOpen(false)}/>
+      )}
+
+      {/* ── 打赏金额 sheet ── */}
+      {tipOpen && (
+        <>
+          <div onClick={() => setTipOpen(false)} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.45)',zIndex:95 }}/>
+          <div style={{ position:'absolute',left:0,right:0,bottom:0,zIndex:96,background:'#fff',borderTopLeftRadius:20,borderTopRightRadius:20,padding:'0 0 28px',boxShadow:'0 -8px 28px rgba(0,0,0,0.15)',fontFamily:LL.font }}>
+            <div style={{ width:38,height:4,borderRadius:2,background:LL.border,margin:'12px auto 14px' }}/>
+            <div style={{ textAlign:'center', fontSize:16, fontWeight:700, color:LL.text }}>打赏 {app.guardian?.name || '守护者'}</div>
+            <div style={{ textAlign:'center', fontSize:12, color:LL.text3, marginTop:4, marginBottom:16 }}>打赏金额 100% 归守护者所有</div>
+            <div style={{ padding:'0 16px', display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
+              {[8,18,66].map(a => {
+                const on = String(a) === tipDraft;
+                return (
+                  <button key={a} onClick={() => setTipDraft(String(a))} style={{
+                    height:48, borderRadius:10, border:`1.5px solid ${on?LL.ink:LL.border}`,
+                    background: on?LL.ink:'#fff', color:on?'#fff':LL.text, fontSize:16, fontWeight:800,
+                    cursor:'pointer', fontFamily:LL.font,
+                  }}>¥{a}</button>
+                );
+              })}
+            </div>
+            <div style={{ padding:'0 16px', marginBottom:16 }}>
+              <div style={{ display:'flex', alignItems:'center', height:50, border:`1.5px solid ${LL.border}`, borderRadius:12, padding:'0 14px', gap:6 }}>
+                <span style={{ fontSize:18, fontWeight:800, color:LL.text }}>¥</span>
+                <input type="number" min="1" step="1" inputMode="numeric" value={tipDraft}
+                  onChange={e => setTipDraft(e.target.value.replace(/[^0-9]/g,''))}
+                  placeholder="其他金额（仅支持整数）"
+                  style={{ flex:1, border:0, outline:'none', background:'transparent', fontSize:16, fontWeight:700, color:LL.text, fontFamily:LL.font }}/>
+              </div>
+            </div>
+            <div style={{ padding:'0 16px' }}>
+              <button disabled={!(parseInt(tipDraft,10) > 0)} onClick={() => { const a = parseInt(tipDraft,10); if (a>0){ setTipPayAmt(a); setTipPayOpen(true); setTipOpen(false); } }} style={{
+                width:'100%', height:52, borderRadius:999, border:0,
+                background: parseInt(tipDraft,10) > 0 ? LL.ink : 'rgba(34,40,44,0.22)', color:'#fff',
+                fontSize:15, fontWeight:700, fontFamily:LL.font, cursor: parseInt(tipDraft,10) > 0 ? 'pointer':'not-allowed',
+              }}>确认打赏{parseInt(tipDraft,10) > 0 ? ` ¥${parseInt(tipDraft,10)}` : ''}</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── 打赏 微信支付 drawer ── */}
+      {tipPayOpen && (
+        <>
+          <div onClick={() => setTipPayOpen(false)} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.45)',zIndex:97 }}/>
+          <div style={{ position:'absolute',left:0,right:0,bottom:0,zIndex:98,background:'#fff',borderTopLeftRadius:20,borderTopRightRadius:20,padding:'0 0 28px',boxShadow:'0 -8px 28px rgba(0,0,0,0.15)',fontFamily:LL.font }}>
+            <div style={{ width:38,height:4,borderRadius:2,background:LL.border,margin:'12px auto 14px' }}/>
+            <div style={{ textAlign:'center',fontSize:15,fontWeight:700,color:LL.text,marginBottom:8 }}>确认打赏</div>
+            <div style={{ textAlign:'center',marginBottom:6 }}>
+              <span style={{ fontSize:36,fontWeight:800,color:LL.text,letterSpacing:'-0.02em' }}>¥{tipPayAmt}</span>
+            </div>
+            <div style={{ textAlign:'center', fontSize:12, color:LL.text3, marginBottom:18 }}>打赏给 {app.guardian?.name || '守护者'} · 金额 100% 归守护者</div>
+            <div style={{ margin:'0 16px 16px',padding:'14px 16px',background:'#F5F5F9',borderRadius:12,display:'flex',alignItems:'center',gap:12 }}>
+              <div style={{ width:34,height:34,borderRadius:8,background:'#07C160',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto' }}>
+                <i className="ph-fill ph-chat-circle-dots" style={{ fontSize:20,color:'#fff' }}/>
+              </div>
+              <span style={{ flex:1,fontSize:15,fontWeight:600,color:LL.text }}>微信支付</span>
+              <div style={{ width:22,height:22,borderRadius:'50%',background:LL.ink,display:'flex',alignItems:'center',justifyContent:'center' }}>
+                <i className="ph-bold ph-check" style={{ fontSize:11,color:'#fff' }}/>
+              </div>
+            </div>
+            <div style={{ padding:'0 16px',display:'flex',flexDirection:'column',gap:10 }}>
+              <button onClick={() => { setTipAmt(tipPayAmt); setTipPayOpen(false); setTipExpanded(false); setTipDraft(''); }} style={{ width:'100%',height:52,borderRadius:999,border:0,background:'#07C160',color:'#fff',fontSize:15,fontWeight:700,fontFamily:LL.font,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
+                <i className="ph-fill ph-chat-circle-dots" style={{ fontSize:18 }}/>
+                微信支付 ¥{tipPayAmt}
+              </button>
+              <button onClick={() => setTipPayOpen(false)} style={{ width:'100%',height:46,borderRadius:999,border:`1.5px solid ${LL.border}`,background:'transparent',color:LL.text2,fontSize:14,fontWeight:600,fontFamily:LL.font,cursor:'pointer' }}>取消</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── 联系客服 sheet ── */}
+      {supportOpen && (
+        <>
+          <div onClick={() => setSupportOpen(false)} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.45)',zIndex:95 }}/>
+          <div style={{ position:'absolute',left:0,right:0,bottom:0,zIndex:96,background:'#fff',borderTopLeftRadius:20,borderTopRightRadius:20,padding:'0 0 28px',boxShadow:'0 -8px 28px rgba(0,0,0,0.15)',fontFamily:LL.font }}>
+            <div style={{ width:38,height:4,borderRadius:2,background:LL.border,margin:'12px auto 14px' }}/>
+            <div style={{ textAlign:'center', fontSize:16, fontWeight:700, color:LL.text, marginBottom:4 }}>联系客服</div>
+            <div style={{ textAlign:'center', fontSize:12, color:LL.text3, marginBottom:16 }}>订单号 {orderNo} · 客服 7×24 小时在线</div>
+            {[
+              { icon:'chat-circle-dots', label:'在线客服', sub:'平均 1 分钟响应' },
+              { icon:'phone', label:'电话客服', sub:'400-666-8888' },
+            ].map((it,i) => (
+              <button key={i} onClick={() => setSupportOpen(false)} style={{
+                width:'100%', padding:'14px 16px', background:'transparent', border:0,
+                borderTop: i===0?`1px solid ${LL.border}`:'none', borderBottom:`1px solid ${LL.border}`,
+                display:'flex', alignItems:'center', gap:12, cursor:'pointer', fontFamily:LL.font, textAlign:'left',
+              }}>
+                <div style={{ width:38,height:38,borderRadius:10,background:'#E6F1EC',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto' }}>
+                  <i className={`ph ph-${it.icon}`} style={{ fontSize:19, color:'#2C7A4B' }}/>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:LL.text }}>{it.label}</div>
+                  <div style={{ fontSize:12, color:LL.text3, marginTop:1 }}>{it.sub}</div>
+                </div>
+                <i className="ph ph-caret-right" style={{ fontSize:14, color:LL.text3 }}/>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-Object.assign(window, { BookingSummaryScreen });
+// ─── Order Modify Screen (修改订单) ───────────────────────────
+function bsParse(str) {
+  const m = (str || '').match(/(\d+)月(\d+)日/);
+  if (!m) return null;
+  return new Date(2026, parseInt(m[1]) - 1, parseInt(m[2]));
+}
+function bsFmt(d) {
+  if (!d) return '';
+  return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+const BS_MOD_SVC_SUB = {
+  '寄养':'在守护者家','日托':'在守护者家','遛狗':'在宠物主家','上门喂养':'在宠物主家','伴宠留宿':'在宠物主家',
+};
+
+function BSModHead({ title, hint }) {
+  return (
+    <div style={{ background:'#F5F5F9', padding:'9px 16px 7px' }}>
+      <div style={{ fontSize:12, fontWeight:600, color:LL.text3, letterSpacing:'0.04em' }}>{title}</div>
+      {hint && <div style={{ fontSize:11, color:LL.text3, marginTop:2 }}>{hint}</div>}
+    </div>
+  );
+}
+
+const BS_DEMO_PETS = [
+  { id:'p1', name:'豆豆', breed:'金毛', weight:'22', age:'3岁', bg:'#FEE7A6' },
+  { id:'p2', name:'奶茶', breed:'英短', weight:'4.5', age:'2岁', bg:'#FBD3C4' },
+];
+
+function OrderModifyScreen({ app, onClose, onConfirm, pets }) {
+  const services = (app.guardian?.services && app.guardian.services.length)
+    ? app.guardian.services.map(s => s.id)
+    : ['遛狗','寄养','日托','上门喂养'];
+  const petsList = (pets && pets.length) ? pets : BS_DEMO_PETS;
+  const [service, setService] = React.useState(app.service || services[0]);
+  const [range,   setRange]   = React.useState({ start: bsParse(app.dateStart), end: bsParse(app.dateEnd) });
+  const [dateOpen,setDateOpen]= React.useState(false);
+  const [note,    setNote]    = React.useState('');
+  const [petEnabled, setPetEnabled] = React.useState(() => Object.fromEntries(petsList.map(p => [p.id, true])));
+  const [phone,   setPhone]   = React.useState(app.phone || '');
+  const [addr,    setAddr]    = React.useState(app.area || '');
+  const bookedDates = app.guardian?.bookedDates || [];
+  const Calendar    = window.GuardianCalendar;
+
+  const isRangeSvc = service === '寄养' || service === '日托' || service === '伴宠留宿';
+  const isPetHome  = service === '遛狗' || service === '上门喂养' || service === '伴宠留宿';
+  const canConfirm = !!range.start;
+  const dateLabel  = range.start
+    ? (range.end && bsFmt(range.end) !== bsFmt(range.start) ? `${bsFmt(range.start)} → ${bsFmt(range.end)}` : bsFmt(range.start))
+    : '点击选择日期';
+
+  return (
+    <div style={{ position:'absolute', inset:0, paddingTop:47, zIndex:80, background:LL.bg, display:'flex', flexDirection:'column', fontFamily:LL.font }}>
+      {/* Nav */}
+      <div style={{ flex:'0 0 auto', height:52, background:'#fff', borderBottom:`1px solid ${LL.border}`, display:'flex', alignItems:'center', padding:'0 16px' }}>
+        <button onClick={onClose} style={{ display:'flex',alignItems:'center',gap:3,background:'transparent',border:0,cursor:'pointer',fontFamily:LL.font,padding:0,color:LL.text2,fontSize:13.5 }}>
+          <i className="ph ph-caret-left" style={{ fontSize:16 }}/> 返回
+        </button>
+        <div style={{ flex:1, textAlign:'center', fontSize:15, fontWeight:700, color:LL.text }}>修改订单</div>
+        <div style={{ width:48 }}/>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex:1, overflowY:'auto', overflowX:'hidden' }}>
+        {/* Guardian row */}
+        <div style={{ background:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${LL.border}` }}>
+          <div style={{ width:42,height:42,borderRadius:'50%',overflow:'hidden',flex:'0 0 auto',background:(app.guardian?.initial?.bg)||LL.lavender,display:'flex',alignItems:'center',justifyContent:'center' }}>
+            {app.guardian?.photo
+              ? <img src={app.guardian.photo} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'top center' }}/>
+              : <span style={{ fontSize:17,fontWeight:800,color:LL.text }}>{app.guardian?.initial?.char || (app.guardian?.name||'守')[0]}</span>}
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:14.5,fontWeight:700,color:LL.text }}>{app.guardian?.name || '守护者'}</div>
+            <div style={{ fontSize:12,color:LL.text3,marginTop:1 }}>修改后将发送给守护者重新确认</div>
+          </div>
+        </div>
+
+        {/* 服务类型 */}
+        <div style={{ marginTop:12 }}>
+          <BSModHead title="服务类型"/>
+          <div style={{ background:'#fff', padding:'12px 16px 6px', display:'flex', flexWrap:'wrap', gap:8 }}>
+            {services.map(id => {
+              const on = id === service;
+              return (
+                <button key={id} onClick={() => setService(id)} style={{
+                  height:34, padding:'0 14px', borderRadius:999, border:`1.5px solid ${on?LL.ink:LL.border}`,
+                  background: on?LL.ink:'transparent', color:on?'#fff':LL.text2,
+                  fontSize:13, fontWeight: on?700:500, cursor:'pointer', fontFamily:LL.font,
+                  display:'flex', alignItems:'center', gap:5,
+                }}>
+                  {on && <i className="ph-fill ph-check" style={{ fontSize:12 }}/>}
+                  {id}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ background:'#fff', padding:'0 16px 12px', fontSize:12, color:LL.text3 }}>{BS_MOD_SVC_SUB[service] || ''}</div>
+        </div>
+
+        {/* 预约日期 — row opens calendar drawer */}
+        <div style={{ marginTop:12 }}>
+          <BSModHead title="预约日期"/>
+          <button onClick={() => setDateOpen(true)} style={{
+            width:'100%', background:'#fff', border:0, padding:'15px 16px',
+            display:'flex', alignItems:'center', gap:10, cursor:'pointer', fontFamily:LL.font, textAlign:'left',
+          }}>
+            <i className="ph ph-calendar-blank" style={{ fontSize:17, color:LL.text2, flex:'0 0 auto' }}/>
+            <span style={{ flex:1, fontSize:14.5, fontWeight: range.start?700:500, color: range.start?LL.text:LL.text3 }}>{dateLabel}</span>
+            <span style={{ fontSize:12, color:LL.text3 }}>在守护者日历中选择</span>
+            <i className="ph ph-caret-right" style={{ fontSize:13, color:LL.text3 }}/>
+          </button>
+        </div>
+
+        {/* 宠物 — toggles + add (same as booking) */}
+        <div style={{ marginTop:12 }}>
+          <BSModHead title="宠物"/>
+          <div style={{ background:'#fff' }}>
+            {petsList.map(pet => {
+              const wt = pet.weight ? (String(pet.weight).includes('公斤') ? pet.weight : `${pet.weight}公斤`) : null;
+              const sub = [pet.breed, wt, pet.age].filter(Boolean).join(' · ');
+              return (
+                <div key={pet.id} style={{ display:'flex', alignItems:'center', padding:'12px 16px', gap:12, borderBottom:`1px solid ${LL.border}` }}>
+                  <div style={{ width:46,height:46,borderRadius:'50%',background:pet.bg||LL.butter,flex:'0 0 auto',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                    {pet.photo ? <img src={pet.photo} alt={pet.name} style={{ width:'100%',height:'100%',objectFit:'cover' }}/> : <i className="ph ph-paw-print" style={{ fontSize:22, color:LL.text }}/>}
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:14, fontWeight:700, color:LL.text }}>{pet.name}</div>
+                    {sub && <div style={{ fontSize:12, color:LL.text3, marginTop:2 }}>{sub}</div>}
+                  </div>
+                  {typeof BFToggle === 'function'
+                    ? <BFToggle on={!!petEnabled[pet.id]} onChange={v => setPetEnabled(prev => ({ ...prev, [pet.id]: v }))}/>
+                    : null}
+                </div>
+              );
+            })}
+            <button style={{ width:'100%', padding:'14px 16px', background:'transparent', border:0,
+              display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', fontFamily:LL.font }}>
+              <span style={{ fontSize:14, color:LL.text2 }}>添加宠物</span>
+              <i className="ph ph-caret-right" style={{ fontSize:12, color:LL.text3 }}/>
+            </button>
+          </div>
+        </div>
+
+        {/* 联系方式 — same as booking, shows filled content */}
+        <div style={{ marginTop:12 }}>
+          <BSModHead title="联系方式"/>
+          <div style={{ background:'#fff' }}>
+            {isPetHome && (
+              <div style={{ display:'flex', alignItems:'center', padding:'14px 16px', gap:12, borderBottom:`1px solid ${LL.border}` }}>
+                <span style={{ fontSize:14, fontWeight:500, color:LL.text, flex:'0 0 auto' }}>服务地址</span>
+                <input value={addr} onChange={e => setAddr(e.target.value)} placeholder="请输入服务地址"
+                  style={{ flex:1, border:0, outline:'none', fontSize:14, color:LL.text, background:'transparent', fontFamily:LL.font, textAlign:'right', caretColor:LL.ink }}/>
+              </div>
+            )}
+            <div style={{ display:'flex', alignItems:'center', padding:'14px 16px', gap:12 }}>
+              <span style={{ fontSize:14, fontWeight:500, color:LL.text, flex:'0 0 auto' }}>手机号码</span>
+              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="请输入手机号码"
+                style={{ flex:1, border:0, outline:'none', fontSize:14, color:LL.text, background:'transparent', fontFamily:LL.font, textAlign:'right', caretColor:LL.ink }}/>
+            </div>
+          </div>
+        </div>
+
+        {/* 留言 */}
+        <div style={{ marginTop:12, marginBottom:12 }}>
+          <BSModHead title="给守护者留言（选填）"/>
+          <div style={{ background:'#fff', padding:'12px 16px' }}>
+            <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="说明一下你想调整的内容…"
+              style={{ width:'100%', minHeight:64, border:`1px solid ${LL.border}`, borderRadius:10, padding:'10px 12px', fontSize:14, color:LL.text, fontFamily:LL.font, outline:'none', resize:'none', boxSizing:'border-box', lineHeight:1.6 }}/>
+          </div>
+        </div>
+        <div style={{ height:8 }}/>
+      </div>
+
+      {/* Bottom */}
+      <div style={{ flex:'0 0 auto', background:'#fff', borderTop:`1px solid ${LL.border}`, padding:'12px 16px 22px' }}>
+        <button disabled={!canConfirm}
+          onClick={() => onConfirm?.(app, { service, dateStart: bsFmt(range.start), dateEnd: isRangeSvc && range.end ? bsFmt(range.end) : null, note })}
+          style={{
+            width:'100%', height:52, borderRadius:999, border:0,
+            background: canConfirm?LL.ink:'rgba(34,40,44,0.22)', color:'#fff',
+            fontSize:15, fontWeight:700, fontFamily:LL.font, cursor: canConfirm?'pointer':'not-allowed',
+            letterSpacing:'0.04em',
+          }}>确认修改并通知守护者</button>
+      </div>
+
+      {/* 日期选择 bottom drawer */}
+      {dateOpen && (
+        <>
+          <div onClick={() => setDateOpen(false)} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.45)', zIndex:90 }}/>
+          <div style={{ position:'absolute', left:0, right:0, bottom:0, zIndex:91, background:'#fff',
+            borderTopLeftRadius:20, borderTopRightRadius:20, boxShadow:'0 -8px 24px rgba(0,0,0,0.12)', fontFamily:LL.font }}>
+            <div style={{ padding:'12px 16px 6px' }}>
+              <div style={{ width:38, height:4, borderRadius:2, background:LL.border, margin:'0 auto 10px' }}/>
+              <div style={{ display:'flex', alignItems:'center' }}>
+                <div style={{ fontSize:16, fontWeight:700, color:LL.text }}>选择服务日期</div>
+                <button onClick={() => setDateOpen(false)} style={{ marginLeft:'auto', width:30, height:30, borderRadius:'50%', border:0, background:'#F0F0F5', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <i className="ph ph-x" style={{ fontSize:13, color:LL.text }}/>
+                </button>
+              </div>
+              <div style={{ fontSize:12, color:LL.text3, marginTop:4 }}>{isRangeSvc ? '选择服务区间（开始 → 结束）' : '点选一个服务日期'}</div>
+            </div>
+            <div style={{ padding:'2px 16px 4px' }}>
+              {typeof Calendar === 'function' && (
+                <Calendar
+                  bookedDates={bookedDates}
+                  svcPrice={null}
+                  viewOnly={false}
+                  scroll={true}
+                  monthsCount={6}
+                  start={range.start}
+                  end={isRangeSvc ? range.end : null}
+                  onChange={(r) => setRange(isRangeSvc ? r : { start: (r.end || r.start), end: null })}
+                />
+              )}
+            </div>
+            <div style={{ padding:'10px 16px 22px', borderTop:`1px solid ${LL.border}` }}>
+              <div style={{ fontSize:12.5, color:LL.text2, marginBottom:8, textAlign:'center', minHeight:18 }}>
+                {range.start ? <span style={{ color:LL.text, fontWeight:700 }}>{dateLabel}</span> : '请在日历上选择日期'}
+              </div>
+              <button disabled={!range.start} onClick={() => setDateOpen(false)} style={{
+                width:'100%', height:50, borderRadius:999, border:0,
+                background: range.start ? LL.ink : 'rgba(34,40,44,0.22)', color:'#fff',
+                fontSize:16, fontWeight:700, fontFamily:LL.font, cursor: range.start?'pointer':'not-allowed', letterSpacing:'0.06em',
+              }}>应用日期</button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+Object.assign(window, { BookingSummaryScreen, OrderModifyScreen });

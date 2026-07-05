@@ -11,10 +11,10 @@ AppID: `wxab4f24c2c7243737` (小程序 type). CloudBase env (when activated): `p
 ## Authoritative documents (read these before coding)
 
 1. **Spec — P0 scope (current):** `docs/superpowers/specs/2026-05-19-loulou-p0-mvp-scope.md`
-2. **Spec — Design system v2 (current):** `docs/superpowers/specs/2026-06-29-loulou-design-system-v2.md` (v1 tokens at `2026-05-30-loulou-design-system.md` still valid)
+2. **Spec — Design system v3 (current):** `docs/superpowers/specs/2026-07-05-loulou-design-system-v3.md` (v2 at `2026-06-29-loulou-design-system-v2.md` for screen inventory; v1 tokens at `2026-05-30-loulou-design-system.md` still valid)
 3. **Spec — Phase 1 base architecture:** `docs/superpowers/specs/2026-05-16-petbacker-dogwalking-mvp-design.md`
 4. **Plan — P0 + P1 (current):** `docs/superpowers/plans/2026-05-19-loulou-p0-launch.md`
-5. **Plan — Design rollout v2 (current):** `docs/superpowers/plans/2026-06-29-design-rollout-v2.md`
+5. **Plan — Design rollout v3 (current):** `docs/superpowers/plans/2026-07-05-design-rollout-v3.md` (v2 at `2026-06-29-design-rollout-v2.md` for foundation stages)
 6. **Plan — Phase 1 task bodies:** `docs/superpowers/plans/2026-05-16-petbacker-dogwalking-mvp.md`
 7. **Risks:** `docs/superpowers/risks/2026-05-18-loulou-risks.md`
 8. **Progress tracker:** `docs/superpowers/progress/2026-05-19-p0-progress.md`

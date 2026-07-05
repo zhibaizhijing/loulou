@@ -25,13 +25,33 @@ const BF_LOC_COLOR = (svc) => BF_SVC_AT_GUARDIAN.includes(svc)
 
 // ─── Mock data ────────────────────────────────────────────────
 const BF_MY_PETS = [
-  { id:'p1', name:'豆豆', breed:'金毛', weight:'22公斤', age:'3岁', bg:'#FEE7A6' },
-  { id:'p2', name:'奶茶', breed:'英短', weight:'4.5公斤', age:'2岁', bg:'#FBD3C4' },
+  { id:'p1', name:'豆豆', species:'dog', breed:'金毛', weight:'22公斤', age:'3岁', bg:'#FEE7A6' },
+  { id:'p2', name:'奶茶', species:'cat', breed:'英短', weight:'4.5公斤', age:'2岁', bg:'#FBD3C4' },
 ];
 const BF_EXTRAS = [
-  { id:'pickup', label:'守护者上门接送', price:30,  desc:'守护者上门接送您的宠物，省心省力' },
-  { id:'bath',   label:'洗澡护理',       price:68,  desc:'专业清洁，宠物回家干净舒适' },
+  { id:'medicate', label:'喂药 / 擦药 / 喂营养品', price:10, desc:'按需为宠物喂药、擦药或喂食营养品（每次）' },
 ];
+// Coupons the user owns — selectable in the price drawer
+const BF_COUPONS = [
+  { id:'birthday', name:'宠物生日折扣券', desc:'生日当月 9 折，不限服务', kind:'percent', value:0.1 },
+  { id:'invite',   name:'邀请好友奖励券', desc:'满 ¥100 立减 ¥20',        kind:'amount',  value:20, min:100 },
+  { id:'newuser',  name:'新用户专享 9 折', desc:'首单 9 折优惠',           kind:'percent', value:0.1 },
+];
+function bfCouponDiscount(coupon, subtotal) {
+  if (!coupon) return 0;
+  if (coupon.kind === 'percent') return Math.round(subtotal * coupon.value);
+  if (coupon.kind === 'amount')  return subtotal >= (coupon.min || 0) ? coupon.value : 0;
+  return 0;
+}
+function bfSpeciesFromBreed(breed) {
+  const b = breed || '';
+  if (/猫|布偶|英短|美短|蓝猫|缅因|暹罗|折耳|狸花/.test(b)) return 'cat';
+  if (/兔/.test(b)) return 'rabbit';
+  if (/鼠|仓鼠/.test(b)) return 'hamster';
+  if (/鸟|鹦鹉/.test(b)) return 'bird';
+  return 'dog';
+}
+const BF_SPECIES_CN = { dog:'狗', cat:'猫', rabbit:'兔', hamster:'鼠', bird:'鸟' };
 const BF_RECS = [
   { id:'r1', name:'林若', area:'朝阳区·望京',   rating:4.8, reviews:96,  repeats:12, price:78, unit:'晚',
     photo:(window.__resources && window.__resources.guardian1) || './assets/guardian1.png' },
@@ -40,6 +60,105 @@ const BF_RECS = [
   { id:'r4', name:'张明', area:'朝阳区·望京',   rating:4.7, reviews:43,  repeats:5,  price:75, unit:'晚',
     photo:null, bg:'#C7E8D8' },
 ];
+
+// ─── Helpers ──────────────────────────────────────────────────
+// Per-day walk-time picker helpers (遛狗 / 上门喂养)
+const BF_WALK_SLOTS = (() => {
+  const out = [];
+  for (let h = 7; h <= 21; h++) {
+    out.push(`${String(h).padStart(2,'0')}:00`);
+    if (h < 21) out.push(`${String(h).padStart(2,'0')}:30`);
+  }
+  return out;
+})();
+const BF_WK = ['周日','周一','周二','周三','周四','周五','周六'];
+function bfDayKey(d) { const x = new Date(d); return `${x.getFullYear()}-${x.getMonth()+1}-${x.getDate()}`; }
+function bfDayLabel(d) { const x = new Date(d); return `${x.getMonth()+1}月${x.getDate()}日 ${BF_WK[x.getDay()]}`; }
+function bfPeriodDefaults(periods) {
+  const map = { morning:'09:00', afternoon:'14:00', evening:'19:00' };
+  const t = (periods || []).map(p => map[p]).filter(Boolean);
+  return t.length ? t : ['09:00'];
+}
+function bfServiceDays(schedule) {
+  const s = schedule;
+  if (!s) return [];
+  if (s.type === 'once') {
+    if (s.pickMode === 'single' && s.dates?.days?.length) {
+      return [...s.dates.days].map(d => new Date(d)).sort((a,b) => a - b);
+    }
+    if (s.dates?.start) {
+      const start = new Date(s.dates.start);
+      const end = s.dates.end ? new Date(s.dates.end) : new Date(s.dates.start);
+      const out = []; const d = new Date(start);
+      while (d <= end && out.length < 31) { out.push(new Date(d)); d.setDate(d.getDate()+1); }
+      return out;
+    }
+  }
+  // recurring: expand chosen weekdays within range (Mon-first index)
+  if (s.dates?.start && s.weekdays?.length) {
+    const start = new Date(s.dates.start);
+    const end = s.dates.end ? new Date(s.dates.end) : new Date(s.dates.start);
+    const wd = new Set(s.weekdays);
+    const out = []; const d = new Date(start);
+    while (d <= end && out.length < 31) {
+      if (wd.has((d.getDay()+6)%7)) out.push(new Date(d));
+      d.setDate(d.getDate()+1);
+    }
+    return out;
+  }
+  return s.dates?.start ? [new Date(s.dates.start)] : [];
+}
+
+// Per-day walk-time picker — scrollable time chips + "same as first day" toggle
+function BFWalkTimes({ days, walkTimes, sameAsFirst, onToggleTime, onToggleSame, serviceLabel }) {
+  if (!days.length) return null;
+  const firstKey   = bfDayKey(days[0]);
+  const firstTimes = walkTimes[firstKey] || [];
+  const summary = (times) => times.length ? `${times.length}次 · ${times.join('、')}` : `添加一个或多个${serviceLabel}时间`;
+
+  return (
+    <div style={{ background:'#fff' }}>
+      {days.map((d, i) => {
+        const k = bfDayKey(d);
+        const isFirst = i === 0;
+        const same = !isFirst && sameAsFirst[k] !== false; // default ON for non-first days
+        const ownTimes = walkTimes[k] || [];
+        const shownTimes = same ? firstTimes : ownTimes;
+        const showChips = isFirst || !same;
+        return (
+          <div key={k} style={{ padding:'14px 16px', borderTop: i > 0 ? `1px solid ${LL.border}` : 'none' }}>
+            <div style={{ fontSize:14, fontWeight:700, color:LL.text }}>{bfDayLabel(d)}</div>
+            <div style={{ fontSize:12, color: shownTimes.length ? LL.text2 : LL.text3, marginTop:3 }}>
+              {summary(shownTimes)}
+            </div>
+            {showChips && (
+              <div style={{ display:'flex', gap:8, overflowX:'auto', marginTop:11, paddingBottom:4, scrollbarWidth:'none', WebkitOverflowScrolling:'touch' }}>
+                {BF_WALK_SLOTS.map(t => {
+                  const on = ownTimes.includes(t);
+                  return (
+                    <button key={t} onClick={() => onToggleTime(k, t)} style={{
+                      flex:'0 0 auto', height:38, padding:'0 15px', borderRadius:10,
+                      border:`1.5px solid ${on ? LL.ink : LL.border}`,
+                      background: on ? LL.ink : '#fff', color: on ? '#fff' : LL.text2,
+                      fontSize:13.5, fontWeight: on ? 700 : 500, fontFamily:LL.font, cursor:'pointer',
+                      fontVariantNumeric:'tabular-nums', whiteSpace:'nowrap', transition:'all 120ms',
+                    }}>{t}</button>
+                  );
+                })}
+              </div>
+            )}
+            {!isFirst && (
+              <div style={{ display:'flex', alignItems:'center', marginTop:12, paddingTop:12, borderTop:`1px dashed ${LL.border}` }}>
+                <span style={{ flex:1, fontSize:13, color:LL.text2 }}>与 {bfDayLabel(days[0])} 相同时间</span>
+                <BFToggle on={same} onChange={(v) => onToggleSame(k, v)} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────
 function bfFmtTime(t) {
@@ -232,11 +351,11 @@ function BFStepper({ value, onChange, min=0, max=9 }) {
 }
 
 // ─── Price Bar + Drawer ───────────────────────────────────────
-function PriceBar({ service, nights, unitPrice, extras, petCount=1, onOpen }) {
+function PriceBar({ service, nights, petUnitSum, extras, pricedPets=[], overtimeFee=0, onOpen }) {
   const extrasTotal = extras.reduce((s,e) => s + (e.qty||0) * e.price, 0);
-  const subtotal = unitPrice * nights * petCount + extrasTotal;
-  const platformFee = Math.round(subtotal * 0.15);
-  const total = subtotal + platformFee;
+  const petCount = pricedPets.length || 1;
+  const subtotal = petUnitSum * nights + extrasTotal + overtimeFee;
+  const total = subtotal;
   const svcUnit = BF_SVC_FORM[service]==='A' ? (service==='日托' ? '天':'晚') : '次';
 
   return (
@@ -261,18 +380,75 @@ function PriceBar({ service, nights, unitPrice, extras, petCount=1, onOpen }) {
   );
 }
 
-function PriceDrawer({ open, onClose, service, nights, unitPrice, extras, petCount=1, bottomOffset=0 }) {
-  const [couponApplied, setCouponApplied] = React.useState(false);
+// Coupon picker bottom-sheet — choose which coupon to apply
+function BFCouponPicker({ open, coupons, subtotal, selectedId, onPick, onClose }) {
+  if (!open) return null;
+  return (
+    <>
+      <div onClick={onClose} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.4)',zIndex:92 }}/>
+      <div style={{ position:'absolute',left:0,right:0,bottom:0,zIndex:93,background:'#fff',
+        borderTopLeftRadius:20,borderTopRightRadius:20,padding:'0 0 24px',
+        boxShadow:'0 -8px 24px rgba(0,0,0,0.12)',fontFamily:LL.font,maxHeight:'80%',display:'flex',flexDirection:'column' }}>
+        <div style={{ padding:'12px 16px 8px',flex:'0 0 auto' }}>
+          <div style={{ width:38,height:4,borderRadius:2,background:LL.border,margin:'0 auto 10px' }}/>
+          <div style={{ display:'flex',alignItems:'center' }}>
+            <div style={{ fontSize:15,fontWeight:700,color:LL.text }}>选择优惠券</div>
+            <button onClick={onClose} style={{ marginLeft:'auto',width:30,height:30,borderRadius:'50%',border:0,background:'#F0F0F5',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
+              <i className="ph ph-x" style={{ fontSize:13,color:LL.text }}/>
+            </button>
+          </div>
+        </div>
+        <div style={{ flex:1,overflowY:'auto',padding:'4px 16px 8px',display:'flex',flexDirection:'column',gap:10 }}>
+          {coupons.map(c => {
+            const disc = bfCouponDiscount(c, subtotal);
+            const usable = disc > 0;
+            const on = selectedId === c.id;
+            return (
+              <button key={c.id} disabled={!usable} onClick={() => onPick(c.id)} style={{
+                display:'flex',alignItems:'center',gap:12,padding:'14px',borderRadius:14,
+                border:`1.5px solid ${on?LL.ink:LL.border}`,background: usable ? (on?'#FAFAFC':'#fff') : '#F7F7FA',
+                cursor: usable?'pointer':'not-allowed',fontFamily:LL.font,textAlign:'left',width:'100%',opacity:usable?1:0.55,
+              }}>
+                <div style={{ width:46,height:46,borderRadius:10,background:LL.butter,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flex:'0 0 auto' }}>
+                  <i className="ph ph-ticket" style={{ fontSize:20,color:LL.text }}/>
+                </div>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <div style={{ fontSize:14,fontWeight:700,color:LL.text }}>{c.name}</div>
+                  <div style={{ fontSize:12,color:LL.text3,marginTop:2 }}>{c.desc}</div>
+                  {!usable && <div style={{ fontSize:11.5,color:'#B45309',marginTop:3 }}>不满足使用条件</div>}
+                </div>
+                <div style={{ flex:'0 0 auto',display:'flex',alignItems:'center',gap:8 }}>
+                  {usable && <span style={{ fontSize:14,fontWeight:800,color:'#E63946' }}>-¥{disc}</span>}
+                  {on
+                    ? <i className="ph-fill ph-check-circle" style={{ fontSize:20,color:LL.ink }}/>
+                    : <div style={{ width:20,height:20,borderRadius:'50%',border:`1.5px solid ${LL.border}` }}/>}
+                </div>
+              </button>
+            );
+          })}
+          <button onClick={() => onPick(null)} style={{
+            padding:'13px',borderRadius:14,border:`1.5px solid ${selectedId==null?LL.ink:LL.border}`,
+            background:selectedId==null?'#FAFAFC':'#fff',cursor:'pointer',fontFamily:LL.font,
+            fontSize:14,fontWeight:600,color:LL.text2,display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+          }}>
+            {selectedId==null && <i className="ph-fill ph-check-circle" style={{ fontSize:16,color:LL.ink }}/>}
+            不使用优惠券
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PriceDrawer({ open, onClose, service, nights, petUnitSum, pricedPets=[], extras, overtimeFee=0, overtimeRate=0, coupon, onOpenCoupon, bottomOffset=0 }) {
   if (!open) return null;
   const extrasWithQty = extras.filter(e => (e.qty||0) > 0);
   const svcUnit = BF_SVC_FORM[service]==='A' ? (service==='日托' ? '天':'晚') : '次';
-  const svcTotal = unitPrice * nights * petCount;
+  const svcTotal = petUnitSum * nights;
   const extrasTotal = extrasWithQty.reduce((s,e) => s + e.qty * e.price, 0);
-  const subtotal = svcTotal + extrasTotal;
-  const platformFee = Math.round(subtotal * 0.15);
-  const discount = couponApplied ? Math.round(subtotal * 0.1) : 0;
-  const total = subtotal + platformFee - discount;
-  const petsLabel = petCount > 1 ? ` × ${petCount}只` : '';
+  const subtotal = svcTotal + extrasTotal + overtimeFee;
+  const discount = bfCouponDiscount(coupon, subtotal);
+  const total = subtotal - discount;
   return (
     <>
       <div onClick={onClose} style={{ position:'absolute',top:0,left:0,right:0,bottom:bottomOffset,background:'rgba(0,0,0,0.35)',zIndex:85 }}/>
@@ -286,44 +462,208 @@ function PriceDrawer({ open, onClose, service, nights, unitPrice, extras, petCou
             <i className="ph ph-x" style={{ fontSize:13,color:LL.text }}/>
           </button>
         </div>
-        <div style={{ padding:'10px 16px',borderTop:`1px solid ${LL.border}`,display:'flex',justifyContent:'space-between' }}>
-          <span style={{ fontSize:14,color:LL.text2 }}>¥{unitPrice}/{svcUnit} × {nights}{svcUnit}{petsLabel}</span>
-          <span style={{ fontSize:14,fontWeight:600,color:LL.text }}>¥{svcTotal}</span>
-        </div>
+        {/* Per-species service lines — dog & cat computed separately */}
+        {(pricedPets.length ? pricedPets : [{ name:'宠物', unit:petUnitSum, species:'dog' }]).map((p,i) => (
+          <div key={p.id||i} style={{ padding:'10px 16px',borderTop:`1px solid ${LL.border}`,display:'flex',justifyContent:'space-between' }}>
+            <span style={{ fontSize:14,color:LL.text2 }}>{p.name}（{BF_SPECIES_CN[p.species]||'宠物'}）¥{p.unit}/{svcUnit} × {nights}{svcUnit}</span>
+            <span style={{ fontSize:14,fontWeight:600,color:LL.text }}>¥{p.unit * nights}</span>
+          </div>
+        ))}
         {extrasWithQty.map(e => (
           <div key={e.id} style={{ padding:'10px 16px',borderTop:`1px solid ${LL.border}`,display:'flex',justifyContent:'space-between' }}>
             <span style={{ fontSize:14,color:LL.text2 }}>{e.label} × {e.qty}</span>
             <span style={{ fontSize:14,fontWeight:600,color:LL.text }}>+¥{e.qty * e.price}</span>
           </div>
         ))}
-        <div style={{ padding:'10px 16px',borderTop:`1px solid ${LL.border}`,display:'flex',justifyContent:'space-between' }}>
-          <span style={{ fontSize:14,color:LL.text2 }}>平台服务费（15%）</span>
-          <span style={{ fontSize:14,fontWeight:600,color:LL.text }}>¥{platformFee}</span>
-        </div>
-        <div style={{ padding:'10px 16px',borderTop:`1px solid ${LL.border}`,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-          <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-            <i className="ph ph-ticket" style={{ fontSize:15,color:'#E63946' }}/>
-            <span style={{ fontSize:14,color: couponApplied ? '#E63946' : LL.text2 }}>
-              {couponApplied ? '新用户9折优惠' : '优惠券'}
-            </span>
+        {overtimeFee > 0 && (
+          <div style={{ padding:'10px 16px',borderTop:`1px solid ${LL.border}`,display:'flex',justifyContent:'space-between' }}>
+            <span style={{ fontSize:14,color:LL.text2 }}>延时费（接回晚于送达 · 当日价×{Math.round(overtimeRate*100)}%）</span>
+            <span style={{ fontSize:14,fontWeight:600,color:LL.text }}>+¥{overtimeFee}</span>
           </div>
-          {couponApplied ? (
-            <div style={{ display:'flex',alignItems:'center',gap:8 }}>
-              <span style={{ fontSize:14,fontWeight:700,color:'#E63946' }}>-¥{discount}</span>
-              <button onClick={() => setCouponApplied(false)} style={{ fontSize:12,color:LL.text3,background:'transparent',border:0,cursor:'pointer',fontFamily:LL.font }}>移除</button>
-            </div>
-          ) : (
-            <button onClick={() => setCouponApplied(true)} style={{ display:'flex',alignItems:'center',gap:2,fontSize:13,color:LL.ink,fontWeight:600,background:'transparent',border:0,cursor:'pointer',fontFamily:LL.font }}>
-              选择<i className="ph ph-caret-right" style={{ fontSize:11 }}/>
-            </button>
-          )}
-        </div>
+        )}
+        <button onClick={onOpenCoupon} style={{ width:'100%',padding:'10px 16px',borderTop:`1px solid ${LL.border}`,background:'transparent',border:0,display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',fontFamily:LL.font }}>
+          <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+            <i className="ph ph-ticket" style={{ fontSize:15,color: coupon ? '#E63946' : LL.text3 }}/>
+            <span style={{ fontSize:14,color: coupon ? '#E63946' : LL.text2 }}>{coupon ? coupon.name : '优惠券'}</span>
+          </div>
+          <div style={{ display:'flex',alignItems:'center',gap:4 }}>
+            {discount > 0 && <span style={{ fontSize:14,fontWeight:700,color:'#E63946' }}>-¥{discount}</span>}
+            <span style={{ fontSize:13,color:LL.ink,fontWeight:600 }}>{coupon ? '更换' : '选择'}</span>
+            <i className="ph ph-caret-right" style={{ fontSize:11,color:LL.ink }}/>
+          </div>
+        </button>
         <div style={{ padding:'14px 16px',borderTop:`2px solid ${LL.border}`,display:'flex',justifyContent:'space-between' }}>
           <span style={{ fontSize:15,fontWeight:700,color:LL.text }}>总计</span>
           <span style={{ fontSize:18,fontWeight:800,color:LL.text }}>¥{total}</span>
         </div>
       </div>
     </>
+  );
+}
+
+// ─── Form A date drawer — scrollable months, no per-day price ──
+function DateRangeDrawer({ open, value, bookedDates, svcUnit = '晚', onApply, onClose }) {
+  const [draft, setDraft] = React.useState(value || { start:null, end:null });
+  React.useEffect(() => { if (open) setDraft(value || { start:null, end:null }); }, [open]); // eslint-disable-line
+  if (!open) return null;
+  const n = (draft.start && draft.end) ? bfDaysBetween(draft.start, draft.end) : 0;
+  const canApply = !!(draft.start && draft.end);
+  return (
+    <>
+      <div onClick={onClose} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.4)', zIndex:88 }}/>
+      <div style={{
+        position:'absolute', left:0, right:0, bottom:0, zIndex:89, background:'#fff',
+        borderTopLeftRadius:20, borderTopRightRadius:20,
+        boxShadow:'0 -8px 24px rgba(0,0,0,0.12)', fontFamily:LL.font,
+      }}>
+        {/* Header */}
+        <div style={{ padding:'12px 16px 6px' }}>
+          <div style={{ width:38, height:4, borderRadius:2, background:LL.border, margin:'0 auto 10px' }}/>
+          <div style={{ display:'flex', alignItems:'center' }}>
+            <div style={{ fontSize:16, fontWeight:700, color:LL.text }}>选择服务日期</div>
+            <button onClick={onClose} style={{
+              marginLeft:'auto', width:30, height:30, borderRadius:'50%', border:0,
+              background:'#F0F0F5', cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}><i className="ph ph-x" style={{ fontSize:13, color:LL.text }}/></button>
+          </div>
+        </div>
+        {/* Calendar — GuardianCalendar handles its own vertical month scroll */}
+        <div style={{ padding:'2px 16px 4px' }}>
+          {typeof GuardianCalendar === 'function' && (
+            <GuardianCalendar
+              bookedDates={bookedDates}
+              svcPrice={null}
+              viewOnly={false}
+              scroll={true}
+              monthsCount={9}
+              start={draft.start}
+              end={draft.end}
+              onChange={setDraft}
+            />
+          )}
+        </div>
+        {/* Footer */}
+        <div style={{ padding:'10px 16px 22px', borderTop:`1px solid ${LL.border}` }}>
+          <div style={{ fontSize:12.5, color:LL.text2, marginBottom:8, textAlign:'center', minHeight:18 }}>
+            {draft.start ? (
+              <>
+                <span style={{ color:LL.text, fontWeight:700 }}>{bfFmtDate(draft.start)}</span>
+                <span style={{ margin:'0 6px' }}>→</span>
+                <span style={{ color:LL.text, fontWeight:700 }}>{draft.end ? bfFmtDate(draft.end) : '...'}</span>
+                {n > 0 && <span style={{ marginLeft:8, color:LL.text2 }}>共 <b style={{ color:LL.text }}>{n}</b> {svcUnit}</span>}
+              </>
+            ) : '请在日历上选择开始日期'}
+          </div>
+          <button disabled={!canApply} onClick={() => onApply(draft)} style={{
+            width:'100%', height:50, borderRadius:999, border:0,
+            background: canApply ? LL.ink : LL.inkDisabled, color:'#fff',
+            fontSize:16, fontWeight:700, fontFamily:LL.font, cursor: canApply ? 'pointer' : 'not-allowed',
+            letterSpacing:'0.06em',
+          }}>应用日期</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Address map page (pick service location) ─────────────────
+const BF_POIS = [
+  { poi:'望京SOHO', area:'北京市朝阳区阜通东大街6号' },
+  { poi:'融科橄榄城', area:'北京市朝阳区望京西园三区' },
+  { poi:'望京新城', area:'北京市朝阳区广顺南大街12号' },
+];
+
+function AddressMapScreen({ initial, onConfirm, onClose }) {
+  const [poiIdx, setPoiIdx] = React.useState(() => {
+    if (initial) { const i = BF_POIS.findIndex(p => p.poi === initial.poi); return i >= 0 ? i : 0; }
+    return 0;
+  });
+  const [detail, setDetail] = React.useState(initial?.detail || '');
+  const [saveAsMine, setSaveAsMine] = React.useState(true);
+  const poi = BF_POIS[poiIdx];
+  const mapImg = (window.__resources && window.__resources.mapImg) || './assets/map.png';
+
+  return (
+    <div style={{ position:'absolute', inset:0, zIndex:92, background:'#fff',
+      display:'flex', flexDirection:'column', fontFamily:LL.font }}>
+      {/* Nav */}
+      <div style={{ flex:'0 0 auto', height:52, background:'#fff', borderBottom:`1px solid ${LL.border}`,
+        display:'flex', alignItems:'center', padding:'0 16px' }}>
+        <button onClick={onClose} style={{ display:'flex', alignItems:'center', gap:3, background:'transparent',
+          border:0, cursor:'pointer', fontFamily:LL.font, padding:0, color:LL.text2, fontSize:13.5 }}>
+          <i className="ph ph-caret-left" style={{ fontSize:16 }}/> 返回
+        </button>
+        <div style={{ flex:1, textAlign:'center', fontSize:15, fontWeight:700, color:LL.text }}>选择服务地址</div>
+        <div style={{ width:48 }}/>
+      </div>
+
+      {/* Map */}
+      <div style={{ flex:1, position:'relative', overflow:'hidden', background:'#D8E8F0', minHeight:0 }}>
+        <img src={mapImg} alt="地图" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
+          onError={e => { e.target.style.display = 'none'; }}/>
+        {/* Search field */}
+        <div style={{ position:'absolute', top:12, left:12, right:12, height:40, background:'#fff',
+          borderRadius:999, boxShadow:'0 2px 10px rgba(0,0,0,0.12)',
+          display:'flex', alignItems:'center', padding:'0 14px', gap:8 }}>
+          <i className="ph ph-magnifying-glass" style={{ fontSize:15, color:LL.text3 }}/>
+          <span style={{ fontSize:13.5, color:LL.text3 }}>搜索小区 / 地址</span>
+        </div>
+        {/* Center pin */}
+        <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-100%)',
+          display:'flex', flexDirection:'column', alignItems:'center', pointerEvents:'none' }}>
+          <div style={{ background:LL.ink, color:'#fff', fontSize:12, fontWeight:700, padding:'5px 10px',
+            borderRadius:8, whiteSpace:'nowrap', marginBottom:4, boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>{poi.poi}</div>
+          <i className="ph-fill ph-map-pin" style={{ fontSize:34, color:'#E63946',
+            filter:'drop-shadow(0 3px 4px rgba(0,0,0,0.25))' }}/>
+        </div>
+      </div>
+
+      {/* Bottom card */}
+      <div style={{ flex:'0 0 auto', background:'#fff', boxShadow:'0 -4px 16px rgba(0,0,0,0.08)',
+        padding:'14px 16px 22px', borderTopLeftRadius:18, borderTopRightRadius:18 }}>
+        <div style={{ fontSize:12, color:LL.text3, marginBottom:8 }}>选择附近地址</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:14 }}>
+          {BF_POIS.map((p, i) => {
+            const on = i === poiIdx;
+            return (
+              <button key={p.poi} onClick={() => setPoiIdx(i)} style={{
+                display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:10, border:0,
+                background: on ? '#F3F1FA' : 'transparent', cursor:'pointer', fontFamily:LL.font, textAlign:'left', width:'100%' }}>
+                <i className={`${on ? 'ph-fill' : 'ph'} ph-map-pin`} style={{ fontSize:16, color: on ? LL.ink : LL.text3, flex:'0 0 auto' }}/>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13.5, fontWeight: on ? 700 : 600, color:LL.text }}>{p.poi}</div>
+                  <div style={{ fontSize:11.5, color:LL.text3, marginTop:1 }}>{p.area}</div>
+                </div>
+                {on && <i className="ph-fill ph-check-circle" style={{ fontSize:17, color:LL.ink, flex:'0 0 auto' }}/>}
+              </button>
+            );
+          })}
+        </div>
+        {/* Detail input */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px',
+          background:LL.bg, borderRadius:12, marginBottom:14 }}>
+          <span style={{ fontSize:13.5, color:LL.text2, flex:'0 0 auto' }}>详细地址</span>
+          <input value={detail} onChange={e => setDetail(e.target.value)} placeholder="楼号 / 单元 / 门牌号"
+            style={{ flex:1, border:0, outline:'none', background:'transparent', fontSize:13.5, color:LL.text,
+              fontFamily:LL.font, textAlign:'right', caretColor:LL.ink }}/>
+        </div>
+        {/* Save as my address */}
+        <button onClick={() => setSaveAsMine(v => !v)} style={{ display:'flex', alignItems:'center', gap:8,
+          background:'transparent', border:0, cursor:'pointer', fontFamily:LL.font, padding:'0 0 14px' }}>
+          <div style={{ width:20, height:20, borderRadius:6, flex:'0 0 auto',
+            background: saveAsMine ? LL.ink : 'transparent',
+            boxShadow: saveAsMine ? 'none' : `inset 0 0 0 1.5px ${LL.text3}`,
+            display:'flex', alignItems:'center', justifyContent:'center' }}>
+            {saveAsMine && <i className="ph-bold ph-check" style={{ fontSize:12, color:'#fff' }}/>}
+          </div>
+          <span style={{ fontSize:13.5, color:LL.text2 }}>添加为我的地址</span>
+        </button>
+        <button onClick={() => onConfirm({ poi: poi.poi, area: poi.area, detail: detail.trim(), saveAsMine })} style={{
+          width:'100%', height:50, borderRadius:999, border:0, background:LL.ink, color:'#fff',
+          fontSize:16, fontWeight:700, fontFamily:LL.font, cursor:'pointer', letterSpacing:'0.06em' }}>确认地址</button>
+      </div>
+    </div>
   );
 }
 
@@ -510,7 +850,7 @@ function BFSuccessScreen({ guardian, onGoToOrders }) {
           padding:'12px 20px', display:'flex', alignItems:'center', gap:12 }}>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:12.5, color:LL.text2, lineHeight:1.55 }}>
-              你的资料完成度 <span style={{ color:'#E63946', fontWeight:700 }}>&lt;60%</span>，完善自我介绍可提高接单率哦
+              您的宠物资料完成度 <span style={{ color:'#E63946', fontWeight:700 }}>&lt;60%</span>，完善宠物资料可以提高接单率，让守护者更好地照顾您的宝贝哦
             </div>
           </div>
           <button style={{
@@ -566,27 +906,44 @@ function BFSuccessScreen({ guardian, onGoToOrders }) {
 }
 
 // ─── Main: BookingFlowScreen ──────────────────────────────────
-function BookingFlowScreen({ guardian, initialService, initialDateRange, initialSchedule, onBack, onSubmit, onGoHome, onGoToOrders }) {
+function BookingFlowScreen({ guardian, initialService, initialDateRange, initialSchedule, myPets, onBack, onSubmit, onGoHome, onGoToOrders }) {
   // ── Resolve initial service
   const resolvedSvc = React.useMemo(() => {
     if (initialService && guardian.services.find(s=>s.id===initialService)) return initialService;
     return guardian.services[0]?.id || '寄养';
   }, []); // eslint-disable-line
 
-  // ── Form state — booking dates always start empty (no default selection)
+  // ── Pet list (user's own pets; falls back to demo pets if none passed)
+  const petsList = (myPets && myPets.length) ? myPets : BF_MY_PETS;
+
+  // ── Form state — date defaults to the searched range when provided
   const [service,    setService]    = React.useState(resolvedSvc);
-  const [dateRange,  setDateRange]  = React.useState({ start:null, end:null });
+  const [dateRange,  setDateRange]  = React.useState(
+    (initialDateRange && initialDateRange.start) ? initialDateRange : { start:null, end:null }
+  );
   const [schedule,   setSchedule]   = React.useState(initialSchedule  || (typeof defaultSchedule==='function' ? defaultSchedule() : { type:'once',dates:{start:null,end:null},weekdays:[],periods:[] }));
   const [duration,   setDuration]   = React.useState(30);
+  const [walkTimes,   setWalkTimes]   = React.useState({});
+  const [sameAsFirst, setSameAsFirst] = React.useState({});
   const [dropoff,    setDropoff]    = React.useState(null);
   const [pickup,     setPickup]     = React.useState(null);
-  const [petEnabled, setPetEnabled] = React.useState({ p1:true, p2:true });
-  const [extras,     setExtras]     = React.useState({ pickup:0, bath:0 });
+  const [petEnabled, setPetEnabled] = React.useState(() =>
+    Object.fromEntries(petsList.map(p => [p.id, true]))
+  );
+  const [extras,     setExtras]     = React.useState({});
+  const [coupon,     setCoupon]     = React.useState(null);   // selected coupon object | null
+  const [couponOpen, setCouponOpen] = React.useState(false);
   const [smsNotify,  setSmsNotify]  = React.useState(true);
   const [message,    setMessage]    = React.useState('');
   const [phone,      setPhone]      = React.useState('');
   const [validated,  setValidated]  = React.useState(false);
   const [cancelPolicyOpen, setCancelPolicyOpen] = React.useState(false);
+
+  // ── Service address (在宠物主家 services only)
+  const [addresses,      setAddresses]      = React.useState([]);
+  const [selectedAddrId, setSelectedAddrId] = React.useState(null);
+  const [mapOpen,        setMapOpen]        = React.useState(false);
+  const [editingAddrId,  setEditingAddrId]  = React.useState(null);
 
   // ── Screen state: 'form' | 'recommendation' | 'success'
   const [screen, setScreen] = React.useState('form');
@@ -599,6 +956,7 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
   const dateRef   = React.useRef(null);
   const petRef    = React.useRef(null);
   const phoneRef  = React.useRef(null);
+  const addrRef   = React.useRef(null);
   const msgRef    = React.useRef(null);
   const [bottomH, setBottomH] = React.useState(0);
   React.useEffect(() => {
@@ -609,6 +967,28 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
   const form        = BF_SVC_FORM[service] || 'A';
   const isFormB     = form === 'B';
   const isHomeguard = service === '伴宠留宿';
+  const isPetHome   = BF_SVC_SUB[service] === '在宠物主家';
+
+  // ── Per-day walk-time picker (遛狗 / 上门喂养) ──
+  const serviceDays = React.useMemo(() => isFormB ? bfServiceDays(schedule) : [], [isFormB, schedule]);
+  const serviceDaysKey = serviceDays.map(bfDayKey).join(',');
+  React.useEffect(() => {
+    if (!serviceDays.length) return;
+    setWalkTimes(prev => {
+      const next = { ...prev };
+      serviceDays.forEach((d, i) => {
+        const k = bfDayKey(d);
+        if (!(k in next)) next[k] = i === 0 ? bfPeriodDefaults(schedule.periods) : [];
+      });
+      return next;
+    });
+  }, [serviceDaysKey, isFormB]); // eslint-disable-line
+  const toggleWalkTime = (k, t) => setWalkTimes(prev => {
+    const cur = prev[k] || [];
+    const has = cur.includes(t);
+    return { ...prev, [k]: has ? cur.filter(x => x !== t) : [...cur, t].sort() };
+  });
+  const toggleSameAsFirst = (k, v) => setSameAsFirst(prev => ({ ...prev, [k]: v }));
   const currentSvc  = guardian.services.find(s=>s.id===service);
   const dropoffLabel= isHomeguard ? '守护者到达时间段':'送达时间段';
   const pickupLabel = isHomeguard ? '守护者离开时间段':'接回时间段';
@@ -622,6 +1002,9 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
   const sessions = React.useMemo(() => {
     if (form !== 'B') return 0;
     const periods = Math.max(1, schedule.periods?.length || 1);
+    if (schedule.type === 'once' && schedule.pickMode === 'single') {
+      return (schedule.dates?.days?.length || 0) * periods;
+    }
     if (!schedule.dates?.start) return 0;
     if (schedule.type === 'once') {
       const days = schedule.dates.end ? Math.max(1, bfDaysBetween(schedule.dates.start, schedule.dates.end)) : 1;
@@ -647,16 +1030,48 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
     if (!validated) return {};
     return {
       date:    isFormB
-        ? (!schedule.periods?.length || !schedule.dates?.start)
+        ? (schedule.type==='once' && schedule.pickMode==='single' ? !(schedule.dates?.days?.length) : !schedule.dates?.start)
         : (!dateRange.start || !dateRange.end),
       pet:     !Object.values(petEnabled).some(Boolean),
+      address: isPetHome && !selectedAddrId,
       phone:   !phone.trim(),
       message: !message.trim(),
     };
-  }, [validated, isFormB, schedule, dateRange, petEnabled, phone, message]);
+  }, [validated, isFormB, schedule, dateRange, petEnabled, phone, message, isPetHome, selectedAddrId]);
 
   // Pet count for pricing
   const petCount = Math.max(1, Object.values(petEnabled).filter(Boolean).length);
+
+  // ── Per-species pricing — dog & cat priced separately (not ×count) ──
+  const speciesPriceFor = (pet) => {
+    const sp = pet?.species || bfSpeciesFromBreed(pet?.breed);
+    const tab = currentSvc?.petPricingTabs?.find(t => t.type === sp);
+    const base = tab?.weights?.[0]?.price;
+    return (typeof base === 'number') ? base : (currentSvc?.price || 0);
+  };
+  const pricedPets = petsList.filter(p => petEnabled[p.id]).map(p => ({
+    id: p.id, name: p.name,
+    species: p.species || bfSpeciesFromBreed(p.breed),
+    unit: speciesPriceFor(p),
+  }));
+  const petUnitSum = pricedPets.reduce((s,p) => s + p.unit, 0) || (currentSvc?.price || 0);
+
+  // ── Overtime fee (Form A): 接回 later in the day than 送达 ──
+  const overtime = React.useMemo(() => {
+    if (form !== 'A' || !dropoff || !pickup) return { mins:0, fee:0, rate:0 };
+    const diff = (pickup.h*60 + (pickup.m||0)) - (dropoff.h*60 + (dropoff.m||0));
+    if (diff <= 0) return { mins:0, fee:0, rate:0 };
+    const rate = diff > 8*60 ? 1 : 0.5;
+    return { mins:diff, fee:Math.round(petUnitSum * rate), rate };
+  }, [form, dropoff, pickup, petUnitSum]);
+
+  // Label for the enabled pets (used on the order card / summary)
+  const petLabel = React.useMemo(() => {
+    const en = petsList.filter(p => petEnabled[p.id]);
+    if (!en.length) return '我的宠物';
+    const names = en.map(p => p.name).filter(Boolean).join('、') || '我的宠物';
+    return en[0].breed ? `${en[0].breed}·${names}` : names;
+  }, [petEnabled, petsList]);
 
   // Extras array for price bar / drawer (qty-based)
   const extrasArr = BF_EXTRAS.map(e => ({ ...e, qty: extras[e.id] || 0 }));
@@ -667,13 +1082,45 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
     return typeof summarizeQuery==='function' ? summarizeQuery({ svcType: service, dateRange, schedule }) : null;
   }, [isFormB, service, dateRange, schedule]);
 
+  // Date summary for Form A single-line row: "x月x日-x月x日 共N晚"
+  const dateSummaryA = React.useMemo(() => {
+    if (isFormB || !dateRange.start || !dateRange.end) return null;
+    const n = bfDaysBetween(dateRange.start, dateRange.end);
+    const unit = currentSvc?.unit || '晚';
+    return `${bfFmtDate(dateRange.start)}-${bfFmtDate(dateRange.end)} 共${n}${unit}`;
+  }, [isFormB, dateRange, currentSvc]);
+
+  // ── Address helpers
+  const selectedAddr = addresses.find(a => a.id === selectedAddrId) || null;
+  const openAddrNew  = () => { setEditingAddrId(null); setMapOpen(true); };
+  const openAddrEdit = (id) => { setEditingAddrId(id); setMapOpen(true); };
+  const handleAddrConfirm = ({ poi, area, detail }) => {
+    if (editingAddrId) {
+      setAddresses(prev => prev.map(a => a.id === editingAddrId ? { ...a, poi, area, detail } : a));
+      setSelectedAddrId(editingAddrId);
+    } else {
+      const id = `addr-${Date.now()}`;
+      setAddresses(prev => [...prev, { id, poi, area, detail }]);
+      setSelectedAddrId(id);
+    }
+    setMapOpen(false);
+    setEditingAddrId(null);
+  };
+
   // Auto-fill message
   React.useEffect(() => {
-    const enabledPets = BF_MY_PETS.filter(p => petEnabled[p.id]);
+    const enabledPets = petsList.filter(p => petEnabled[p.id]);
     const petName = enabledPets.length > 0 ? enabledPets.map(p => p.name).join('和') : '[宠物名]';
     let ds = '';
     if (form === 'A' && dateRange.start) ds = bfFmtDate(dateRange.start);
-    else if (form === 'B' && schedule.dates?.start) ds = bfFmtDate(schedule.dates.start);
+    else if (form === 'B') {
+      if (schedule.pickMode === 'single' && schedule.dates?.days?.length) {
+        const sorted = schedule.dates.days.slice().sort((a, b) => a - b);
+        ds = bfFmtDate(sorted[0]);
+      } else if (schedule.dates?.start) {
+        ds = bfFmtDate(schedule.dates.start);
+      }
+    }
     const dateStr = ds || '[预约日期]';
     let tmpl = '';
     if (service === '寄养' || service === '日托') {
@@ -692,13 +1139,14 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
   const handleApply = () => {
     setValidated(true);
     const hasDateErr = isFormB
-      ? (!schedule.periods?.length || !schedule.dates?.start)
+      ? (schedule.type==='once' && schedule.pickMode==='single' ? !(schedule.dates?.days?.length) : !schedule.dates?.start)
       : (!dateRange.start || !dateRange.end);
     const hasPetErr    = !Object.values(petEnabled).some(Boolean);
+    const hasAddrErr   = isPetHome && !selectedAddrId;
     const hasPhoneErr  = !phone.trim();
     const hasMsgErr    = !message.trim();
-    if (hasDateErr || hasPetErr || hasPhoneErr || hasMsgErr) {
-      const target = hasDateErr ? dateRef : hasPetErr ? petRef : hasPhoneErr ? phoneRef : msgRef;
+    if (hasDateErr || hasPetErr || hasAddrErr || hasPhoneErr || hasMsgErr) {
+      const target = hasDateErr ? dateRef : hasPetErr ? petRef : hasAddrErr ? addrRef : hasPhoneErr ? phoneRef : msgRef;
       if (target.current && scrollBodyRef.current) {
         scrollBodyRef.current.scrollTop = target.current.offsetTop - 60;
       }
@@ -711,10 +1159,16 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
     const additionalGuardians = BF_RECS.filter(r => recChecked[r.id]);
     onSubmit?.({
       guardian, service, dateRange, schedule, additionalGuardians,
+      pet: petLabel,
+      phone, address: selectedAddr || null,
       message: recMsg,
       dropoff: dropoff ? bfFmtTime(dropoff) : null,
       pickup:  pickup  ? bfFmtTime(pickup)  : null,
-      nights, unitPrice: currentSvc?.price || 0,
+      nights: unitCount, unitPrice: petUnitSum || (currentSvc?.price || 0),
+      petBreakdown: pricedPets,
+      extrasList: extrasArr.filter(e => (e.qty||0) > 0).map(e => ({ label:e.label, price:e.price, qty:e.qty })),
+      overtimeFee: overtime.fee, overtimeRate: overtime.rate,
+      coupon: coupon || null,
     });
     setScreen('success');
   };
@@ -722,10 +1176,16 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
   const handleSkip = () => {
     onSubmit?.({
       guardian, service, dateRange, schedule, additionalGuardians: [],
+      pet: petLabel,
+      phone, address: selectedAddr || null,
       message,
       dropoff: dropoff ? bfFmtTime(dropoff) : null,
       pickup:  pickup  ? bfFmtTime(pickup)  : null,
-      nights, unitPrice: currentSvc?.price || 0,
+      nights: unitCount, unitPrice: petUnitSum || (currentSvc?.price || 0),
+      petBreakdown: pricedPets,
+      extrasList: extrasArr.filter(e => (e.qty||0) > 0).map(e => ({ label:e.label, price:e.price, qty:e.qty })),
+      overtimeFee: overtime.fee, overtimeRate: overtime.rate,
+      coupon: coupon || null,
     });
     setScreen('success');
   };
@@ -800,20 +1260,20 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
         <div style={{ marginTop:12 }} ref={dateRef}>
           <BFGroupHeader title="时间"/>
           <div style={{ background:'#fff' }}>
-            {/* Form A: inline guardian calendar */}
-            {!isFormB && typeof GuardianCalendar === 'function' && (
-              <div style={{ padding:'14px 16px', borderBottom:`1px solid ${LL.border}` }}>
-                <GuardianCalendar
-                  bookedDates={guardian.bookedDates || []}
-                  svcPrice={currentSvc?.price ?? null}
-                  svcUnit={currentSvc?.unit ?? '晚'}
-                  viewOnly={false}
-                  scroll={true}
-                  start={dateRange.start}
-                  end={dateRange.end}
-                  onChange={d => setDateRange(d)}
-                />
-              </div>
+            {/* Form A: single-line date summary row → opens calendar drawer */}
+            {!isFormB && (
+              <button onClick={() => setPicker('dateA')} style={{
+                width:'100%', padding:'14px 16px', background:'transparent', border:0,
+                display:'flex', alignItems:'center', borderBottom:`1px solid ${LL.border}`,
+                cursor:'pointer', fontFamily:LL.font, textAlign:'left',
+              }}>
+                <span style={{ fontSize:14, fontWeight:500, color:LL.text, flex:'0 0 auto' }}>服务日期</span>
+                <span style={{ fontSize:13, marginLeft:'auto', marginRight:4,
+                  color: dateSummaryA ? LL.text : LL.text3, fontWeight: dateSummaryA ? 600 : 400 }}>
+                  {dateSummaryA || '添加日期'}
+                </span>
+                <i className="ph ph-caret-right" style={{ fontSize:12, color:LL.text3 }}/>
+              </button>
             )}
             {/* Form B: schedule row */}
             {isFormB && (
@@ -883,22 +1343,43 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
           )}
         </div>
 
+        {/* ── 2b. 选择每天的服务时间（遛狗 / 上门喂养） */}
+        {isFormB && serviceDays.length > 0 && (
+          <div style={{ marginTop:12 }}>
+            <BFGroupHeader title={service === '遛狗' ? '选择遛狗时间' : '选择上门时间'}/>
+            <BFWalkTimes
+              days={serviceDays}
+              walkTimes={walkTimes}
+              sameAsFirst={sameAsFirst}
+              onToggleTime={toggleWalkTime}
+              onToggleSame={toggleSameAsFirst}
+              serviceLabel={service === '遛狗' ? '遛狗' : '上门'}
+            />
+          </div>
+        )}
+
         {/* ── 3. 宠物 */}
         <div style={{ marginTop:12 }} ref={petRef}>
           <BFGroupHeader title="宠物"/>
           <div style={{ background:'#fff' }}>
-            {BF_MY_PETS.map((pet) => (
+            {petsList.map((pet) => {
+              const wt = pet.weight ? (String(pet.weight).includes('公斤') ? pet.weight : `${pet.weight}公斤`) : null;
+              const sub = [pet.breed, wt, pet.age].filter(Boolean).join(' · ');
+              return (
               <div key={pet.id} style={{ display:'flex',alignItems:'center',padding:'12px 16px',gap:12,borderBottom:`1px solid ${LL.border}` }}>
-                <div style={{ width:46,height:46,borderRadius:'50%',background:pet.bg,flex:'0 0 auto',display:'flex',alignItems:'center',justifyContent:'center' }}>
-                  <i className="ph ph-paw-print" style={{ fontSize:22,color:LL.text }}/>
+                <div style={{ width:46,height:46,borderRadius:'50%',background:pet.bg || LL.butter,flex:'0 0 auto',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                  {pet.photo
+                    ? <img src={pet.photo} alt={pet.name} style={{ width:'100%',height:'100%',objectFit:'cover' }}/>
+                    : <i className="ph ph-paw-print" style={{ fontSize:22,color:LL.text }}/>}
                 </div>
                 <div style={{ flex:1,minWidth:0 }}>
                   <div style={{ fontSize:14,fontWeight:700,color:LL.text }}>{pet.name}</div>
-                  <div style={{ fontSize:12,color:LL.text3,marginTop:2 }}>{pet.breed} · {pet.weight} · {pet.age}</div>
+                  {sub && <div style={{ fontSize:12,color:LL.text3,marginTop:2 }}>{sub}</div>}
                 </div>
                 <BFToggle on={petEnabled[pet.id]} onChange={v => setPetEnabled(prev=>({...prev,[pet.id]:v}))}/>
               </div>
-            ))}
+              );
+            })}
             <button style={{ width:'100%',padding:'14px 16px',background:'transparent',border:0,
               display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',fontFamily:LL.font }}>
               <span style={{ fontSize:14,color:LL.text2 }}>添加宠物</span>
@@ -938,6 +1419,64 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
         <div style={{ marginTop:12 }} ref={phoneRef}>
           <BFGroupHeader title="联系方式"/>
           <div style={{ background:'#fff' }}>
+            {/* 地址 — required for 在宠物主家 services (遛狗 / 上门喂养 / 伴宠留宿) */}
+            {isPetHome && (
+              <div ref={addrRef} style={{ borderBottom:`1px solid ${LL.border}` }}>
+                <div style={{ display:'flex', alignItems:'center', padding:'12px 16px 6px' }}>
+                  <span style={{ fontSize:14, fontWeight:500, color:LL.text }}>服务地址</span>
+                  <span style={{ fontSize:13, color:'#E63946', marginLeft:3 }}>*</span>
+                </div>
+                {addresses.length === 0 ? (
+                  <button onClick={openAddrNew} style={{
+                    width:'100%', padding:'2px 16px 14px', background:'transparent', border:0,
+                    display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontFamily:LL.font, textAlign:'left',
+                  }}>
+                    <i className="ph ph-map-pin" style={{ fontSize:16, color:LL.text3, flex:'0 0 auto' }}/>
+                    <span style={{ fontSize:13.5, color: errors.address ? '#E63946' : LL.text3, flex:1 }}>请选择服务地址</span>
+                    <i className="ph ph-caret-right" style={{ fontSize:12, color:LL.text3 }}/>
+                  </button>
+                ) : (
+                  <div style={{ padding:'2px 16px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+                    {addresses.map(a => {
+                      const on = a.id === selectedAddrId;
+                      return (
+                        <button key={a.id} onClick={() => setSelectedAddrId(a.id)} style={{
+                          display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px', borderRadius:12,
+                          border: on ? `1.5px solid ${LL.ink}` : `1.5px solid ${LL.border}`,
+                          background: on ? '#FAFAFC' : '#fff', cursor:'pointer', fontFamily:LL.font,
+                          textAlign:'left', width:'100%', transition:'border-color 140ms',
+                        }}>
+                          <i className={`${on ? 'ph-fill' : 'ph'} ph-map-pin`} style={{ fontSize:16, color: on ? LL.ink : LL.text3, marginTop:1, flex:'0 0 auto' }}/>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:13.5, fontWeight:700, color:LL.text }}>{a.poi}</div>
+                            <div style={{ fontSize:12, color:LL.text3, marginTop:2, lineHeight:1.45 }}>
+                              {a.area}{a.detail ? ` ${a.detail}` : ''}
+                            </div>
+                          </div>
+                          {on && <i className="ph-fill ph-check-circle" style={{ fontSize:18, color:LL.ink, flex:'0 0 auto' }}/>}
+                        </button>
+                      );
+                    })}
+                    <div style={{ display:'flex', gap:18, paddingTop:2 }}>
+                      <button onClick={() => openAddrEdit(selectedAddrId)} style={{
+                        background:'transparent', border:0, padding:0, cursor:'pointer', fontFamily:LL.font,
+                        fontSize:13, fontWeight:600, color:LL.text2, textDecoration:'underline', textUnderlineOffset:'2px',
+                      }}>修改地址</button>
+                      <button onClick={openAddrNew} style={{
+                        background:'transparent', border:0, padding:0, cursor:'pointer', fontFamily:LL.font,
+                        fontSize:13, fontWeight:600, color:LL.text2, textDecoration:'underline', textUnderlineOffset:'2px',
+                      }}>添加其他地址</button>
+                    </div>
+                  </div>
+                )}
+                {errors.address && (
+                  <div style={{ padding:'0 16px 10px', fontSize:12, color:'#E63946', display:'flex', alignItems:'center', gap:4 }}>
+                    <i className="ph ph-warning-circle" style={{ fontSize:13 }}/>
+                    请选择服务地址
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ padding:'14px 16px', borderBottom:`1px solid ${LL.border}`, display:'flex', alignItems:'center', gap:12 }}>
               <span style={{ fontSize:14,fontWeight:500,color:LL.text,flex:'0 0 auto' }}>手机号码</span>
               <input
@@ -991,9 +1530,10 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
           <PriceBar
             service={service}
             nights={unitCount}
-            unitPrice={currentSvc.price}
+            petUnitSum={petUnitSum}
             extras={extrasArr}
-            petCount={petCount}
+            pricedPets={pricedPets}
+            overtimeFee={overtime.fee}
             onOpen={() => setPriceOpen(true)}
           />
         )}
@@ -1021,6 +1561,9 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
       {/* Pickers */}
       <BFServiceSheet open={picker==='service'} value={service} options={guardian.services}
         onPick={v => { setService(v); setPicker(null); }} onClose={() => setPicker(null)}/>
+      <DateRangeDrawer open={picker==='dateA'} value={dateRange}
+        bookedDates={guardian.bookedDates || []} svcUnit={currentSvc?.unit || '晚'}
+        onApply={d => { setDateRange(d); setPicker(null); }} onClose={() => setPicker(null)}/>
       {typeof SchedulePickerSheet==='function' && (
         <SchedulePickerSheet open={picker==='dateB'} svcType={service}
           applyLabel="应用"
@@ -1032,9 +1575,23 @@ function BookingFlowScreen({ guardian, initialService, initialDateRange, initial
         onConfirm={t => { setPickup(t); setPicker(null); }} onClose={() => setPicker(null)}/>
       <PriceDrawer open={priceOpen} onClose={() => setPriceOpen(false)}
         service={service} nights={unitCount}
-        unitPrice={currentSvc?.price||0} extras={extrasArr}
-        petCount={petCount} bottomOffset={bottomH}/>
+        petUnitSum={petUnitSum} pricedPets={pricedPets} extras={extrasArr}
+        overtimeFee={overtime.fee} overtimeRate={overtime.rate}
+        coupon={coupon} onOpenCoupon={() => setCouponOpen(true)}
+        bottomOffset={bottomH}/>
+      <BFCouponPicker open={couponOpen} coupons={BF_COUPONS}
+        subtotal={petUnitSum * unitCount + extrasArr.reduce((s,e)=>s+(e.qty||0)*e.price,0) + overtime.fee}
+        selectedId={coupon?.id || null}
+        onPick={(id) => { setCoupon(id ? BF_COUPONS.find(c=>c.id===id) : null); setCouponOpen(false); }}
+        onClose={() => setCouponOpen(false)}/>
       {cancelPolicyOpen && <CancelPolicyModal onClose={() => setCancelPolicyOpen(false)} />}
+      {mapOpen && (
+        <AddressMapScreen
+          initial={editingAddrId ? addresses.find(a => a.id === editingAddrId) : null}
+          onConfirm={handleAddrConfirm}
+          onClose={() => { setMapOpen(false); setEditingAddrId(null); }}
+        />
+      )}
     </div>
   );
 }
@@ -1109,4 +1666,33 @@ function CancelPolicyModal({ onClose }) {
   );
 }
 
-Object.assign(window, { BookingFlowScreen, CancelPolicyModal });
+// ─── Cancel Policy (shared, reused by guardian service drawer) ─
+const CANCEL_SECTIONS = [
+  { title:'全额退款', icon:'check-circle', color:'#2C7A4B', bg:'#E6F1EC',
+    text:'在服务开始前一天的 12:00 之前申请取消，可享免费取消（全额退款）。' },
+  { title:'部分扣款', icon:'warning', color:'#B45309', bg:'#FEF3C7',
+    text:'在服务开始前一天的 12:00 之后申请取消，将扣除首日服务费的 20%，其余费用退还。' },
+  { title:'多日订单', icon:'calendar-blank', color:'#2F5F87', bg:'#E3EEF7',
+    text:'若为连续多日的订单，扣款与退款标准将依据当天与剩余未服务首日之间的时差，参照上述规则同理推算。' },
+];
+
+function CancelPolicySections() {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+      {CANCEL_SECTIONS.map((s,i) => (
+        <div key={i} style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
+          <div style={{ width:34, height:34, borderRadius:10, background:s.bg,
+            display:'flex', alignItems:'center', justifyContent:'center', flex:'0 0 auto' }}>
+            <i className={`ph-fill ph-${s.icon}`} style={{ fontSize:17, color:s.color }}/>
+          </div>
+          <div style={{ flex:1, paddingTop:2 }}>
+            <div style={{ fontSize:13.5, fontWeight:700, color:LL.text, marginBottom:4 }}>{s.title}</div>
+            <div style={{ fontSize:12.5, color:LL.text2, lineHeight:1.65 }}>{s.text}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+Object.assign(window, { BookingFlowScreen, CancelPolicyModal, CancelPolicySections, BF_COUPONS, bfCouponDiscount, BFCouponPicker });

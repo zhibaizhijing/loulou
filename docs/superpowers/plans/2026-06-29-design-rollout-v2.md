@@ -1,5 +1,8 @@
 # Loulou Design-System Rollout v2
 
+> **SUPERSEDED 2026-07-05 by `2026-07-05-design-rollout-v3.md`.** v2 DSv2-0..E stages mostly complete (see progress tracker); v3 layers DSv3-0..C on top for canonical primitives + deferred follow-ups.
+
+
 **Sister spec:** `docs/superpowers/specs/2026-06-29-loulou-design-system-v2.md`.
 **Builds on:** `docs/superpowers/specs/2026-05-30-loulou-design-system.md` (v1 tokens + primitives still valid) and `docs/superpowers/plans/2026-05-19-loulou-p0-launch.md` (P0 stages).
 

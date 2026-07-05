@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Top Nav</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 22px 24px; background: var(--ll-bg); }
+  .col { display: flex; flex-direction: column; gap: 14px; }
+  .nav { background: #fff; height: 56px; border-radius: 14px; display: flex; align-items: center; padding: 0 14px; gap: 12px; border: 1px solid var(--ll-border); }
+  .back { width: 36px; height: 36px; border-radius: 50%; background: var(--ll-ink); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .back svg { width: 16px; height: 16px; }
+  .ttl { flex: 1; text-align: center; font-weight: 600; font-size: 16px; color: var(--ll-text); }
+  .spc { width: 36px; }
+  .lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ll-text-3); }
+</style>
+</head>
+<body>
+  <div class="col">
+    <div class="lbl">Top Nav · 128rpx · centered title, dark circular back</div>
+    <div class="nav">
+      <div class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="ttl">Details</div>
+      <div class="spc"></div>
+    </div>
+    <div class="nav" style="background: var(--ll-bg); border-color: transparent;">
+      <div class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="ttl">Daily Activity</div>
+      <div class="spc"></div>
+    </div>
+  </div>
+</body>
+</html>

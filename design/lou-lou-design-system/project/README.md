@@ -219,9 +219,32 @@ for star ratings and inline confirmation marks only.
 | `README.md` | This document |
 | `SKILL.md` | Cross-compatible Agent-Skill metadata |
 | `colors_and_type.css` | All design tokens as CSS custom properties + semantic element styles |
+| `components/` | Reusable React components, exposed on the `window` namespace |
 | `assets/` | Logo, moodboard, brand imagery |
 | `preview/` | Self-contained HTML cards used by the Design System tab |
 | `ui_kits/wechat-mini-program/` | Pixel-faithful Mini Program UI kit with click-through prototype |
+
+### Components
+
+Reusable, token-driven React primitives. Each lives in `components/<Name>/`
+with a `<Name>.jsx` (`export function <Name>`), a `<Name>.d.ts`, and a
+`@dsCard` HTML preview. They compile into `_ds_bundle.js` and are read off the
+window namespace:
+
+```html
+<script src="…/_ds_bundle.js"></script>
+<script>
+  const { Button, Tag, StatusPill } = window.LouLouDesignSystem_d0e775;
+</script>
+```
+
+- **`Button`** — pill CTA. `variant` primary / secondary / ghost, `size` sm / md / lg, plus `block` / `loading` / `disabled`.
+- **`Tag`** — small pastel chip. `tone` butter / lavender / mint / peach / neutral.
+- **`StatusPill`** — order-status chip. `status` pending / accepted / progress / completed / rejected (drives color + default label).
+
+> The `ui_kits/wechat-mini-program/` prototype predates these primitives and
+> renders its own inline equivalents via in-browser Babel; it is a runnable
+> reference app, not a consumer of the compiled bundle.
 
 ### UI Kits
 

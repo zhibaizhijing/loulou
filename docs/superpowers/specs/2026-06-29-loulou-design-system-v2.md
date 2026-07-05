@@ -1,5 +1,7 @@
 # Loulou Design-System Spec v2 (Lou Lou · 露露 · 2026-06-29)
 
+> **SUPERSEDED 2026-07-05 by `2026-07-05-loulou-design-system-v3.md`.** v2 screen inventory + `ll-*` component list below remain authoritative. v3 adds three canonical primitives (`Button`, `Tag`, `StatusPill`) that ship in `design/lou-lou-design-system/project/components/`, changes the status enum (`progress` not `in_progress`; `cancelled` collapses into `rejected`), and clarifies that `ui_kits/*.jsx` is prototype reference not consumer of the compiled bundle. Read v3 first.
+
 **Status:** authoritative for **all visuals + flow chrome** going forward. Supersedes `2026-05-30-loulou-design-system.md` (v1). v1 tokens and primitives remain valid — this doc layers on the new screens, flows, and behaviors introduced in the claude.ai Design System project refresh.
 
 **Source bundle (canonical):** `claude.ai/design/p/d0e77521-a840-4bf3-b1ee-434b57e3296f` (project "Lou Lou Design System", owner: jt). Pull via `DesignSync` tool. The local `design/lou-lou-design-system/` folder is **stale** — do not rely on it. Re-pull components and screens from the claude.ai project when in doubt.

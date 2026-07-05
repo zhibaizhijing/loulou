@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Inputs & Search</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 28px 24px; }
+  .col { display: flex; flex-direction: column; gap: 12px; }
+  .field { height: 44px; border-radius: 12px; border: 1px solid var(--ll-border); display: flex; align-items: center; padding: 0 14px; gap: 10px; background: #fff; font-size: 14px; color: var(--ll-text-3); }
+  .field.focus { border-color: var(--ll-ink); color: var(--ll-text); }
+  .field svg { flex: 0 0 18px; }
+  .search { background: #F0F0F5; border-color: transparent; border-radius: 999px; color: var(--ll-text-3); }
+  .label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ll-text-3); }
+</style>
+</head>
+<body>
+  <div class="col">
+    <div class="label">Text Field — Default / Focus</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="field">Search for services…</div>
+      <div class="field focus">Bella<span style="margin-left: auto; width: 2px; height: 18px; background: var(--ll-ink);"></span></div>
+    </div>
+    <div class="label" style="margin-top: 4px;">Search Bar (rounded)</div>
+    <div class="field search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Search services, breeds, or city…
+    </div>
+  </div>
+</body>
+</html>

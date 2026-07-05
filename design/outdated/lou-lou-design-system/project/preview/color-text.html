@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lou Lou — Text Colors</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 28px 24px; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .cell { background: #fff; border: 1px solid var(--ll-border); border-radius: 12px; padding: 16px; height: 124px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
+  .sample { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .meta   { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+  .label  { font-weight: 600; }
+  .hex    { font-family: var(--font-mono); opacity: 0.65; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="cell">
+      <div class="sample" style="color: var(--ll-text);">Pamper your pet</div>
+      <div class="meta"><span class="label">Primary text</span><span class="hex">#1E1E24</span></div>
+    </div>
+    <div class="cell">
+      <div class="sample" style="color: var(--ll-text-2); font-weight: 500;">Book a grooming visit</div>
+      <div class="meta"><span class="label">Secondary</span><span class="hex">#6B6B7A</span></div>
+    </div>
+    <div class="cell">
+      <div class="sample" style="color: var(--ll-text-3); font-weight: 400;">Search for services…</div>
+      <div class="meta"><span class="label">Hint / disabled</span><span class="hex">#A0A0B0</span></div>
+    </div>
+  </div>
+</body>
+</html>
