@@ -2,7 +2,7 @@
 <view wx:if="{{visible}}" class="ll-cpm-card" catchtap="noop">
   <view class="ll-cpm-head">
     <view class="ll-cpm-head-text">
-      <text class="ll-cpm-title">取消订单</text>
+      <text class="ll-cpm-title">{{mode === 'policy' ? '取消政策' : '取消订单'}}</text>
       <text class="ll-cpm-sub">Lou Lou 平台取消条款</text>
     </view>
     <view class="ll-cpm-close" bindtap="onClose">
@@ -40,8 +40,11 @@
     </view>
   </view>
 
-  <view class="ll-cpm-actions">
+  <view wx:if="{{mode === 'cancel'}}" class="ll-cpm-actions">
     <view class="ll-cpm-confirm" bindtap="onConfirm">确认取消</view>
     <view class="ll-cpm-cancel" bindtap="onClose">暂不取消</view>
+  </view>
+  <view wx:else class="ll-cpm-actions">
+    <view class="ll-cpm-cancel" bindtap="onClose">我知道了</view>
   </view>
 </view>

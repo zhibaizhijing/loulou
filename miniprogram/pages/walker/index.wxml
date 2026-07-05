@@ -16,7 +16,20 @@
     <!-- Hero photo + actions -->
     <view class="gp-hero">
       <view class="gp-hero-photo">
-        <image wx:if="{{heroPhoto}}" src="{{heroPhoto}}" mode="aspectFill" class="gp-hero-img"/>
+        <!-- v3 audit — swipeable photo carousel per design GuardianProfileScreen. -->
+        <swiper
+          wx:if="{{photos.length > 0}}"
+          class="gp-hero-swiper"
+          current="{{photoIdx}}"
+          indicator-dots="{{false}}"
+          circular="{{photos.length > 1}}"
+          duration="240"
+          bindchange="onPhotoSwipe"
+        >
+          <swiper-item wx:for="{{photos}}" wx:key="*this">
+            <image src="{{item}}" mode="aspectFill" class="gp-hero-img"/>
+          </swiper-item>
+        </swiper>
         <view wx:else class="gp-hero-fallback">
           <ll-icon name="paw-print" weight="fill" size="220" color="#22282C"/>
         </view>
@@ -25,7 +38,7 @@
             <ll-icon name="share-network" size="28" color="#6B6B7A"/>
           </view>
           <view class="gp-hero-iconbtn {{liked ? 'is-liked' : ''}}" bindtap="onLike">
-            <ll-icon name="paw-print" weight="{{liked ? 'fill' : 'regular'}}" size="28" color="{{liked ? '#E63946' : '#A0A0B0'}}"/>
+            <ll-icon name="heart" weight="{{liked ? 'fill' : 'regular'}}" size="28" color="{{liked ? '#E63946' : '#A0A0B0'}}"/>
           </view>
         </view>
         <view wx:if="{{photos.length > 1}}" class="gp-hero-dots">
@@ -33,6 +46,8 @@
             wx:for="{{photos}}"
             wx:key="*this"
             class="gp-hero-dot {{photoIdx === index ? 'is-on' : ''}}"
+            data-i="{{index}}"
+            catchtap="onPickPhotoDot"
           ></view>
         </view>
       </view>
@@ -186,5 +201,5 @@
     bind:continue="onPetReminderSkip"
     bind:dismiss="onPetReminderDismiss"
   />
-  <ll-cancel-policy-modal visible="{{policyOpen}}" bind:close="onClosePolicy"/>
+  <ll-cancel-policy-modal visible="{{policyOpen}}" mode="policy" bind:close="onClosePolicy"/>
 </view>

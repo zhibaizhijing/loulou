@@ -28,6 +28,8 @@ interface Data {
   canRebook: boolean
   cancelModalOpen: boolean
   cancelDateStr: string
+  supportOpen: boolean
+  orderNoCopied: boolean
   pageStatus: string
   pageError: string
 }
@@ -61,6 +63,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     canReview: false, canCancel: false,
     canModify: false, canRebook: false,
     cancelModalOpen: false, cancelDateStr: '',
+    supportOpen: false, orderNoCopied: false,
     pageStatus: 'loading', pageError: ''
   },
   bookingId: '',
@@ -125,8 +128,21 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     const w = this.data.walker
     if (w) wx.navigateTo({ url: `/pages/walker/index?id=${w._id}` })
   },
-  onCancel() {
-    // v3 — open the design's 3-tier bottom-anchored cancel-order modal.
+  async onCancel() {
+    // v3 audit — design has two cancel kinds:
+    //  - status='requested' (before guardian accepts) → simple 'cancel-request' confirm.
+    //  - status='accepted'/... (after payment) → open 3-tier cancel-order modal.
+    const status = this.data.booking?.status
+    if (status === 'requested') {
+      const m = await wx.showModal({
+        title: '撤回申请？',
+        content: '守护者尚未接受申请，可直接撤回；如已支付将全额退款。',
+        confirmText: '撤回申请',
+        cancelText: '暂不撤回',
+      })
+      if (m.confirm) void this.onConfirmCancel()
+      return
+    }
     const cancelDateStr = this.computeCancelDateStr()
     this.setData({ cancelModalOpen: true, cancelDateStr })
   },
@@ -155,6 +171,26 @@ Page<Data, WechatMiniprogram.IAnyObject>({
       this.load()
     } catch (e) { showAppError(e) }
   },
+  onOpenSupport()  { this.setData({ supportOpen: true }) },
+  onCloseSupport() { this.setData({ supportOpen: false }) },
+  onCallSupport() {
+    wx.makePhoneCall({ phoneNumber: '4000000000', fail: () => wx.showToast({ title: '电话客服 4000-000-000', icon: 'none' }) })
+    this.setData({ supportOpen: false })
+  },
+  onEmailSupport() {
+    wx.setClipboardData({ data: 'support@loulou.pet' })
+    wx.showToast({ title: '邮箱已复制', icon: 'success' })
+    this.setData({ supportOpen: false })
+  },
+  onCopyOrderNo() {
+    const orderNo = this.data.booking?.orderNo
+    if (!orderNo) return
+    wx.setClipboardData({ data: orderNo })
+    this.setData({ orderNoCopied: true })
+    setTimeout(() => this.setData({ orderNoCopied: false }), 2000)
+  },
+  noop() { /* stopPropagation for sheet body taps */ },
+
   computeCancelDateStr(): string {
     const b = this.data.booking
     if (!b?.date) return '服务前一天'

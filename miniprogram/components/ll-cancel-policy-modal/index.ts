@@ -5,6 +5,9 @@ Component({
   properties: {
     visible:       { type: Boolean, value: false },
     cancelDateStr: { type: String,  value: '服务前一天' },
+    /** 'cancel' (default) — shows 确认取消 red CTA + 暂不取消 ghost.
+     *  'policy' — info-only view (no CTAs); used from walker page. */
+    mode:          { type: String,  value: 'cancel' },
   },
   methods: {
     onClose()   { this.triggerEvent('close') },

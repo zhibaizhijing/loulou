@@ -12,7 +12,16 @@
         <text>返回</text>
       </view>
       <view class="bs-nav-title">预约摘要</view>
-      <view class="bs-nav-spacer"></view>
+      <view class="bs-nav-support" bindtap="onOpenSupport">
+        <ll-icon name="headset" size="28" color="#6B6B7A"/>
+      </view>
+    </view>
+
+    <!-- v3 audit — user-facing order number w/ tap-to-copy. -->
+    <view wx:if="{{booking.orderNo}}" class="bs-orderno" bindtap="onCopyOrderNo">
+      <text class="bs-orderno-label">订单编号</text>
+      <text class="bs-orderno-value ll-num">{{booking.orderNo}}</text>
+      <text class="bs-orderno-copy">{{orderNoCopied ? '✓ 已复制' : '复制'}}</text>
     </view>
 
     <!-- Status banner -->
@@ -146,4 +155,26 @@
     bind:close="onCloseCancelModal"
     bind:confirm="onConfirmCancel"
   />
+
+  <!-- v3 audit — support sheet (客服) -->
+  <view wx:if="{{supportOpen}}" class="bs-support-mask" bindtap="onCloseSupport"></view>
+  <view wx:if="{{supportOpen}}" class="bs-support-sheet" catchtap="noop">
+    <view class="bs-support-grab"></view>
+    <view class="bs-support-title">联系客服</view>
+    <view class="bs-support-row" bindtap="onCallSupport">
+      <view class="bs-support-ico"><ll-icon name="phone" size="32" color="#1E1E24"/></view>
+      <view class="bs-support-info">
+        <text class="bs-support-lbl">电话客服</text>
+        <text class="bs-support-sub">工作时间 09:00 – 22:00</text>
+      </view>
+    </view>
+    <view class="bs-support-row" bindtap="onEmailSupport">
+      <view class="bs-support-ico"><ll-icon name="envelope-simple" size="32" color="#1E1E24"/></view>
+      <view class="bs-support-info">
+        <text class="bs-support-lbl">邮件反馈</text>
+        <text class="bs-support-sub">support@loulou.pet</text>
+      </view>
+    </view>
+    <view class="bs-support-cancel" bindtap="onCloseSupport">取消</view>
+  </view>
 </view>

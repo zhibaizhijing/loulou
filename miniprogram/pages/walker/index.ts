@@ -141,7 +141,27 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   onLike()  { this.setData({ liked: !this.data.liked }) },
-  onShare() { wx.showToast({ title: '分享即将上线', icon: 'none' }) },
+  onShare() {
+    // v3 audit — wire the native WeChat share menu so the button is real.
+    try {
+      wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage', 'shareTimeline'] })
+      wx.showToast({ title: '轻点右上角分享 →', icon: 'none' })
+    } catch { wx.showToast({ title: '分享暂不可用', icon: 'none' }) }
+  },
+  onShareAppMessage() {
+    // Enables the WeChat share sheet's `send to friend` option.
+    const w = this.data.walker
+    return {
+      title: w ? `推荐守护者：${w.name}` : '推荐守护者',
+      path: `/pages/walker/index?id=${this.walkerId}`,
+    }
+  },
+  onPhotoSwipe(e: WechatMiniprogram.CustomEvent<{ current: number }>) {
+    this.setData({ photoIdx: e.detail.current })
+  },
+  onPickPhotoDot(e: WechatMiniprogram.BaseEvent) {
+    this.setData({ photoIdx: Number(e.currentTarget.dataset.i) })
+  },
   onBook()  { this.navigateToBooking() },
 
   navigateToBooking(svcType?: ServiceType) {
