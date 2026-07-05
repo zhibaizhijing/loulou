@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "usingComponents": {
     "ll-icon":          "/components/ll-icon/index",
+    "ll-tag":           "/components/ll-tag/index",
     "loading-skeleton": "/components/loading-skeleton/index",
     "empty-state":      "/components/empty-state/index"
   }

@@ -1,11 +1,11 @@
 <view
-  class="ll-cta {{full ? 'is-full' : ''}} {{secondary ? 'is-secondary' : ''}} {{danger ? 'is-danger' : ''}} {{disabled ? 'is-disabled' : ''}} {{loading ? 'is-loading' : ''}} {{pressed ? 'is-pressed' : ''}}"
+  class="ll-cta ll-cta--{{resolvedVariant}} ll-cta--{{size}} {{resolvedBlock ? 'is-block' : ''}} {{disabled ? 'is-disabled' : ''}} {{loading ? 'is-loading' : ''}} {{pressed ? 'is-pressed' : ''}}"
   bindtap="onTap"
   bindtouchstart="onPressIn"
   bindtouchend="onPressOut"
   bindtouchcancel="onPressOut"
 >
-  <view wx:if="{{loading}}" class="ll-spinner"></view>
-  <text class="ll-cta-text">{{text}}</text>
+  <view wx:if="{{loading}}" class="ll-cta-spinner"></view>
+  <text wx:if="{{text}}" class="ll-cta-text">{{text}}</text>
   <slot/>
 </view>

@@ -24,10 +24,10 @@
       <view
         wx:for="{{threads}}"
         wx:key="id"
-        class="ml-thread"
+        class="ml-thread {{item.bookingId ? '' : 'is-static'}}"
         data-booking="{{item.bookingId}}"
         bindtap="onOpenThread"
-        hover-class="ml-thread-hover"
+        hover-class="{{item.bookingId ? 'ml-thread-hover' : ''}}"
       >
         <view class="ml-avatar ml-avatar--{{item.bg}}">
           <image wx:if="{{item.photo}}" src="{{item.photo}}" mode="aspectFill" class="ml-avatar-img"/>
@@ -38,6 +38,10 @@
           <view class="ml-thread-top">
             <text class="ml-thread-name {{item.unread ? 'is-unread' : ''}}">{{item.name}}</text>
             <text class="ml-thread-time">{{item.time}}</text>
+          </view>
+          <view wx:if="{{item.orderTag}}" class="ml-thread-order-tag {{item.done ? 'is-done' : ''}}">
+            <ll-icon name="clipboard-text" size="22" color="{{item.done ? '#A0A0B0' : '#2C7A4B'}}"/>
+            <text>{{item.orderTag}}</text>
           </view>
           <text class="ml-thread-last {{item.unread ? 'is-unread' : ''}}">{{item.last}}</text>
         </view>

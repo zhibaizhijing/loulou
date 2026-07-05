@@ -1,15 +1,17 @@
+/* v3 primitive — StatusPill. Spec §2.3.
+   Design shape: 11px/700 font, 4px 9px pad, pill radius.
+   Repo: 22rpx/700 font, 8rpx 18rpx pad. */
 .ll-sb {
   display: inline-block;
   font-size: 22rpx;
   font-weight: 700;
   line-height: 1;
-  padding: 6rpx 18rpx;
+  padding: 8rpx 18rpx;
   border-radius: 999rpx;
   white-space: nowrap;
 }
-.ll-sb--pending     { background: var(--ll-status-pending-bg);     color: var(--ll-status-pending-fg); }
-.ll-sb--accepted    { background: var(--ll-status-accepted-bg);    color: var(--ll-status-accepted-fg); }
-.ll-sb--in_progress { background: var(--ll-status-progress-bg);    color: var(--ll-status-progress-fg); }
-.ll-sb--completed   { background: var(--ll-status-completed-bg);   color: var(--ll-status-completed-fg); }
-.ll-sb--rejected    { background: var(--ll-status-rejected-bg);    color: var(--ll-status-rejected-fg); }
-.ll-sb--cancelled   { background: var(--ll-status-completed-bg);   color: var(--ll-status-completed-fg); }
+.ll-sb--pending   { background: var(--ll-status-pending-bg);   color: var(--ll-status-pending-fg); }
+.ll-sb--accepted  { background: var(--ll-status-accepted-bg);  color: var(--ll-status-accepted-fg); }
+.ll-sb--progress  { background: var(--ll-status-progress-bg);  color: var(--ll-status-progress-fg); }
+.ll-sb--completed { background: var(--ll-status-completed-bg); color: var(--ll-status-completed-fg); }
+.ll-sb--rejected  { background: var(--ll-status-rejected-bg);  color: var(--ll-status-rejected-fg); }

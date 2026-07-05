@@ -1,0 +1,17 @@
+.ll-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 44rpx;
+  padding: 0 16rpx;
+  border-radius: var(--ll-radius-xs);
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ll-text);
+  white-space: nowrap;
+}
+.ll-tag--butter   { background: var(--ll-butter); }
+.ll-tag--lavender { background: var(--ll-lavender); }
+.ll-tag--mint     { background: var(--ll-mint); }
+.ll-tag--peach    { background: var(--ll-peach); }
+.ll-tag--neutral  { background: var(--ll-bg); }

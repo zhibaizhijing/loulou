@@ -15,13 +15,13 @@ import { showAppError } from '../../utils/errorHandler'
 import { bus, BUS_EVENTS } from '../../utils/bus'
 import { SERVICE_TYPE_LABEL, type ServiceType } from '../../models/index'
 import {
-  toV2Status, STATUS_TAB_KEY, isHistorical,
-  type V2Status,
+  toDesignStatus, STATUS_TAB_KEY, isHistorical,
+  type StatusPillStatus,
 } from '../../utils/orderStatus'
 
 interface CardRow {
   id: string
-  status: V2Status
+  status: StatusPillStatus
   guardianName: string
   guardianPhoto?: string
   guardianInitial?: string
@@ -62,8 +62,8 @@ interface Data {
   pageStatus: string
 }
 
-const STATUS_PRIORITY: Record<V2Status, number> = {
-  accepted: 0, pending: 1, in_progress: 2, completed: 9, rejected: 9, cancelled: 9,
+const STATUS_PRIORITY: Record<StatusPillStatus, number> = {
+  accepted: 0, pending: 1, progress: 2, completed: 9, rejected: 9,
 }
 
 function fmtBatchTime(t: number): string {
@@ -143,7 +143,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
       const rows: CardRow[] = []
       for (const b of bookings) {
         const w = await getWalkerById(b.walkerId).catch(() => null)
-        const status = toV2Status(b.status)
+        const status = toDesignStatus(b.status)
         rows.push({
           id: b._id,
           status,

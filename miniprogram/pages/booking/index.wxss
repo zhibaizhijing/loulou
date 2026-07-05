@@ -39,7 +39,8 @@
 .bk-report-photo  { width: 200rpx; height: 200rpx; border-radius: var(--ll-radius-md); }
 .bk-report-counts { font-size: 24rpx; color: var(--ll-text-2); margin-top: 16rpx; }
 
-.bk-stickybar {
+.bk-stickybar,
+.bs-stickybar {
   position: fixed;
   bottom: env(safe-area-inset-bottom);
   left: 0; right: 0;
@@ -48,4 +49,12 @@
   display: flex; flex-direction: column; gap: 12rpx;
   box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.06);
   z-index: 50;
+}
+.bs-cta-row {
+  display: flex; gap: 16rpx; flex-wrap: wrap;
+}
+.bs-cta-row ll-cta { flex: 1; min-width: 0; }
+.bs-cta-inner {
+  display: inline-flex; align-items: center; gap: 8rpx;
+  font-size: 26rpx; font-weight: 700;
 }

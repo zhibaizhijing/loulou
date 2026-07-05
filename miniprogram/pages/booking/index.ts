@@ -26,6 +26,8 @@ interface Data {
   canCancel: boolean
   canModify: boolean
   canRebook: boolean
+  cancelModalOpen: boolean
+  cancelDateStr: string
   pageStatus: string
   pageError: string
 }
@@ -58,6 +60,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     paymentStatusLabel: '',
     canReview: false, canCancel: false,
     canModify: false, canRebook: false,
+    cancelModalOpen: false, cancelDateStr: '',
     pageStatus: 'loading', pageError: ''
   },
   bookingId: '',
@@ -122,22 +125,21 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     const w = this.data.walker
     if (w) wx.navigateTo({ url: `/pages/walker/index?id=${w._id}` })
   },
-  async onCancel() {
-    let content = 'This cannot be undone.'
+  onCancel() {
+    // v3 — open the design's 3-tier bottom-anchored cancel-order modal.
+    const cancelDateStr = this.computeCancelDateStr()
+    this.setData({ cancelModalOpen: true, cancelDateStr })
+  },
+  onCloseCancelModal() { this.setData({ cancelModalOpen: false }) },
+  async onConfirmCancel() {
+    this.setData({ cancelModalOpen: false })
     let refundAmount = 0
     let shouldRefund = false
     try {
       const preview = previewCancelRefund(this.bookingId)
       refundAmount = preview.refundAmount
       shouldRefund = refundAmount > 0 && this.data.booking?.payment?.state === 'held'
-      const pctText = preview.refundPct === 1 ? '100%' : `${Math.round(preview.refundPct * 100)}%`
-      content = shouldRefund
-        ? `${pctText} refund — you'll get S$${refundAmount} back. Continue?`
-        : 'Outside the refund window — no refund. Continue?'
     } catch { /* preview failure shouldn't block cancel */ }
-
-    const m = await wx.showModal({ title: 'Cancel booking?', content })
-    if (!m.confirm) return
     try {
       if (shouldRefund) {
         await refundPayment({
@@ -149,9 +151,16 @@ Page<Data, WechatMiniprogram.IAnyObject>({
       }
       await cancelBooking(this.bookingId)
       bus.emit(BUS_EVENTS.BOOKING_UPDATED, { bookingId: this.bookingId })
-      wx.showToast({ title: shouldRefund ? `Refunded S$${refundAmount}` : 'Cancelled', icon: 'success' })
+      wx.showToast({ title: shouldRefund ? `已退款 ¥${refundAmount}` : '订单已取消', icon: 'success' })
       this.load()
     } catch (e) { showAppError(e) }
+  },
+  computeCancelDateStr(): string {
+    const b = this.data.booking
+    if (!b?.date) return '服务前一天'
+    const d = new Date(b.date)
+    d.setDate(d.getDate() - 1)
+    return `${d.getMonth() + 1}月${d.getDate()}日`
   },
   onBack() { wx.navigateBack() },
   onGoHome() { wx.switchTab({ url: '/pages/home/index', fail: () => wx.reLaunch({ url: '/pages/home/index' }) }) },

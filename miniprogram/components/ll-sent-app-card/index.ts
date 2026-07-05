@@ -1,9 +1,9 @@
 // v2 — Sent application card. Spec §2.8.
-import { STATUS_DESC, type V2Status } from '../../utils/orderStatus'
+import { STATUS_DESC, type StatusPillStatus } from '../../utils/orderStatus'
 
 interface AppCardData {
   id: string
-  status: V2Status
+  status: StatusPillStatus
   guardianName: string
   guardianPhoto?: string
   guardianInitial?: string
@@ -27,10 +27,10 @@ Component({
     isPending: false,
   },
   observers: {
-    'app.status'(s: V2Status) {
+    'app.status'(s: StatusPillStatus) {
       this.setData({
         desc: STATUS_DESC[s] || '',
-        isInactive: s === 'rejected' || s === 'cancelled',
+        isInactive: s === 'rejected',
         isCompleted: s === 'completed',
         isAccepted: s === 'accepted',
         isPending: s === 'pending',

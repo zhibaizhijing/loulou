@@ -114,13 +114,13 @@
       </view>
 
       <view wx:if="{{item.reused || item.features.length}}" class="sr-tags">
-        <view wx:if="{{item.reused}}" class="sr-tag sr-tag--relation">托付过</view>
-        <view
+        <ll-tag wx:if="{{item.reused}}" tone="lavender">托付过</ll-tag>
+        <ll-tag
           wx:for="{{item.features}}"
           wx:for-item="f"
           wx:key="*this"
-          class="sr-tag sr-tag--{{f.cat}}"
-        >{{f.label}}</view>
+          tone="{{f.tone}}"
+        >{{f.label}}</ll-tag>
       </view>
 
       <view class="sr-bottom">

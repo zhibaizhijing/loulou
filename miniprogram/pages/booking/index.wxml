@@ -113,28 +113,37 @@
       </view>
     </view>
 
-    <!-- Sticky CTAs -->
+    <!-- Sticky CTAs (v3 primitive) -->
     <view class="bs-stickybar">
       <view class="bs-cta-row">
-        <view class="bs-cta bs-cta--ghost" bindtap="onOpenChat">
-          <ll-icon name="chat-circle-dots" size="24" color="#6B6B7A"/>
-          <text>打开聊天</text>
-        </view>
-        <view wx:if="{{canModify}}" class="bs-cta bs-cta--ghost" bindtap="onModify">
-          <ll-icon name="pencil-simple" size="24" color="#6B6B7A"/>
-          <text>修改订单</text>
-        </view>
-        <view wx:if="{{canRebook}}" class="bs-cta bs-cta--ink" bindtap="onRebook">
-          <ll-icon name="calendar-plus" size="24" color="#FFFFFF"/>
-          <text>再次预约</text>
-        </view>
-        <view wx:if="{{canReview}}" class="bs-cta bs-cta--ink" bindtap="onLeaveReview">
-          <text>留下评价</text>
-        </view>
-        <view wx:if="{{canCancel}}" class="bs-cta bs-cta--danger" bindtap="onCancel">
-          <text>取消订单</text>
-        </view>
+        <ll-cta variant="ghost" size="sm" block="{{false}}" bind:tap="onOpenChat">
+          <view class="bs-cta-inner">
+            <ll-icon name="chat-circle-dots" size="24" color="#6B6B7A"/>
+            <text>打开聊天</text>
+          </view>
+        </ll-cta>
+        <ll-cta wx:if="{{canModify}}" variant="secondary" size="sm" block="{{false}}" bind:tap="onModify">
+          <view class="bs-cta-inner">
+            <ll-icon name="pencil-simple" size="24" color="#1E1E24"/>
+            <text>修改订单</text>
+          </view>
+        </ll-cta>
+        <ll-cta wx:if="{{canRebook}}" variant="primary" size="sm" block="{{false}}" bind:tap="onRebook">
+          <view class="bs-cta-inner">
+            <ll-icon name="calendar-plus" size="24" color="#FFFFFF"/>
+            <text>再次预约</text>
+          </view>
+        </ll-cta>
+        <ll-cta wx:if="{{canReview}}" variant="primary" size="sm" block="{{false}}" text="留下评价" bind:tap="onLeaveReview"/>
+        <ll-cta wx:if="{{canCancel}}" variant="danger" size="sm" block="{{false}}" text="取消订单" bind:tap="onCancel"/>
       </view>
     </view>
   </view>
+
+  <ll-cancel-policy-modal
+    visible="{{cancelModalOpen}}"
+    cancelDateStr="{{cancelDateStr}}"
+    bind:close="onCloseCancelModal"
+    bind:confirm="onConfirmCancel"
+  />
 </view>

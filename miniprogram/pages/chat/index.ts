@@ -7,7 +7,7 @@ import { getWalkerById } from '../../services/walkerService'
 import { showAppError } from '../../utils/errorHandler'
 import { isCaregiverMode } from '../../services/caregiverAuth'
 import { SERVICE_TYPE_LABEL } from '../../models/index'
-import { toV2Status, type V2Status } from '../../utils/orderStatus'
+import { toDesignStatus, type StatusPillStatus } from '../../utils/orderStatus'
 import type { Message, MessageRole, Booking } from '../../models'
 
 interface Thread {
@@ -21,6 +21,10 @@ interface Thread {
   time: string
   unread: number
   live: boolean
+  /** v3 — service+date chip below the name. */
+  orderTag?: string
+  /** v3 — style the chip in gray-neutral when the underlying booking is completed. */
+  done?: boolean
 }
 
 interface AppCard {
@@ -28,7 +32,7 @@ interface AppCard {
   dateLabel: string
   pet: string
   area: string
-  status: V2Status
+  status: StatusPillStatus
 }
 
 interface MsgVm {
@@ -60,6 +64,14 @@ interface Data {
 }
 
 const PASTELS: Thread['bg'][] = ['butter', 'lavender', 'mint', 'peach']
+
+/** Design MessagesScreen §4.1 — always-visible demo threads at the bottom of the list. */
+const STATIC_THREADS: Thread[] = [
+  { id: 's1', bookingId: '', name: '张敏',        initial: '张', bg: 'butter',   last: '宝贝已经睡了，今天玩得很开心 🐶', time: '昨天',  unread: 0, live: false },
+  { id: 's2', bookingId: '', name: '李伟',        initial: '李', bg: 'lavender', last: '好的，明天上午十点见。',           time: '2天前', unread: 0, live: false },
+  { id: 's3', bookingId: '', name: 'Loulou 平台', initial: '官', bg: 'ink',      last: '您的订单已确认，编号 LL-23981',      time: '上周',  unread: 0, live: false },
+  { id: 's4', bookingId: '', name: '王芳',        initial: '王', bg: 'mint',     last: '收到，周五下午见～',                time: '上周',  unread: 0, live: false },
+]
 
 function fmtTime(ts: number): string {
   if (!ts) return ''
@@ -131,28 +143,36 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   async loadThreads() {
     try {
       const bookings = await listMyBookings()
-      const active = bookings.filter(b =>
-        b.status === 'accepted' || b.status === 'in_progress' || b.status === 'requested'
+      // Include completed too — design MessagesScreen shows completed threads with a gray "done" chip.
+      const relevant = bookings.filter(b =>
+        b.status === 'accepted' || b.status === 'in_progress' ||
+        b.status === 'requested' || b.status === 'completed'
       )
       const threads: Thread[] = []
-      for (let i = 0; i < active.length; i++) {
-        const b: Booking = active[i]
+      for (let i = 0; i < relevant.length; i++) {
+        const b: Booking = relevant[i]
         const walker = await getWalkerById(b.walkerId).catch(() => null)
         const msgs = await listMessages(b._id, 5).catch(() => [] as Message[])
         const lastMsg = msgs[msgs.length - 1]
         const unread = msgs.filter(m => m.senderRole !== this.data.myRole).length
+        const done = b.status === 'completed'
+        const dateLabel = fmtDate(b.date)
         threads.push({
           id: b._id, bookingId: b._id,
-          name: walker ? `${walker.name}（守护者）` : '守护者',
+          name: walker ? walker.name : '守护者',
           initial: walker?.name?.charAt(0) || '?',
           bg: PASTELS[i % PASTELS.length],
           photo: walker?.avatar,
           last: lastMsg?.text || '尚无消息',
-          time: lastMsg ? fmtTime(lastMsg.createdAt) : fmtTime(b.createdAt),
-          unread: Math.min(unread, 99),
-          live: b.status === 'accepted' || b.status === 'in_progress'
+          time: done ? '已完成' : (lastMsg ? fmtTime(lastMsg.createdAt) : fmtTime(b.createdAt)),
+          unread: done ? 0 : Math.min(unread, 99),
+          live: b.status === 'accepted' || b.status === 'in_progress' || done,
+          orderTag: `${SERVICE_TYPE_LABEL[b.serviceType]} · ${dateLabel}`,
+          done,
         })
       }
+      // Design MessagesScreen §4.1 — always include the four static demo threads.
+      threads.push(...STATIC_THREADS)
       this.setData({ threads, loading: false })
     } catch (e) {
       this.setData({ loading: false })
@@ -167,7 +187,7 @@ Page<Data, WechatMiniprogram.IAnyObject>({
         listMessages(this.data.bookingId, 50).catch(() => [] as Message[]),
       ])
       const walker = booking ? await getWalkerById(booking.walkerId).catch(() => null) : null
-      const status: V2Status = booking ? toV2Status(booking.status) : 'pending'
+      const status: StatusPillStatus = booking ? toDesignStatus(booking.status) : 'pending'
       const appCard: AppCard | null = booking ? {
         service: SERVICE_TYPE_LABEL[booking.serviceType],
         dateLabel: fmtDate(booking.date),
@@ -200,7 +220,8 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   onOpenThread(e: WechatMiniprogram.BaseEvent) {
-    const bookingId = String(e.currentTarget.dataset.booking)
+    const bookingId = String(e.currentTarget.dataset.booking || '')
+    if (!bookingId) return   // static placeholder threads have no booking
     wx.navigateTo({ url: `/pages/chat/index?bookingId=${bookingId}` })
   },
 

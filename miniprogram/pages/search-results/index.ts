@@ -1,7 +1,10 @@
 import { listWalkers } from '../../services/walkerService'
 import { showAppError } from '../../utils/errorHandler'
 
-interface Feature { label: string; cat: 'relation' | 'time' | 'skill' | 'care' | 'other' }
+/** Design v3 Tag tone. Categories map: time→mint (credential), care→neutral (facility),
+ *  skill→butter (service), relation→lavender. */
+type TagTone = 'butter' | 'lavender' | 'mint' | 'peach' | 'neutral'
+interface Feature { label: string; tone: TagTone }
 
 interface Card {
   id: string
@@ -85,10 +88,10 @@ Page<Data, WechatMiniprogram.IAnyObject>({
         bio: w.bio || '专业守护者，提供贴心照护',
         reused: i % 3 === 0,
         features: [
-          { label: `认证${1 + (i % 6)}年`, cat: 'time' as const },
-          ...(w.canMedicate    ? [{ label: '清洁消毒',  cat: 'care'  as const }] : []),
-          ...(w.acceptsAggressive ? [{ label: '训练师', cat: 'skill' as const }] : []),
-          ...(w.acceptsPuppy   ? [{ label: '户外活动',  cat: 'skill' as const }] : [])
+          { label: `认证${1 + (i % 6)}年`, tone: 'mint'    as TagTone },
+          ...(w.canMedicate       ? [{ label: '清洁消毒', tone: 'neutral' as TagTone }] : []),
+          ...(w.acceptsAggressive ? [{ label: '训练师',   tone: 'butter'  as TagTone }] : []),
+          ...(w.acceptsPuppy      ? [{ label: '户外活动', tone: 'butter'  as TagTone }] : []),
         ].slice(0, 4),
         price: w.pricePerWalk,
         unit: '晚',

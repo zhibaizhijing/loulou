@@ -65,6 +65,21 @@
   font-weight: 400;
 }
 .ml-thread-last.is-unread { color: var(--ll-text-2); font-weight: 500; }
+
+/* v3 — order-tag chip below thread name (design MessagesScreen §4.1). */
+.ml-thread-order-tag {
+  display: inline-flex; align-items: center; gap: 8rpx;
+  background: #EAF3EE; color: #2C7A4B;
+  border-radius: 12rpx;
+  padding: 2rpx 14rpx;
+  font-size: 21rpx; font-weight: 600;
+  margin: 8rpx 0;
+  align-self: flex-start;
+}
+.ml-thread-order-tag.is-done {
+  background: #F0F0F5; color: var(--ll-text-3);
+}
+.ml-thread.is-static { opacity: 0.9; }
 .ml-unread {
   min-width: 36rpx; height: 36rpx;
   padding: 0 10rpx; border-radius: 18rpx;

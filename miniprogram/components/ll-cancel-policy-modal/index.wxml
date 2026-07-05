@@ -1,23 +1,47 @@
 <view wx:if="{{visible}}" class="ll-cpm-mask" bindtap="onClose"></view>
 <view wx:if="{{visible}}" class="ll-cpm-card" catchtap="noop">
   <view class="ll-cpm-head">
-    <text class="ll-cpm-title">取消政策</text>
+    <view class="ll-cpm-head-text">
+      <text class="ll-cpm-title">取消订单</text>
+      <text class="ll-cpm-sub">Lou Lou 平台取消条款</text>
+    </view>
     <view class="ll-cpm-close" bindtap="onClose">
       <ll-icon name="x" size="26" color="#1E1E24"/>
     </view>
   </view>
+
   <view class="ll-cpm-body">
     <view class="ll-cpm-tier">
-      <text class="ll-cpm-tier-label">服务前 48 小时</text>
-      <text class="ll-cpm-tier-detail">全额退款，不收取手续费</text>
+      <view class="ll-cpm-tier-ico ll-cpm-tier-ico--refund">
+        <ll-icon name="check-circle" weight="fill" size="34" color="#2C7A4B"/>
+      </view>
+      <view class="ll-cpm-tier-text">
+        <text class="ll-cpm-tier-label">全额退款</text>
+        <text class="ll-cpm-tier-detail">在服务开始前一天（{{cancelDateStr}}）12:00 之前申请取消，可享免费取消（全额退款）。</text>
+      </view>
     </view>
     <view class="ll-cpm-tier">
-      <text class="ll-cpm-tier-label">服务前 24–48 小时</text>
-      <text class="ll-cpm-tier-detail">退 50%，剩余作为守护者预订补偿</text>
+      <view class="ll-cpm-tier-ico ll-cpm-tier-ico--partial">
+        <ll-icon name="info" weight="fill" size="34" color="#B45309"/>
+      </view>
+      <view class="ll-cpm-tier-text">
+        <text class="ll-cpm-tier-label">部分扣款</text>
+        <text class="ll-cpm-tier-detail">在服务开始前一天的 12:00 之后申请取消，将扣除首日服务费的 20%，其余费用退还。</text>
+      </view>
     </view>
     <view class="ll-cpm-tier">
-      <text class="ll-cpm-tier-label">服务开始后</text>
-      <text class="ll-cpm-tier-detail">已发生服务费用不退</text>
+      <view class="ll-cpm-tier-ico ll-cpm-tier-ico--multi">
+        <ll-icon name="calendar-blank" size="34" color="#2F5F87"/>
+      </view>
+      <view class="ll-cpm-tier-text">
+        <text class="ll-cpm-tier-label">多日订单</text>
+        <text class="ll-cpm-tier-detail">若为连续多日的订单，扣款与退款标准将依据"提交申请当天"与"剩余未服务首日"之间的时差，参照上述规则同理推算。</text>
+      </view>
     </view>
+  </view>
+
+  <view class="ll-cpm-actions">
+    <view class="ll-cpm-confirm" bindtap="onConfirm">确认取消</view>
+    <view class="ll-cpm-cancel" bindtap="onClose">暂不取消</view>
   </view>
 </view>

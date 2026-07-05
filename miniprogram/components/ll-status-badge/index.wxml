@@ -1,1 +1,1 @@
-<view class="ll-sb ll-sb--{{status}}">{{label}}</view>
+<view class="ll-sb ll-sb--{{resolved}}">{{label}}</view>

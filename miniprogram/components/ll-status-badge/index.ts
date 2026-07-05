@@ -1,16 +1,26 @@
-// v2 — order status pill. Spec §2.8 STATUS_META.
-import { STATUS_LABEL, type V2Status } from '../../utils/orderStatus'
+// v3 primitive — StatusPill. Spec §2.3 (2026-07-05).
+// Contract mirrors design/lou-lou-design-system/project/components/StatusPill/StatusPill.jsx.
+//
+// Accepts the design's canonical 5-status enum; also accepts legacy
+// `in_progress` / `cancelled` via `normalizeStatus` for callers still on v2.
+import { STATUS_LABEL, normalizeStatus, type StatusPillStatus } from '../../utils/orderStatus'
 
 Component({
   options: { addGlobalClass: true },
   properties: {
     status: { type: String, value: 'pending' },
+    /** Optional label override (matches design `children`). */
+    text:   { type: String, value: '' },
   },
-  data: { label: '' },
+  data: {
+    label:    '',
+    resolved: 'pending' as StatusPillStatus,
+  },
   observers: {
-    status(s: string) {
-      const v = (s || 'pending') as V2Status
-      this.setData({ label: STATUS_LABEL[v] || '' })
+    'status, text'(s: string, t: string) {
+      const resolved = normalizeStatus(s)
+      const label = t || STATUS_LABEL[resolved] || ''
+      this.setData({ resolved, label })
     },
   },
 })

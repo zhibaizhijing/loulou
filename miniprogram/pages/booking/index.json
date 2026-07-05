@@ -1,12 +1,13 @@
 {
   "navigationStyle": "custom",
   "usingComponents": {
-    "mock-banner":       "/components/mock-banner/index",
-    "loading-skeleton":  "/components/loading-skeleton/index",
-    "empty-state":       "/components/empty-state/index",
-    "ll-topnav":         "/components/ll-topnav/index",
-    "ll-card":           "/components/ll-card/index",
-    "ll-cta":            "/components/ll-cta/index",
-    "ll-icon":           "/components/ll-icon/index"
+    "mock-banner":              "/components/mock-banner/index",
+    "loading-skeleton":         "/components/loading-skeleton/index",
+    "empty-state":              "/components/empty-state/index",
+    "ll-topnav":                "/components/ll-topnav/index",
+    "ll-card":                  "/components/ll-card/index",
+    "ll-cta":                   "/components/ll-cta/index",
+    "ll-icon":                  "/components/ll-icon/index",
+    "ll-cancel-policy-modal":   "/components/ll-cancel-policy-modal/index"
   }
 }
