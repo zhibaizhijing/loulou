@@ -41,11 +41,19 @@
 .ml-avatar-img       { width: 100%; height: 100%; }
 .ml-avatar-init      { font-size: 36rpx; font-weight: 700; color: var(--ll-text); }
 .ml-avatar--ink .ml-avatar-init { color: #fff; }
+.ml-avatar-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: 96rpx; height: 96rpx;
+}
+.ml-avatar-wrap .ml-avatar { width: 96rpx; height: 96rpx; }
 .ml-live-dot {
-  position: absolute; top: 8rpx; left: 80rpx;
+  position: absolute;
+  top: 4rpx; right: 4rpx;
   width: 24rpx; height: 24rpx; border-radius: 50%;
   background: #2C7A4B;
   border: 4rpx solid #fff;
+  z-index: 2;
 }
 
 .ml-body { flex: 1; min-width: 0; }
@@ -79,7 +87,8 @@
 .ml-thread-order-tag.is-done {
   background: #F0F0F5; color: var(--ll-text-3);
 }
-.ml-thread.is-static { opacity: 0.9; }
+/* v3 audit — static demo threads render at full opacity per design MessagesScreen. */
+.ml-thread.is-static { opacity: 1; }
 .ml-unread {
   min-width: 36rpx; height: 36rpx;
   padding: 0 10rpx; border-radius: 18rpx;

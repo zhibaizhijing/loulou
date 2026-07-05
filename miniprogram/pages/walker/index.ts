@@ -151,11 +151,13 @@ Page<Data, WechatMiniprogram.IAnyObject>({
 
   onBookViaBar(e: WechatMiniprogram.CustomEvent<{ id: string; svc: BarSvc }>) {
     const svc = e.detail.svc
-    // v2 spec §2.15 — block booking for new users with no pet on file.
+    // v3 audit fix — pets are stored on the User doc in mockDb.users, not in wx.storage.
+    // Previous check (`wx.getStorageSync('loulou:my-dogs')`) was always empty → gate never triggered.
     let hasPet = true
     try {
-      const dogs = wx.getStorageSync('loulou:my-dogs')
-      hasPet = Array.isArray(dogs) && dogs.length > 0
+      const { mockDb } = require('../../mocks/db') as typeof import('../../mocks/db')
+      const owner = mockDb.users.list().find(u => u._id === 'mock-owner-1')
+      hasPet = !!owner?.dogs && owner.dogs.length > 0
     } catch { /* test env */ }
     if (!hasPet) {
       this.pendingService = svc?.serviceType

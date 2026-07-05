@@ -13,6 +13,10 @@
         size="44"
         color="{{activePath === item.path ? '#1E1E24' : '#A0A0B0'}}"
       />
+      <view
+        wx:if="{{(item.badgeKey === 'loulou:badge:orders' && badges.orders) || (item.badgeKey === 'loulou:badge:chat' && badges.chat)}}"
+        class="ll-tab-dot"
+      ></view>
     </view>
     <view class="ll-tab-label">{{item.label}}</view>
   </view>

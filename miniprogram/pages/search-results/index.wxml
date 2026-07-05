@@ -56,10 +56,63 @@
         <view wx:if="{{filterCount}}" class="sr-filterbtn-count ll-num">{{filterCount}}</view>
       </view>
       <view class="sr-flex"></view>
-      <view class="sr-sortchip" bindtap="onOpenSort">
+      <view class="sr-sortchip {{sortOpen ? 'is-open' : ''}}" bindtap="onOpenSort">
         <text>{{sort}}</text>
-        <ll-icon name="caret-down" size="18" color="#A0A0B0"/>
+        <ll-icon name="caret-{{sortOpen ? 'up' : 'down'}}" size="18" color="#A0A0B0"/>
       </view>
+      <view wx:if="{{sortOpen}}" class="sr-sort-mask" bindtap="onCloseSort"></view>
+      <view wx:if="{{sortOpen}}" class="sr-sort-popover" catchtap="onCloseSort">
+        <view
+          wx:for="{{sortOptions}}"
+          wx:key="*this"
+          class="sr-sort-row {{item === sort ? 'is-on' : ''}}"
+          data-sort="{{item}}"
+          catchtap="onPickSort"
+        >
+          <text>{{item}}</text>
+          <ll-icon wx:if="{{item === sort}}" name="check-circle" weight="fill" size="26" color="#22282C"/>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Field picker sheet (v3 audit — summary chips re-open pickers) -->
+  <view wx:if="{{fieldPicker.open}}" class="sr-fp-mask" bindtap="onCloseFieldPicker"></view>
+  <view wx:if="{{fieldPicker.open}}" class="sr-fp-sheet" catchtap="noop">
+    <view class="sr-fp-grab"></view>
+    <view class="sr-fp-head">
+      <text class="sr-fp-title">{{fieldPicker.title}}</text>
+      <view class="sr-fp-close" bindtap="onCloseFieldPicker">
+        <ll-icon name="x" size="26" color="#1E1E24"/>
+      </view>
+    </view>
+    <view
+      wx:for="{{fieldPicker.options}}"
+      wx:key="*this"
+      class="sr-fp-row {{item === fieldPicker.value ? 'is-on' : ''}}"
+      data-value="{{item}}"
+      bindtap="onPickFieldValue"
+    >
+      <text>{{item}}</text>
+      <ll-icon wx:if="{{item === fieldPicker.value}}" name="check-circle" weight="fill" size="30" color="#22282C"/>
+    </view>
+  </view>
+
+  <!-- Filter drawer stub (v3 audit — full FilterDrawer TBD) -->
+  <view wx:if="{{filterOpen}}" class="sr-filter-mask" bindtap="onCloseFilter"></view>
+  <view wx:if="{{filterOpen}}" class="sr-filter-drawer" catchtap="noop">
+    <view class="sr-filter-head">
+      <text class="sr-filter-title">筛选</text>
+      <view class="sr-filter-close" bindtap="onCloseFilter">
+        <ll-icon name="x" size="26" color="#1E1E24"/>
+      </view>
+    </view>
+    <view class="sr-filter-body">
+      <view class="sr-filter-empty">距离 / 评分 / 价格 / 认证等筛选项即将上线</view>
+    </view>
+    <view class="sr-filter-foot">
+      <view class="sr-filter-clear" bindtap="onClearFilters">清空</view>
+      <view class="sr-filter-apply" bindtap="onApplyFilters">应用</view>
     </view>
   </view>
 

@@ -29,10 +29,12 @@
         bindtap="onOpenThread"
         hover-class="{{item.bookingId ? 'ml-thread-hover' : ''}}"
       >
-        <view class="ml-avatar ml-avatar--{{item.bg}}">
-          <image wx:if="{{item.photo}}" src="{{item.photo}}" mode="aspectFill" class="ml-avatar-img"/>
-          <text wx:else class="ml-avatar-init">{{item.initial}}</text>
-          <view wx:if="{{item.live}}" class="ml-live-dot"></view>
+        <view class="ml-avatar-wrap">
+          <view class="ml-avatar ml-avatar--{{item.bg}}">
+            <image wx:if="{{item.photo}}" src="{{item.photo}}" mode="aspectFill" class="ml-avatar-img"/>
+            <text wx:else class="ml-avatar-init">{{item.initial}}</text>
+          </view>
+          <view wx:if="{{item.live && !item.done}}" class="ml-live-dot"></view>
         </view>
         <view class="ml-body">
           <view class="ml-thread-top">

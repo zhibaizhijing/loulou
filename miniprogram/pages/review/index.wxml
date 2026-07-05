@@ -1,11 +1,95 @@
-<mock-banner />
-<view class="page">
-  <view class="label">How was your walk?</view>
-  <star-rating value="{{stars}}" bind:change="onStars" />
+<view class="ll-page rv-page">
+  <mock-banner/>
+  <ll-topnav title="评价守护者" bind:back="onBack"/>
 
-  <view class="label">Tell us more</view>
-  <t-textarea model:value="{{text}}" placeholder="On time? Friendly? Photos shared?" />
+  <!-- Guardian card -->
+  <view class="rv-guardian">
+    <view class="rv-guardian-avatar">
+      <image wx:if="{{guardianPhoto}}" src="{{guardianPhoto}}" mode="aspectFill" class="rv-guardian-img"/>
+      <text wx:else class="rv-guardian-char">{{guardianInitial}}</text>
+    </view>
+    <view class="rv-guardian-info">
+      <text class="rv-guardian-name">{{guardianName}}</text>
+      <text class="rv-guardian-line">{{service}} · {{dateLabel}}</text>
+    </view>
+  </view>
 
-  <t-button theme="primary" block loading="{{submitting}}" bindtap="onSubmit">Submit</t-button>
+  <!-- Stars -->
+  <view class="rv-stars-card">
+    <text class="rv-stars-title">您如何评价本次服务？</text>
+    <view class="rv-stars-row">
+      <view
+        wx:for="{{starList}}"
+        wx:key="*this"
+        class="rv-star"
+        data-n="{{item}}"
+        bindtap="onPickStar"
+      >
+        <ll-icon
+          name="star"
+          weight="{{item <= stars ? 'fill' : 'regular'}}"
+          size="72"
+          color="{{item <= stars ? '#F5B301' : '#EEEEF2'}}"
+        />
+      </view>
+    </view>
+    <text wx:if="{{starLabel}}" class="rv-star-label">{{starLabel}}</text>
+  </view>
+
+  <!-- Impression tags -->
+  <view class="rv-tags-card">
+    <text class="rv-tags-title">守护者给你的印象</text>
+    <view class="rv-tags-row">
+      <view
+        wx:for="{{tags}}"
+        wx:key="*this"
+        class="rv-tag {{selectedTags[item] ? 'is-on' : ''}}"
+        data-tag="{{item}}"
+        bindtap="onToggleTag"
+      >{{item}}</view>
+    </view>
+  </view>
+
+  <!-- Comment -->
+  <view class="rv-comment-card">
+    <text class="rv-comment-title">写下你的评价</text>
+    <textarea
+      class="rv-textarea"
+      placeholder="分享你与 {{guardianName}} 的这次服务体验，帮助其他宠物主人…"
+      placeholder-class="rv-textarea-hint"
+      value="{{text}}"
+      maxlength="{{charMax}}"
+      bindinput="onText"
+    />
+    <text class="rv-count">{{charCount}} / {{charMax}}</text>
+    <view class="rv-photos">
+      <view class="rv-photo-tile" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <ll-icon name="camera" size="36" color="#A0A0B0"/>
+      </view>
+    </view>
+  </view>
+
+  <!-- Anonymous toggle -->
+  <view class="rv-anon-row">
+    <view class="rv-anon-text">
+      <text class="rv-anon-title">匿名评价</text>
+      <text class="rv-anon-sub">守护者不会看到你的头像和昵称</text>
+    </view>
+    <view class="rv-toggle {{anonymous ? 'is-on' : ''}}" bindtap="onToggleAnonymous">
+      <view class="rv-toggle-knob"></view>
+    </view>
+  </view>
+
+  <!-- Submit -->
+  <view class="rv-foot">
+    <ll-cta
+      text="提交评价"
+      variant="primary"
+      size="lg"
+      block="{{true}}"
+      loading="{{submitting}}"
+      disabled="{{stars === 0}}"
+      bind:tap="onSubmit"
+    />
+  </view>
 </view>
-<custom-tab-bar />

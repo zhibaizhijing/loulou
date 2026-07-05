@@ -29,10 +29,6 @@ Page<Data, WechatMiniprogram.IAnyObject>({
 
   onTab(e: WechatMiniprogram.BaseEvent) {
     const tab = e.currentTarget.dataset.tab as 'about' | 'feedback' | 'pets'
-    if (tab === 'pets') {
-      wx.navigateTo({ url: '/pages/pets/index' })
-      return
-    }
     this.setData({ tab })
   },
 
@@ -69,11 +65,11 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     } catch (e) { showAppError(e) }
   },
 
-  onEditProfile() { wx.showToast({ title: '即将上线 · Coming soon', icon: 'none' }) },
-  onCoupons()     { wx.showToast({ title: '即将上线 · Coming soon', icon: 'none' }) },
-  onInvite()      { wx.showToast({ title: '即将上线 · Coming soon', icon: 'none' }) },
-  onSettings()    { wx.showToast({ title: '即将上线 · Coming soon', icon: 'none' }) },
-  onAbout()       { wx.showToast({ title: 'Loulou v1.0', icon: 'none' }) },
+  onEditProfile() { wx.showToast({ title: '编辑资料即将上线', icon: 'none' }) },
+  onCoupons()     { wx.navigateTo({ url: '/pages/coupons/index' }) },
+  onInvite()      { wx.navigateTo({ url: '/pages/invite/index' }) },
+  onSettings()    { wx.navigateTo({ url: '/pages/settings/index' }) },
+  onAbout()       { wx.navigateTo({ url: '/pages/about/index' }) },
 
   onAddDogToggle() { this.setData({ addingDog: !this.data.addingDog }) },
 

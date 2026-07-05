@@ -1,10 +1,9 @@
 {
-  "navigationBarTitleText": "Leave a Review",
+  "navigationStyle": "custom",
   "usingComponents": {
-    "mock-banner": "/components/mock-banner/index",
-    "custom-tab-bar": "/custom-tab-bar/index",
-    "star-rating": "/components/star-rating/index",
-    "t-textarea":  "tdesign-miniprogram/textarea/textarea",
-    "t-button":    "tdesign-miniprogram/button/button"
+    "mock-banner":  "/components/mock-banner/index",
+    "ll-icon":      "/components/ll-icon/index",
+    "ll-cta":       "/components/ll-cta/index",
+    "ll-topnav":    "/components/ll-topnav/index"
   }
 }

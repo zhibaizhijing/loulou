@@ -16,7 +16,13 @@
   color: var(--ll-text-3, #A0A0B0);
 }
 .ll-tab.is-on { color: var(--ll-text, #1E1E24); }
-.ll-tab-icon { line-height: 1; }
+.ll-tab-icon { line-height: 1; position: relative; }
+.ll-tab-dot {
+  position: absolute; top: -4rpx; right: -6rpx;
+  width: 16rpx; height: 16rpx; border-radius: 50%;
+  background: #E63946;
+  border: 3rpx solid var(--ll-surface, #fff);
+}
 .ll-tab-label {
   font-size: 21rpx;
   font-weight: 500;

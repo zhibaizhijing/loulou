@@ -101,6 +101,8 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     minEnd: tomorrowStr()
   },
 
+  bannerTimer: 0 as unknown as ReturnType<typeof setInterval>,
+
   onLoad() {
     this.updateDateLabel(this.data.svcType)
   },
@@ -110,6 +112,20 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     if (tb && typeof tb.setData === 'function') {
       tb.setData({ activePath: '/pages/home/index' })
     }
+    // v3 audit — design HomeMarketplaceScreen auto-advances the banner every 3s.
+    if (!this.bannerTimer) {
+      this.bannerTimer = setInterval(() => {
+        const next = (this.data.bannerIdx + 1) % this.data.banners.length
+        this.setData({ bannerIdx: next, currentBanner: this.data.banners[next] })
+      }, 3000)
+    }
+  },
+
+  onHide() {
+    if (this.bannerTimer) { clearInterval(this.bannerTimer); this.bannerTimer = 0 as any }
+  },
+  onUnload() {
+    if (this.bannerTimer) { clearInterval(this.bannerTimer); this.bannerTimer = 0 as any }
   },
 
   onPullDownRefresh() { wx.stopPullDownRefresh() },
@@ -190,8 +206,18 @@ Page<Data, WechatMiniprogram.IAnyObject>({
   },
 
   onPickRecent(e: WechatMiniprogram.BaseEvent) {
-    const id = String(e.currentTarget.dataset.id)
-    wx.navigateTo({ url: `/pages/walker/index?id=${id}` })
+    // v3 audit — recents seed uses r1/r2/r3 which are demo ids that don't exist
+    // in the walker store. Resolve to the first real seed walker so the profile
+    // page always renders. The design equivalent (`onPickService`) opens the
+    // hardcoded CHEN_YI profile, matching this substitution.
+    const id = String(e.currentTarget.dataset.id) || 'walker-1'
+    const target = id.startsWith('walker-') ? id : 'walker-1'
+    wx.navigateTo({ url: `/pages/walker/index?id=${target}` })
+  },
+
+  onOpenAllRecents() {
+    // Placeholder — design points to a full favorites listing. Toast for now.
+    wx.showToast({ title: '全部收藏即将上线', icon: 'none' })
   },
 
   onBanner() {

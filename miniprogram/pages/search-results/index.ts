@@ -43,7 +43,16 @@ interface Data {
   loading: boolean
   filterCount: number
   sort: string
+  sortOpen: boolean
+  sortOptions: string[]
+  filterOpen: boolean
+  fieldPicker: { open: boolean; field: string; title: string; options: string[]; value: string }
 }
+
+const SORT_OPTIONS = ['智能排序', '距离由近到远', '评分由高到低', '价格由低到高', '价格由高到低']
+const PET_OPTIONS  = ['猫', '狗', '兔子', '鼠鼠', '鸟']
+const SVC_OPTIONS  = ['寄养', '日托', '遛狗', '上门喂养', '伴宠留宿']
+const ADDRESS_OPTIONS = ['朝阳区·望京', '朝阳区·三里屯', '朝阳区·国贸', '海淀区·中关村', '东城区·东直门']
 
 const PASTELS = ['butter', 'lavender', 'mint', 'peach', 'lavender-soft'] as const
 
@@ -58,7 +67,11 @@ Page<Data, WechatMiniprogram.IAnyObject>({
     guardians: [],
     loading: true,
     filterCount: 0,
-    sort: '智能排序'
+    sort: '智能排序',
+    sortOpen: false,
+    sortOptions: SORT_OPTIONS,
+    filterOpen: false,
+    fieldPicker: { open: false, field: '', title: '', options: [], value: '' },
   },
 
   onLoad(query: Record<string, string>) {
@@ -108,12 +121,61 @@ Page<Data, WechatMiniprogram.IAnyObject>({
 
   onBack() { wx.navigateBack({}).catch?.(() => undefined) },
 
-  onPickPet()     { wx.showToast({ title: '修改宠物类型', icon: 'none' }) },
-  onPickSvc()     { wx.showToast({ title: '修改服务类型', icon: 'none' }) },
-  onPickAddress() { wx.showToast({ title: '修改地址', icon: 'none' }) },
-  onPickDate()    { wx.showToast({ title: '修改日期', icon: 'none' }) },
-  onOpenFilter()  { wx.showToast({ title: '筛选即将上线', icon: 'none' }) },
-  onOpenSort()    { wx.showToast({ title: '排序即将上线', icon: 'none' }) },
+  // v3 audit — summary chips re-open the same pickers used on home so users can
+  // amend the query in place, matching design SearchResultsScreen `onPickField`.
+  onPickPet() {
+    this.setData({ fieldPicker: { open: true, field: 'petType', title: '选择宠物类型', options: PET_OPTIONS, value: this.data.q.petType } })
+  },
+  onPickSvc() {
+    this.setData({ fieldPicker: { open: true, field: 'svcType', title: '选择服务类型', options: SVC_OPTIONS, value: this.data.q.svcType } })
+  },
+  onPickAddress() {
+    this.setData({ fieldPicker: { open: true, field: 'address', title: '选择地址', options: ADDRESS_OPTIONS, value: this.data.q.address } })
+  },
+  onPickDate() {
+    wx.showToast({ title: '日期编辑器即将上线', icon: 'none' })
+  },
+  onPickFieldValue(e: WechatMiniprogram.BaseEvent) {
+    const value = String(e.currentTarget.dataset.value)
+    const field = this.data.fieldPicker.field
+    if (field && (field in this.data.q)) {
+      (this.data.q as any)[field] = value
+      this.setData({ q: this.data.q })
+    }
+    this.setData({ fieldPicker: { ...this.data.fieldPicker, open: false } })
+  },
+  onCloseFieldPicker() {
+    this.setData({ fieldPicker: { ...this.data.fieldPicker, open: false } })
+  },
+
+  onOpenFilter() {
+    this.setData({ filterOpen: true })
+  },
+  onCloseFilter() { this.setData({ filterOpen: false }) },
+  onClearFilters() {
+    this.setData({ filterOpen: false, filterCount: 0 })
+    wx.showToast({ title: '已清空筛选', icon: 'none' })
+  },
+  onApplyFilters() {
+    this.setData({ filterOpen: false })
+  },
+
+  onOpenSort() { this.setData({ sortOpen: !this.data.sortOpen }) },
+  onPickSort(e: WechatMiniprogram.BaseEvent) {
+    const sort = String(e.currentTarget.dataset.sort)
+    const sorters: Record<string, (a: Card, b: Card) => number> = {
+      '智能排序':     (a, b) => parseFloat(b.rating) - parseFloat(a.rating),
+      '距离由近到远': (a, b) => parseFloat(a.dist) - parseFloat(b.dist),
+      '评分由高到低': (a, b) => parseFloat(b.rating) - parseFloat(a.rating),
+      '价格由低到高': (a, b) => a.price - b.price,
+      '价格由高到低': (a, b) => b.price - a.price,
+    }
+    const sorter = sorters[sort] || sorters['智能排序']
+    const guardians = [...this.data.guardians].sort(sorter)
+    this.setData({ sort, sortOpen: false, guardians })
+  },
+  onCloseSort() { this.setData({ sortOpen: false }) },
+  noop() { /* stopPropagation for sheet body taps */ },
 
   onToggleFav(e: WechatMiniprogram.BaseEvent) {
     const id = String(e.currentTarget.dataset.id)
